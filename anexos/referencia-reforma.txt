@@ -1,0 +1,5 @@
+﻿Padrao de codigo: c:\Users\daany\.vscode\Projeto\Repos\app_reforma
+Login/auth: app/(auth)/login/page.tsx
+Supabase clients: lib/supabase/
+Middleware: middleware.ts
+Migrations RLS: supabase/migrations/

@@ -1,0 +1,16 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env*.local
+.vercel
+*.log
+.DS_Store
+
+# Dados pessoais / arquivos pesados (manter só local)
+controle_marmitas.xlsx
+jornada-acompanhamento-1.html
+receitas_da_jornada_da_dany_final.PDF
+anexos/relatorio-fase-2-consolidado.jpg
+*.tsbuildinfo

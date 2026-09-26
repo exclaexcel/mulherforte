@@ -1,0 +1,13 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --oliva: #4a5d23;
+  --rosa: #e8b4b8;
+  --bege: #f7f3eb;
+}
+
+body {
+  min-height: 100dvh;
+}
