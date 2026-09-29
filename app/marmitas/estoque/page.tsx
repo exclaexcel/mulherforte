@@ -12,12 +12,12 @@ const STATUS_STYLE: Record<StatusValidade, string> = {
 };
 
 const STATUS_LABEL: Record<StatusValidade, string> = {
-  verde: "Dentro do prazo",
-  amarelo: "Atenção — perto do prazo",
-  vermelho: "Vencido ou quase vencendo",
+  verde: "Qualidade ótima, pode consumir normalmente",
+  amarelo: "Ainda seguro, mas consuma com atenção (qualidade caindo)",
+  vermelho: "Ainda seguro a -18°C, mas qualidade comprometida — priorize o consumo",
 };
 
-type ReceitaRef = { nome: string; validade_congelado_dias: number } | null;
+type ReceitaRef = { nome: string } | null;
 
 export default async function EstoquePage() {
   const supabase = await createClient();
@@ -31,9 +31,7 @@ export default async function EstoquePage() {
 
   const { data: preparos, error } = await supabase
     .from("preparos")
-    .select(
-      "id, data_preparo, quantidade_porcoes, observacoes, receitas ( nome, validade_congelado_dias )"
-    )
+    .select("id, data_preparo, quantidade_porcoes, observacoes, receitas ( nome )")
     .eq("status", "congelado")
     .order("data_preparo", { ascending: true });
 
@@ -56,10 +54,7 @@ export default async function EstoquePage() {
             const receita = (
               Array.isArray(p.receitas) ? p.receitas[0] : p.receitas
             ) as ReceitaRef;
-            const { diasDesdePreparo, diasRestantes, status } = calcularStatusValidade(
-              p.data_preparo,
-              receita?.validade_congelado_dias ?? 60
-            );
+            const { diasDesdePreparo, status } = calcularStatusValidade(p.data_preparo);
 
             return (
               <li key={p.id} className={`rounded-2xl border p-4 space-y-2 ${STATUS_STYLE[status]}`}>
@@ -70,12 +65,7 @@ export default async function EstoquePage() {
                     {p.quantidade_porcoes} porção(ões)
                   </p>
                 </div>
-                <p className="text-xs font-medium">
-                  {STATUS_LABEL[status]}{" "}
-                  {diasRestantes >= 0
-                    ? `— restam ${diasRestantes} dia(s)`
-                    : `— venceu há ${Math.abs(diasRestantes)} dia(s)`}
-                </p>
+                <p className="text-xs font-medium">{STATUS_LABEL[status]}</p>
                 <form action={marcarConsumido}>
                   <input type="hidden" name="id" value={p.id} />
                   <Button type="submit" variant="outline" size="sm">

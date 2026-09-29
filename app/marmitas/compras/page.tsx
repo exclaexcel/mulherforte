@@ -7,7 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GRUPOS_COMPRA } from "@/lib/marmitas/types";
 
-export default async function ComprasPage() {
+export default async function ComprasPage({
+  searchParams,
+}: {
+  searchParams: { item_salvo?: string };
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -27,6 +31,8 @@ export default async function ComprasPage() {
     itens: (itens ?? []).filter((i) => i.grupo === g.value),
   }));
 
+  const itemSalvo = searchParams?.item_salvo === "1";
+
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
@@ -35,6 +41,12 @@ export default async function ComprasPage() {
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Lista de compras</h1>
       </header>
+
+      {itemSalvo ? (
+        <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
+          Item salvo!
+        </p>
+      ) : null}
 
       <div className="space-y-5">
         {porGrupo.map((grupo) => (

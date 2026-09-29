@@ -124,6 +124,20 @@ export async function criarItemCompra(formData: FormData) {
     throw new Error("Grupo e item são obrigatórios.");
   }
 
+  const { data: existentes } = await supabase
+    .from("itens_compra")
+    .select("item")
+    .eq("user_id", user.id)
+    .eq("grupo", grupo);
+
+  const jaExiste = (existentes ?? []).some(
+    (i) => i.item.trim().toLowerCase() === item.toLowerCase()
+  );
+
+  if (jaExiste) {
+    throw new Error(`"${item}" já está na lista desse grupo.`);
+  }
+
   const { error } = await supabase.from("itens_compra").insert({
     user_id: user.id,
     grupo,
@@ -135,6 +149,7 @@ export async function criarItemCompra(formData: FormData) {
   }
 
   revalidatePath("/marmitas/compras");
+  redirect("/marmitas/compras?item_salvo=1");
 }
 
 export async function alternarTenhoEmCasa(formData: FormData) {
@@ -157,4 +172,39 @@ export async function alternarTenhoEmCasa(formData: FormData) {
   }
 
   revalidatePath("/marmitas/compras");
+}
+
+export async function salvarDiaCronograma(formData: FormData) {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const semanaCiclo = Number(formData.get("semana_ciclo"));
+  const diaSemana = String(formData.get("dia_semana") ?? "").trim();
+  const proteina = String(formData.get("proteina") ?? "").trim() || null;
+  const base = String(formData.get("base") ?? "").trim() || null;
+  const legumes = String(formData.get("legumes") ?? "").trim() || null;
+  const receitaExtraTexto = String(formData.get("receita_extra_texto") ?? "").trim() || null;
+
+  if (!semanaCiclo || semanaCiclo < 1 || semanaCiclo > 4 || !diaSemana) {
+    throw new Error("Semana (1-4) e dia são obrigatórios.");
+  }
+
+  const { error } = await supabase.from("cronograma_planejado").upsert(
+    {
+      user_id: user.id,
+      semana_ciclo: semanaCiclo,
+      dia_semana: diaSemana,
+      proteina,
+      base,
+      legumes,
+      receita_extra_texto: receitaExtraTexto,
+    },
+    { onConflict: "user_id,semana_ciclo,dia_semana" }
+  );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/marmitas/cronograma");
+  redirect(`/marmitas/cronograma?dia_salvo=1#semana-${semanaCiclo}`);
 }

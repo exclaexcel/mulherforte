@@ -38,5 +38,5 @@ export async function salvarPerfil(formData: FormData) {
   }
 
   revalidatePath("/");
-  redirect("/");
+  redirect("/?perfil_salvo=1");
 }

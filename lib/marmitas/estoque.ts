@@ -1,42 +1,28 @@
-import { hojeISO } from "@/lib/date";
+import { hojeISO, diasEntre } from "@/lib/date";
 
 export type StatusValidade = "verde" | "amarelo" | "vermelho";
 
-const MS_POR_DIA = 86_400_000;
-
-function dataISOParaUTC(dataISO: string): number {
-  const [ano, mes, dia] = dataISO.split("-").map(Number);
-  return Date.UTC(ano, mes - 1, dia);
-}
-
 /**
- * Verde até 60% do prazo de congelamento consumido, amarelo 60-90%, vermelho acima de 90%.
- * Decisão da Dany: prazo é por receita (validade_congelado_dias), não um corte fixo em dias.
- *
- * Compara datas de calendário (via Date.UTC), não instantes — evita bug de "-1 dia" por
- * diferença de fuso entre o horário do servidor e o horário de Brasília.
+ * Corte fixo em dias desde o preparo, igual pra qualquer receita — conforme a regra
+ * USDA/FSIS documentada pela Dany (aba "Informações Importantes" da planilha original):
+ * verde até 60 dias, amarelo 61-90, vermelho acima de 90. São prazos de QUALIDADE, não de
+ * segurança — mantido a -18°C o alimento é seguro indefinidamente.
  */
 export function calcularStatusValidade(
   dataPreparo: string,
-  validadeDias: number,
   dataHojeISO: string = hojeISO()
 ): {
   diasDesdePreparo: number;
-  diasRestantes: number;
   status: StatusValidade;
 } {
-  const diasDesdePreparo = Math.round(
-    (dataISOParaUTC(dataHojeISO) - dataISOParaUTC(dataPreparo)) / MS_POR_DIA
-  );
-  const diasRestantes = validadeDias - diasDesdePreparo;
-  const percentualConsumido = diasDesdePreparo / validadeDias;
+  const diasDesdePreparo = diasEntre(dataPreparo, dataHojeISO);
 
   let status: StatusValidade = "verde";
-  if (percentualConsumido > 0.9) {
+  if (diasDesdePreparo > 90) {
     status = "vermelho";
-  } else if (percentualConsumido > 0.6) {
+  } else if (diasDesdePreparo > 60) {
     status = "amarelo";
   }
 
-  return { diasDesdePreparo, diasRestantes, status };
+  return { diasDesdePreparo, status };
 }
