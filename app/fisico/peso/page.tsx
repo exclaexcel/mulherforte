@@ -32,6 +32,14 @@ export default async function PesoPage({
     .eq("data", hoje)
     .maybeSingle();
 
+  const { data: ultimoRegistro } = await supabase
+    .from("registros_peso")
+    .select("data, peso_kg, percentual_gordura, percentual_massa_muscular, percentual_agua")
+    .eq("user_id", user.id)
+    .order("data", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
   const pesoSalvo = searchParams?.peso_salvo === "1";
   const registroExcluido = searchParams?.registro_excluido === "1";
 
@@ -54,6 +62,17 @@ export default async function PesoPage({
       {registroExcluido ? (
         <p className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
           Registro de hoje excluído.
+        </p>
+      ) : null}
+
+      {ultimoRegistro && ultimoRegistro.data !== hoje ? (
+        <p className="text-xs text-stone-500 bg-stone-50 border border-stone-200 rounded-2xl p-3">
+          Último registrado: {ultimoRegistro.peso_kg}kg em {ultimoRegistro.data}
+          {ultimoRegistro.percentual_gordura ? ` · gordura ${ultimoRegistro.percentual_gordura}%` : ""}
+          {ultimoRegistro.percentual_massa_muscular
+            ? ` · massa muscular ${ultimoRegistro.percentual_massa_muscular}%`
+            : ""}
+          {ultimoRegistro.percentual_agua ? ` · água ${ultimoRegistro.percentual_agua}%` : ""}
         </p>
       ) : null}
 

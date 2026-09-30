@@ -26,18 +26,23 @@ export default async function MedidasPage({
 
   const hoje = hojeISO();
 
-  const { data: medidasHoje } = await supabase
+  const { data: todasMedidas } = await supabase
     .from("medidas_corporais")
-    .select("regiao, valor_cm")
+    .select("data, regiao, valor_cm")
     .eq("user_id", user.id)
-    .eq("data", hoje);
+    .order("data", { ascending: false });
+
+  const medidasHoje = todasMedidas?.filter((m) => m.data === hoje) ?? [];
 
   const valorAtual = (regiao: RegiaoMedida) =>
-    medidasHoje?.find((m) => m.regiao === regiao)?.valor_cm ?? undefined;
+    medidasHoje.find((m) => m.regiao === regiao)?.valor_cm ?? undefined;
+
+  const ultimaMedida = (regiao: RegiaoMedida) =>
+    todasMedidas?.find((m) => m.regiao === regiao && m.data !== hoje) ?? null;
 
   const medidasSalvas = searchParams?.medidas_salvas === "1";
   const registroExcluido = searchParams?.registro_excluido === "1";
-  const temMedidaHoje = Boolean(medidasHoje && medidasHoje.length > 0);
+  const temMedidaHoje = medidasHoje.length > 0;
 
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
@@ -72,19 +77,27 @@ export default async function MedidasPage({
 
         <p className="text-xs text-stone-500">Preencha só as medidas que for tirar hoje.</p>
 
-        {REGIOES_MEDIDA.map((r) => (
-          <div key={r.value} className="space-y-2">
-            <Label htmlFor={`${r.value}_cm`}>{r.label} (cm)</Label>
-            <Input
-              id={`${r.value}_cm`}
-              name={`${r.value}_cm`}
-              type="number"
-              step="0.1"
-              min={0}
-              defaultValue={valorAtual(r.value)}
-            />
-          </div>
-        ))}
+        {REGIOES_MEDIDA.map((r) => {
+          const ultima = ultimaMedida(r.value);
+          return (
+            <div key={r.value} className="space-y-2">
+              <Label htmlFor={`${r.value}_cm`}>{r.label} (cm)</Label>
+              <Input
+                id={`${r.value}_cm`}
+                name={`${r.value}_cm`}
+                type="number"
+                step="0.1"
+                min={0}
+                defaultValue={valorAtual(r.value)}
+              />
+              {ultima ? (
+                <p className="text-xs text-stone-500">
+                  Última: {ultima.valor_cm}cm em {ultima.data}
+                </p>
+              ) : null}
+            </div>
+          );
+        })}
 
         <Button type="submit" className="w-full">
           Registrar medidas
