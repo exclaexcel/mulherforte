@@ -25,7 +25,7 @@ export async function registrarPeso(formData: FormData) {
   const data = String(formData.get("data") ?? "");
   const pesoKg = Number(formData.get("peso_kg"));
   const percentualGorduraRaw = formData.get("percentual_gordura");
-  const massaMuscularRaw = formData.get("massa_muscular");
+  const percentualMassaMuscularRaw = formData.get("percentual_massa_muscular");
   const percentualAguaRaw = formData.get("percentual_agua");
 
   if (!data || !pesoKg || pesoKg <= 0) {
@@ -38,7 +38,9 @@ export async function registrarPeso(formData: FormData) {
       data,
       peso_kg: pesoKg,
       percentual_gordura: percentualGorduraRaw ? Number(percentualGorduraRaw) : null,
-      massa_muscular: massaMuscularRaw ? Number(massaMuscularRaw) : null,
+      percentual_massa_muscular: percentualMassaMuscularRaw
+        ? Number(percentualMassaMuscularRaw)
+        : null,
       percentual_agua: percentualAguaRaw ? Number(percentualAguaRaw) : null,
     },
     { onConflict: "user_id,data" }

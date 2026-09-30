@@ -27,7 +27,7 @@ export default async function PesoPage({
 
   const { data: registroHoje } = await supabase
     .from("registros_peso")
-    .select("peso_kg, percentual_gordura, massa_muscular, percentual_agua")
+    .select("peso_kg, percentual_gordura, percentual_massa_muscular, percentual_agua")
     .eq("user_id", user.id)
     .eq("data", hoje)
     .maybeSingle();
@@ -101,14 +101,15 @@ export default async function PesoPage({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="massa_muscular">Massa muscular (kg)</Label>
+              <Label htmlFor="percentual_massa_muscular">Massa muscular (%)</Label>
               <Input
-                id="massa_muscular"
-                name="massa_muscular"
+                id="percentual_massa_muscular"
+                name="percentual_massa_muscular"
                 type="number"
                 step="0.1"
                 min={0}
-                defaultValue={registroHoje?.massa_muscular ?? undefined}
+                max={100}
+                defaultValue={registroHoje?.percentual_massa_muscular ?? undefined}
               />
             </div>
             <div className="space-y-2">
