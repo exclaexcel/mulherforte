@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { salvarDiaCronograma } from "../actions";
@@ -134,8 +135,9 @@ export default async function CronogramaPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
-        <Link href="/" className="text-sm text-oliva/70">
-          ← Início
+        <Link href="/?aba=planejamento" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+          <Home className="h-4 w-4" />
+          Início
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Cronograma planejado</h1>
         <p className="text-sm text-stone-500 mt-1">

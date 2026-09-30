@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/logout-button";
 import { NavCard } from "@/components/marmitas/nav-card";
+import { HomeTabs } from "@/components/home-tabs";
 import { redirect } from "next/navigation";
 import {
   ChefHat,
@@ -11,6 +12,11 @@ import {
   BookOpen,
   CalendarDays,
   Info,
+  Scale,
+  Ruler,
+  Dumbbell,
+  Droplet,
+  Target,
 } from "lucide-react";
 
 export default async function HomePage({
@@ -42,7 +48,7 @@ export default async function HomePage({
         <div>
           <p className="text-sm text-oliva/70">Olá, {saudacao}</p>
           <h1 className="text-2xl font-bold text-oliva">App Jornada</h1>
-          <p className="text-sm text-stone-500 mt-1">Etapa 3 — marmitas: conteúdo e planejamento</p>
+          <p className="text-sm text-stone-500 mt-1">Etapa 4 — jornada física: núcleo</p>
           <Link href="/perfil" className="inline-flex items-center gap-1 text-xs text-oliva/70 mt-2">
             <Pencil className="h-3 w-3" />
             Editar perfil
@@ -57,53 +63,103 @@ export default async function HomePage({
         </p>
       ) : null}
 
-      <section className="space-y-3">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-oliva/60 px-1">
-          Dia a dia
-        </h2>
-        <NavCard
-          href="/marmitas/preparo"
-          icon={ChefHat}
-          titulo="Registrar preparo"
-          descricao="Anotar o que foi cozinhado e congelado"
-        />
-        <NavCard
-          href="/marmitas/estoque"
-          icon={Refrigerator}
-          titulo="Estoque do congelador"
-          descricao="Ver o que tem e o alerta de validade"
-        />
-        <NavCard
-          href="/marmitas/compras"
-          icon={ShoppingCart}
-          titulo="Lista de compras"
-          descricao="Marcar o que já tem em casa"
-        />
-      </section>
-
-      <section className="space-y-3 mt-8">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-oliva/60 px-1">
-          Planejamento e referência
-        </h2>
-        <NavCard
-          href="/marmitas/receitas"
-          icon={BookOpen}
-          titulo="Biblioteca de receitas"
-          descricao="As 16 receitas do guia, sem precisar abrir o PDF"
-        />
-        <NavCard
-          href="/marmitas/cronograma"
-          icon={CalendarDays}
-          titulo="Cronograma planejado"
-          descricao="O que preparar em cada semana do ciclo"
-        />
-        <NavCard
-          href="/marmitas/plano"
-          icon={Info}
-          titulo="Sobre o plano"
-          descricao="Horários, regras USDA e boas práticas"
-        />
-      </section>
+      <HomeTabs
+        groups={[
+          {
+            key: "dia-a-dia",
+            label: "Dia a dia",
+            cor: "oliva",
+            content: (
+              <>
+                <NavCard
+                  href="/marmitas/preparo"
+                  icon={ChefHat}
+                  titulo="Registrar preparo"
+                  descricao="Anotar o que foi cozinhado e congelado"
+                />
+                <NavCard
+                  href="/marmitas/estoque"
+                  icon={Refrigerator}
+                  titulo="Estoque do congelador"
+                  descricao="Ver o que tem e o alerta de validade"
+                />
+                <NavCard
+                  href="/marmitas/compras"
+                  icon={ShoppingCart}
+                  titulo="Lista de compras"
+                  descricao="Marcar o que já tem em casa"
+                />
+              </>
+            ),
+          },
+          {
+            key: "fisico",
+            label: "Jornada física",
+            cor: "rosa",
+            content: (
+              <>
+                <NavCard
+                  href="/fisico/peso"
+                  icon={Scale}
+                  titulo="Registrar peso"
+                  descricao="Pesagem do dia, com bioimpedância opcional"
+                />
+                <NavCard
+                  href="/fisico/medidas"
+                  icon={Ruler}
+                  titulo="Registrar medidas"
+                  descricao="Cintura, quadril, coxa e abdômen inferior"
+                />
+                <NavCard
+                  href="/fisico/treino"
+                  icon={Dumbbell}
+                  titulo="Registrar treino"
+                  descricao="Move's, Zumba ou outra atividade do dia"
+                />
+                <NavCard
+                  href="/fisico/habitos"
+                  icon={Droplet}
+                  titulo="Hábitos do dia"
+                  descricao="Hidratação e proteína"
+                />
+                <NavCard
+                  href="/fisico/metas"
+                  icon={Target}
+                  titulo="Metas"
+                  descricao="Peso, cintura, abdômen e hidratação"
+                />
+              </>
+            ),
+          },
+          {
+            key: "planejamento",
+            label: "Planejamento",
+            cor: "neutro",
+            content: (
+              <>
+                <NavCard
+                  href="/marmitas/receitas"
+                  icon={BookOpen}
+                  titulo="Biblioteca de receitas"
+                  descricao="As 16 receitas do guia, sem precisar abrir o PDF"
+                />
+                <NavCard
+                  href="/marmitas/cronograma"
+                  icon={CalendarDays}
+                  titulo="Cronograma planejado"
+                  descricao="O que preparar em cada semana do ciclo"
+                />
+                <NavCard
+                  href="/marmitas/plano"
+                  icon={Info}
+                  titulo="Sobre o plano"
+                  descricao="Horários, regras USDA e boas práticas"
+                />
+              </>
+            ),
+          },
+        ]}
+      />
     </main>
   );
 }
