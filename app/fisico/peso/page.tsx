@@ -102,9 +102,9 @@ export default async function PesoPage({
           Registrar peso
         </Button>
 
-        <details className="pt-2">
+        <details className="pt-2" open>
           <summary className="font-semibold text-oliva cursor-pointer text-sm">
-            + Registrar bioimpedância (opcional)
+            Bioimpedância (opcional)
           </summary>
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
