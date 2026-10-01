@@ -10,6 +10,7 @@ import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
 import { hojeISO } from "@/lib/date";
 import { TIPOS_TREINO } from "@/lib/fisico/types";
 import { TipoTreinoField } from "@/components/fisico/tipo-treino-field";
+import { DataTreinoField } from "@/components/fisico/data-treino-field";
 
 export default async function TreinoPage({
   searchParams,
@@ -29,7 +30,7 @@ export default async function TreinoPage({
 
   const { data: treinoHoje } = await supabase
     .from("adesao_treino")
-    .select("tipo, obrigatorio, realizado, tipo_outro_descricao, duracao_minutos, calorias")
+    .select("tipo, realizado, tipo_outro_descricao, duracao_minutos, calorias")
     .eq("user_id", user.id)
     .eq("data", hoje)
     .maybeSingle();
@@ -63,10 +64,7 @@ export default async function TreinoPage({
         action={registrarTreino}
         className="space-y-4 rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm"
       >
-        <div className="space-y-2">
-          <Label htmlFor="data">Data</Label>
-          <Input id="data" name="data" type="date" defaultValue={hoje} required />
-        </div>
+        <DataTreinoField defaultValue={hoje} />
 
         <TipoTreinoField
           tipos={TIPOS_TREINO}
@@ -95,19 +93,6 @@ export default async function TreinoPage({
               defaultValue={treinoHoje?.calorias ?? undefined}
             />
           </div>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <input
-            id="obrigatorio"
-            name="obrigatorio"
-            type="checkbox"
-            defaultChecked={treinoHoje?.obrigatorio ?? true}
-            className="h-5 w-5 rounded border-oliva/30 text-oliva focus-visible:ring-2 focus-visible:ring-oliva"
-          />
-          <Label htmlFor="obrigatorio" className="cursor-pointer">
-            Treino obrigatório do dia
-          </Label>
         </div>
 
         <div className="flex items-center gap-2">

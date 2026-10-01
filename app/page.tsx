@@ -18,6 +18,7 @@ import {
   Droplet,
   Target,
   Activity,
+  Trophy,
 } from "lucide-react";
 
 export default async function HomePage({
@@ -134,6 +135,12 @@ export default async function HomePage({
                   icon={Activity}
                   titulo="Indicadores corporais"
                   descricao="Cintura, RCEst, RCQ e RFM — estimativas, não diagnóstico"
+                />
+                <NavCard
+                  href="/fisico/score"
+                  icon={Trophy}
+                  titulo="Score da semana"
+                  descricao="Proteína, hidratação e treino obrigatório, acumulado"
                 />
               </>
             ),

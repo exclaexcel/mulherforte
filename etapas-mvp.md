@@ -89,15 +89,36 @@ indicador exploratório sem classificação.
 
 ---
 
-## Etapa 6 — Score de hábitos e linha de tendência
-**Objetivo:** as camadas de "constância" e "anti-sabotagem da balança".
-- Score de hábitos semanal (checklist de 3 itens, acumulado — nunca streak que zera,
-  ≥85% = "Semana Vencida")
-- Gráfico de peso com média móvel de 7 e 28 dias
+## Etapa 6A — Score de hábitos semanal (concluída, 2026-10-01)
+**Objetivo:** a camada de "constância" — premiar execução do hábito, não o número da balança.
+- Calendário fixo de treino obrigatório centralizado em `lib/fisico/calendarioTreino.ts`
+  (segunda/quarta Move's, terça/quinta Zumba, sexta-domingo sem obrigatoriedade)
+- Score semanal (`lib/fisico/score.ts`) com regra do dia atual (pendente fica fora até
+  virar o dia), ausência de registro conta como não realizado, "Semana Vencida" a partir
+  de 85% do valor bruto (comparação por multiplicação cruzada)
+- Meta de hidratação só participa a partir da segunda-feira seguinte à criação
+- Interface de Registrar Treino sem checkbox manual de obrigatoriedade — texto automático
+  calculado pelo calendário, coluna `obrigatorio` só persistida por histórico
 
 **Pronto quando:**
-- [ ] Score calculado corretamente como acumulado semanal
-- [ ] Gráfico de tendência exibindo média móvel sobre os registros brutos
+- [x] Score calculado corretamente como acumulado semanal, nunca streak
+- [x] Treino obrigatório decidido só pelo calendário fixo, nunca pela coluna `obrigatorio`
+- [x] Dia de hoje nunca penaliza item pendente
+- [x] `npm test`/`build`/`lint` passando
+
+---
+
+## Etapa 6B — Linha de tendência do peso (pendente)
+**Objetivo:** a camada de "anti-sabotagem da balança".
+- Gráfico de peso com média móvel de 7 e 28 dias (janela de dias corridos, não últimos N
+  registros), usando Recharts (decisão já tomada, pacote ainda não instalado)
+- Cálculo em `lib/fisico/tendenciaPeso.ts` (puro), componente client isolado só pra render
+- Campos `janela7dCompleta`/`janela28dCompleta` + `quantidadeRegistros7d`/`28d` pra UI
+  distinguir janela parcial de completa sem usar linguagem de "confiável"
+
+**Pronto quando:**
+- [ ] Gráfico de tendência exibindo média móvel sobre os registros brutos, sem interpolar
+- [ ] Estado alternativo claro quando não houver dados suficientes
 
 ---
 

@@ -101,24 +101,45 @@ uma checagem e outra (mitiga o risco de "inconsistência de fita" citado no rela
 - Posicionamento: cintura (ponto mais estreito, dois dedos acima do umbigo), quadril
   (maior circunferência dos glúteos), coxa (ponto médio da coxa direita)
 
-### 3.2.2 Score de hábitos semanal (causa vs. efeito)
+### 3.2.2 Score de hábitos semanal (causa vs. efeito) — implementado na Etapa 6A
 Placar semanal separando o que é **ação diária sob controle direto** (causa) do que é
 **resultado tardio** (efeito — peso e medidas). Conceito: premiar a execução do hábito,
 não o número da balança — desarma a frustração emocional com a pesagem.
 
-**Checklist diário (3 itens):**
-- Proteína do dia batida (sim/não)
-- Hidratação atingida — 2,2 a 2,5 L (sim/não, a partir de `adesao_habitos.quantidade_agua_ml`)
-- Treino do dia concluído (Move's ou Zumba, nos dias fixos — a partir de `adesao_treino`)
+**Checklist diário (3 categorias):**
+- Proteína priorizada (sim/não, `adesao_habitos.priorizou_proteina`)
+- Meta de hidratação atingida (sim/não, `adesao_habitos.bebeu_agua_meta`) — só entra no
+  cálculo se houver meta válida pra essa semana (ver regra de meta abaixo)
+- Treino obrigatório realizado — obrigatoriedade vem de um **calendário fixo centralizado
+  no código** (`lib/fisico/calendarioTreino.ts`), não da coluna `obrigatorio` da linha:
+  - Segunda e quarta: Move's obrigatório · Terça e quinta: Zumba obrigatória · Sexta,
+    sábado e domingo: sem treino obrigatório (qualquer atividade nesses dias é "adicional",
+    não entra no score)
+  - Qualquer treino `realizado=true` num dia obrigatório cumpre a oportunidade, mesmo que
+    o tipo registrado não bata com o planejado (ex: fez Zumba numa segunda de Move's)
 
 **Mecânica:**
-- Cada item diário preenche uma fração da barra de progresso semanal
-- **≥ 85% da semana = status verde "Semana Vencida"** — confirma que a recomposição está
-  ocorrendo mesmo com a balança oscilando por retenção de água
-- Calculado a partir de `adesao_habitos` e `adesao_treino` já registrados — não exige
-  tabela nova, é uma agregação semanal
+- `pontos_obtidos / oportunidades × 100`, calculado a partir de `adesao_habitos` e
+  `adesao_treino` já registrados — agregação semanal, sem tabela nova
+- **Dia passado**: sempre conta (0 ou 1 ponto, 1 oportunidade); ausência de registro conta
+  como não realizado, nunca é ignorada
+- **Dia de hoje**: só entra no numerador E no denominador se já realizado; pendente fica
+  fora dos dois até virar o dia — evita punir um dia que ainda não terminou
+- **Dia futuro**: nunca entra
+- **≥ 85% do valor BRUTO (nunca arredondado) = "Semana Vencida"** — comparação por
+  multiplicação cruzada (`pontos×100 ≥ oportunidades×85`), já que a semana completa (até
+  18 oportunidades) raramente bate exatamente em 85%
+- Sem nenhuma oportunidade ainda na semana → estado "indisponível", nunca "0%"
+- Semana vai de segunda a domingo; sem navegação pra semanas passadas e sem snapshot
+  persistido no MVP (recalculado a cada carregamento da tela, igual aos indicadores)
 
-**Regra explícita anti-punição:** o score é sempre uma **média/acumulado da semana**, nunca
+**Regra da meta de hidratação:** como `metas` não guarda histórico de quando um valor
+passou a valer (sem trigger de `updated_at`, uma edição de valor não desloca `created_at`),
+a meta só participa do score a partir da **segunda-feira seguinte** à sua criação — nunca
+na própria semana em que foi criada ou editada. Sem meta configurada, hidratação fica
+inteiramente fora do score (nunca interpretada como meta não atingida).
+
+**Regra explícita anti-punição:** o score é sempre uma **soma/acumulado da semana**, nunca
 um streak diário que zera com uma quebra. Um dia atípico não deve resetar o progresso —
 isso vai contra o "não se cobrar pelos dias que não puder treinar" do guia original.
 
@@ -289,8 +310,9 @@ O MVP está pronto quando:
   secundária/informativa
 - [ ] Gráfico de peso exibe média móvel de 7 e 28 dias sobre os registros brutos
 - [ ] Alerta de variação atípica (>3cm) funcionando ao registrar medida
-- [ ] Score de hábitos semanal (proteína, hidratação, treino) calculado como acumulado da
-  semana — nunca como streak diário que zera — com status verde a partir de 85%
+- [x] Score de hábitos semanal (proteína, hidratação, treino) calculado como acumulado da
+  semana — nunca como streak diário que zera — com "Semana Vencida" a partir de 85% do
+  valor bruto, treino obrigatório pelo calendário fixo (Etapa 6A, 2026-10-01)
 - [ ] Exportação de dados em CSV/JSON funcionando para todas as tabelas
 
 ## 9. Documentos relacionados

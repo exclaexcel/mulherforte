@@ -100,6 +100,20 @@ em todo o app, mas não é PT-BR. Mudar isso exige uma função central de forma
 exibição (separada do cálculo, que deve continuar em ponto decimal) e tocar em todas as
 telas listadas acima de uma vez, pra não deixar o app com mistura de vírgula e ponto.
 
+### 2.9 Histórico de semanas do score de hábitos
+
+No MVP (Etapa 6A), a tela `/fisico/score` mostra só a semana atual (segunda a domingo),
+sem navegação pra semanas passadas e sem nenhum snapshot persistido — é recalculada do
+zero a cada carregamento, igual ao painel de indicadores.
+
+Se um dia fizer sentido ver a evolução do score ao longo de várias semanas, as opções são:
+- Navegar entre semanas passadas recalculando sob demanda (sem tabela nova, só passar uma
+  data de referência diferente pras mesmas funções de `lib/fisico/score.ts`).
+- Persistir um snapshot semanal (tabela nova, com migration) se recalcular ficar caro ou se
+  quiser congelar o resultado mesmo que os dados brutos mudem depois.
+
+Decisão consciente de não fazer isso agora, pra manter a Etapa 6A pequena e sem migration.
+
 ## 3. Como usar este documento
 
 Nenhum item aqui deve ser construído "de brinde" durante o desenvolvimento do MVP, mesmo que

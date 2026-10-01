@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hojeISO } from "@/lib/date";
+import { treinoObrigatorioDoDia } from "@/lib/fisico/calendarioTreino";
 import { selecionarMedidaReferencia, verificarVariacaoAtipica } from "@/lib/fisico/medidas";
 import type { IndicadorMeta, RegiaoMedida } from "@/lib/fisico/types";
 
@@ -178,7 +179,6 @@ export async function registrarTreino(formData: FormData) {
 
   const data = String(formData.get("data") ?? "");
   const tipo = String(formData.get("tipo") ?? "");
-  const obrigatorio = formData.get("obrigatorio") === "on";
   const realizado = formData.get("realizado") === "on";
   const tipoOutroDescricao = String(formData.get("tipo_outro_descricao") ?? "").trim() || null;
   const duracaoRaw = formData.get("duracao_minutos");
@@ -191,6 +191,12 @@ export async function registrarTreino(formData: FormData) {
   if (tipo === "outro" && !tipoOutroDescricao) {
     throw new Error('Descreva qual atividade foi, já que o tipo é "Outro".');
   }
+
+  // Obrigatoriedade vem só do calendário fixo (Etapa 6A) — nunca de um
+  // controle manual. Persistida aqui por histórico/compatibilidade, mas o
+  // score semanal (lib/fisico/score.ts) ignora esta coluna e lê o calendário
+  // direto.
+  const obrigatorio = treinoObrigatorioDoDia(data) !== null;
 
   const { error } = await supabase.from("adesao_treino").upsert(
     {
@@ -279,6 +285,7 @@ async function salvarQuantidadeAgua(userId: string, data: string, quantidadeMl: 
     .maybeSingle();
 
   const metaLitros = meta?.meta_hidratacao_litros_dia ?? null;
+  // Sem meta válida, a hidratação é excluída do score semanal.
   const bebeuAguaMeta = metaLitros ? quantidadeMl / 1000 >= metaLitros : false;
 
   const { error } = await supabase.from("adesao_habitos").upsert(
