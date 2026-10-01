@@ -48,10 +48,29 @@ direto nele — sem depender da planilha em paralelo.
 
 ### 3.2 Módulo Jornada Física
 - Registrar peso (data, peso em kg)
-- **Linha de tendência**: gráfico de peso com média móvel de 7 e 28 dias sobreposta aos
-  registros brutos — neutraliza oscilações normais de 500g-1kg (sódio, ciclo hormonal) que
-  distorcem a leitura do progresso real. Única exceção à regra de "cards, não gráfico de
-  linha" (seção 7), justamente por resolver o risco de sabotagem emocional pela balança
+- **Linha de tendência (implementada na Etapa 6B, 2026-10-01)**: gráfico de peso com média
+  móvel de 7 e 28 dias sobreposta aos registros brutos — neutraliza oscilações normais de
+  500g-1kg (sódio, ciclo hormonal) que distorcem a leitura do progresso real. Única exceção
+  à regra de "cards, não gráfico de linha" (seção 7), justamente por resolver o risco de
+  sabotagem emocional pela balança.
+  - Janelas de **dias corridos** (não últimos N registros): `[data-6, data]` pra 7 dias,
+    `[data-27, data]` pra 28 dias, ambas inclusivas nos dois limites
+  - Peso bruto exibido como **pontos** (nunca linha ligando pesagens); MM7/MM28 exibidas
+    como linha, calculadas só com as pesagens que existem na janela — nenhum dia sem
+    pesagem ganha valor inventado, carregado do anterior ou interpolado
+  - Média parcial é permitida e normal (não exige 7 nem 28 pesagens pra existir); a tela
+    mostra quantas pesagens entraram em cada média e se a janela já é "completa" (tempo
+    decorrido desde a 1ª pesagem ≥ 6/27 dias) ou ainda "parcial"
+  - Cálculo roda sobre o histórico completo primeiro; o recorte pros últimos 90 dias
+    exibidos acontece só depois, na camada de apresentação — as médias dos pontos visíveis
+    podem usar pesagens anteriores à janela de 90 dias
+  - Arredondamento (1 casa decimal, formato PT-BR) só na exibição — o cálculo interno
+    mantém precisão bruta
+  - Biblioteca: Recharts, isolado num único componente client
+    (`components/fisico/grafico-tendencia-peso.tsx`) — a página e o cálculo continuam sem
+    nenhuma dependência de UI de gráfico
+  - Puramente informativo: sem meta, sem projeção de emagrecimento, sem recomendação
+    alimentar — só "o peso de um dia é um ponto, a tendência mostra o caminho"
 - Registrar medidas corporais (data, região, valor em cm)
 - **Sanity check de medidas**: ao salvar uma medida com variação maior que 3 cm em relação
   ao mês anterior, exibir alerta sutil ("Variação atípica. Confira a tensão da fita e a
@@ -308,7 +327,9 @@ O MVP está pronto quando:
 - [ ] Dashboard exibe o Painel de evolução corporal (cintura, RCEst, RCQ, RFM) em destaque
   no topo, Relação Cintura-Coxa como indicador exploratório à parte, e o IMC em posição
   secundária/informativa
-- [ ] Gráfico de peso exibe média móvel de 7 e 28 dias sobre os registros brutos
+- [x] Gráfico de peso exibe média móvel de 7 e 28 dias sobre os registros brutos, com
+  janelas de dias corridos, sem interpolação, recorte de exibição de 90 dias calculado só
+  depois das médias (Etapa 6B, 2026-10-01)
 - [ ] Alerta de variação atípica (>3cm) funcionando ao registrar medida
 - [x] Score de hábitos semanal (proteína, hidratação, treino) calculado como acumulado da
   semana — nunca como streak diário que zera — com "Semana Vencida" a partir de 85% do

@@ -51,6 +51,9 @@ export default async function PesoPage({
           Início
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Registrar peso</h1>
+        <Link href="/fisico/peso/tendencia" className="inline-block text-xs text-oliva/70 underline mt-1">
+          Ver tendência
+        </Link>
       </header>
 
       {pesoSalvo ? (

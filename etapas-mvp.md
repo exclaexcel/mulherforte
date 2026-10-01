@@ -108,17 +108,27 @@ indicador exploratório sem classificação.
 
 ---
 
-## Etapa 6B — Linha de tendência do peso (pendente)
+## Etapa 6B — Linha de tendência do peso (concluída, 2026-10-01)
 **Objetivo:** a camada de "anti-sabotagem da balança".
 - Gráfico de peso com média móvel de 7 e 28 dias (janela de dias corridos, não últimos N
-  registros), usando Recharts (decisão já tomada, pacote ainda não instalado)
-- Cálculo em `lib/fisico/tendenciaPeso.ts` (puro), componente client isolado só pra render
+  registros), usando Recharts 3.10.1 + `react-is` (peer dependency obrigatória)
+- Cálculo em `lib/fisico/tendenciaPeso.ts` (puro, zero dependência de React/Recharts),
+  componente client isolado em `components/fisico/grafico-tendencia-peso.tsx` só pra render
 - Campos `janela7dCompleta`/`janela28dCompleta` + `quantidadeRegistros7d`/`28d` pra UI
   distinguir janela parcial de completa sem usar linguagem de "confiável"
+- Peso bruto como pontos (Scatter), nunca linha ligando pesagens; MM7/MM28 como linha, sem
+  `connectNulls`; eixo X por timestamp real (não por índice no array), pra intervalos
+  esparsos (ex: 26 dias) aparecerem proporcionalmente maiores que intervalos de 1 dia
+- Cálculo roda sobre o histórico completo; recorte de exibição dos últimos 90 dias
+  acontece só depois, na página — sem seletor de período nesta etapa (ver backlog)
+- Defesa de dados: `peso_kg` convertido com `Number(...)` explicitamente (Postgres
+  `numeric` pode vir como string via PostgREST) e descartado se não-finito ou ≤0 — sem
+  migration, só na função pura
 
 **Pronto quando:**
-- [ ] Gráfico de tendência exibindo média móvel sobre os registros brutos, sem interpolar
-- [ ] Estado alternativo claro quando não houver dados suficientes
+- [x] Gráfico de tendência exibindo média móvel sobre os registros brutos, sem interpolar
+- [x] Estado alternativo claro quando não houver dados suficientes (0 ou 1 registro)
+- [x] `npm test`/`build`/`lint` passando
 
 ---
 

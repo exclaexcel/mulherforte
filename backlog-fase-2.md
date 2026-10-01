@@ -56,8 +56,14 @@ ALTER TABLE metas ADD COLUMN tipo_meta TEXT; -- 'numerica' | 'qualitativa_evoluc
 ```
 
 ### 2.5 Dashboards e gráficos avançados
-- Gráfico de linha de peso/medidas ao longo do tempo (visualização secundária, opcional —
-  o padrão principal do app continua sendo cards de estado atual → meta, ver PRD seção 7)
+- Gráfico de linha de peso **já implementado na Etapa 6B** (`/fisico/peso/tendencia`) — o
+  que fica de fora ainda é:
+  - **Seletor de período** (30 dias, 90 dias, 1 ano, todo o histórico). No MVP (Etapa 6B)
+    o período é fixo em 90 dias, calculado sobre o histórico completo e só recortado na
+    exibição — trocar o período no futuro é reaproveitar a mesma função pura
+    (`lib/fisico/tendenciaPeso.ts`) com um corte diferente, sem mudar o cálculo
+  - Gráfico de linha de medidas corporais ao longo do tempo (ainda não existe nenhuma
+    versão, nem fixa nem com seletor)
 - Cruzamento entre módulo Marmitas e módulo Jornada Física — ex: dias com proteína priorizada
   vs. dias com marmita de proteína preparada/consumida (view `vw_adesao_proteina`)
 

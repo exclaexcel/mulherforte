@@ -40,6 +40,11 @@ export function diasEntre(dataInicioISO: string, dataFimISO: string): number {
   return Math.round((dataISOParaUTC(dataFimISO) - dataISOParaUTC(dataInicioISO)) / MS_POR_DIA);
 }
 
+/** Data ISO n dias depois de dataISO (n negativo para dias antes). */
+export function somarDias(dataISO: string, n: number): string {
+  return utcParaDataISO(dataISOParaUTC(dataISO) + n * MS_POR_DIA);
+}
+
 /** Idade em anos completos a partir da data de nascimento (ISO), numa data de referência (default hoje). */
 export function calcularIdadeAnos(
   dataNascimentoISO: string,

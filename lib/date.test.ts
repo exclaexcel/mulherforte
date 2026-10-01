@@ -6,6 +6,7 @@ import {
   inicioDaSemana,
   listarDiasDaSemana,
   obterDiaSemana,
+  somarDias,
   timestampParaDataLocalISO,
 } from "./date";
 
@@ -74,6 +75,20 @@ describe("inicioDaSemana / fimDaSemana / listarDiasDaSemana", () => {
       "2026-10-03",
       "2026-10-04",
     ]);
+  });
+});
+
+describe("somarDias", () => {
+  it("subtrai dias corretamente (janela de 90 dias pra trás)", () => {
+    expect(somarDias("2026-09-30", -89)).toBe("2026-07-03");
+  });
+
+  it("soma dias corretamente", () => {
+    expect(somarDias("2026-09-30", 1)).toBe("2026-10-01");
+  });
+
+  it("atravessa a virada de ano", () => {
+    expect(somarDias("2026-01-01", -3)).toBe("2025-12-29");
   });
 });
 

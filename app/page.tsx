@@ -19,6 +19,7 @@ import {
   Target,
   Activity,
   Trophy,
+  TrendingUp,
 } from "lucide-react";
 
 export default async function HomePage({
@@ -105,6 +106,12 @@ export default async function HomePage({
                   icon={Scale}
                   titulo="Registrar peso"
                   descricao="Pesagem do dia, com bioimpedância opcional"
+                />
+                <NavCard
+                  href="/fisico/peso/tendencia"
+                  icon={TrendingUp}
+                  titulo="Tendência do peso"
+                  descricao="Pontos registrados e médias de 7/28 dias"
                 />
                 <NavCard
                   href="/fisico/medidas"
