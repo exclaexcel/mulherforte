@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hojeISO } from "@/lib/date";
+import { selecionarMedidaReferencia, verificarVariacaoAtipica } from "@/lib/fisico/medidas";
 import type { IndicadorMeta, RegiaoMedida } from "@/lib/fisico/types";
 
 async function getUserOrRedirect() {
@@ -52,6 +53,7 @@ export async function registrarPeso(formData: FormData) {
 
   revalidatePath("/fisico/peso");
   revalidatePath("/fisico/metas");
+  revalidatePath("/fisico/indicadores");
   redirect("/fisico/peso?peso_salvo=1");
 }
 
@@ -70,6 +72,7 @@ export async function excluirPesoHoje() {
 
   revalidatePath("/fisico/peso");
   revalidatePath("/fisico/metas");
+  revalidatePath("/fisico/indicadores");
   redirect("/fisico/peso?registro_excluido=1");
 }
 
@@ -108,6 +111,30 @@ export async function registrarMedidas(formData: FormData) {
     throw new Error("Preencha pelo menos uma medida.");
   }
 
+  // Sanity check de variação atípica (PRD §3.2): compara com a medida de
+  // referência da mesma região, entre 21-45 dias atrás ("mês anterior", com
+  // margem), a mais próxima de 30 dias. Não bloqueia o salvamento, só
+  // sinaliza pra tela avisar depois do redirect.
+  const regioesSendoSalvas = registros.map((r) => r.regiao);
+  const { data: candidatas } = await supabase
+    .from("medidas_corporais")
+    .select("regiao, data, valor_cm")
+    .eq("user_id", user.id)
+    .in("regiao", regioesSendoSalvas)
+    .neq("data", data);
+
+  const variacoesAtipicas = registros
+    .filter((registro) => {
+      const candidatasRegiao = (candidatas ?? [])
+        .filter((c) => c.regiao === registro.regiao)
+        .map((c) => ({ data: c.data, valorCm: c.valor_cm }));
+
+      const referencia = selecionarMedidaReferencia(candidatasRegiao, data);
+
+      return referencia !== null && verificarVariacaoAtipica(registro.valor_cm, referencia.valorCm);
+    })
+    .map((registro) => registro.regiao);
+
   const { error } = await supabase
     .from("medidas_corporais")
     .upsert(registros, { onConflict: "user_id,data,regiao" });
@@ -118,7 +145,13 @@ export async function registrarMedidas(formData: FormData) {
 
   revalidatePath("/fisico/medidas");
   revalidatePath("/fisico/metas");
-  redirect("/fisico/medidas?medidas_salvas=1");
+  revalidatePath("/fisico/indicadores");
+
+  const query =
+    variacoesAtipicas.length > 0
+      ? `medidas_salvas=1&variacao_atipica=${variacoesAtipicas.join(",")}`
+      : "medidas_salvas=1";
+  redirect(`/fisico/medidas?${query}`);
 }
 
 export async function excluirMedidasHoje() {
@@ -136,6 +169,7 @@ export async function excluirMedidasHoje() {
 
   revalidatePath("/fisico/medidas");
   revalidatePath("/fisico/metas");
+  revalidatePath("/fisico/indicadores");
   redirect("/fisico/medidas?registro_excluido=1");
 }
 

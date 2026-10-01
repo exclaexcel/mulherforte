@@ -23,3 +23,22 @@ export function dataISOParaUTC(dataISO: string): number {
 export function diasEntre(dataInicioISO: string, dataFimISO: string): number {
   return Math.round((dataISOParaUTC(dataFimISO) - dataISOParaUTC(dataInicioISO)) / MS_POR_DIA);
 }
+
+/** Idade em anos completos a partir da data de nascimento (ISO), numa data de referência (default hoje). */
+export function calcularIdadeAnos(
+  dataNascimentoISO: string,
+  dataReferenciaISO: string = hojeISO()
+): number {
+  const [anoNasc, mesNasc, diaNasc] = dataNascimentoISO.split("-").map(Number);
+  const [anoRef, mesRef, diaRef] = dataReferenciaISO.split("-").map(Number);
+
+  let idade = anoRef - anoNasc;
+  const aniversarioJaPassouEsteAno =
+    mesRef > mesNasc || (mesRef === mesNasc && diaRef >= diaNasc);
+
+  if (!aniversarioJaPassouEsteAno) {
+    idade -= 1;
+  }
+
+  return idade;
+}

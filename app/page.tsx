@@ -17,6 +17,7 @@ import {
   Dumbbell,
   Droplet,
   Target,
+  Activity,
 } from "lucide-react";
 
 export default async function HomePage({
@@ -127,6 +128,12 @@ export default async function HomePage({
                   icon={Target}
                   titulo="Metas"
                   descricao="Peso, cintura, abdômen e hidratação"
+                />
+                <NavCard
+                  href="/fisico/indicadores"
+                  icon={Activity}
+                  titulo="Indicadores corporais"
+                  descricao="Cintura, RCEst, RCQ e RFM — estimativas, não diagnóstico"
                 />
               </>
             ),

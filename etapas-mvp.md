@@ -58,21 +58,34 @@ abrir muita frente ao mesmo tempo e mantém o RLS/segurança sob controle desde 
 
 ---
 
-## Etapa 5 — Indicadores clínicos
-**Objetivo:** a "bússola oficial" (RCEst, RCQ, RFM, Cintura-Coxa) funcionando com precisão.
-- Funções de cálculo puras (sem hardcode de estatura — lida de `perfil_usuario`)
+## Etapa 5 — Indicadores corporais estimados
+**Objetivo:** o Painel de evolução corporal (cintura, RCEst, RCQ, RFM feminina) funcionando
+com precisão e linguagem não diagnóstica. Relação Cintura-Coxa fica fora do painel, como
+indicador exploratório sem classificação.
+- Funções de cálculo puras, separadas em bruto / classificação / formatação (sem hardcode
+  de altura — lida de `perfil_usuario`)
+- Classificação sempre a partir do valor bruto, nunca do valor já arredondado pra exibição
 - Testes unitários com a massa de dados de setembro/2026 (cintura 77, quadril 96, coxa 60,
-  estatura 152 → RCEst 0,50 / RCQ 0,80 / RFM 36,5% / Cintura-Coxa 1,28)
-- Arredondamento padronizado (2 casas RCEst/RCQ, 1 casa RFM)
-- Validação de input (vírgula/ponto, nulo/zero)
+  altura 152 → RCEst 0,51 / RCQ 0,80 / RFM 36,5% / Cintura-Coxa 1,28, exploratório)
+- Arredondamento só na exibição (2 casas RCEst/RCQ, 1 casa RFM, inteiro no metabolismo de
+  repouso)
+- Validação de input (vírgula/ponto, nulo/zero, altura/cintura/quadril/coxa/peso ≤0, data
+  de nascimento ausente ou no futuro)
 - Sanity check de variação >3cm nas medidas
-- Badges de classificação por faixa de corte
-- Dashboard com o quarteto em destaque no topo, IMC em posição secundária
+- Badges de classificação só pra RCEst e RCQ, com linguagem neutra (sem "proteção máxima",
+  "padrão-ouro", "gordura residual" ou qualquer leitura de "sem risco" em verde); RFM e
+  Cintura-Coxa sem badge/classificação
+- Mensagem fixa de estimativa informativa (não diagnóstico) junto ao painel
+- Dashboard com o painel (cintura, RCEst, RCQ, RFM) em destaque no topo, IMC em posição
+  secundária, Cintura-Coxa em seção exploratória à parte, metabolismo de repouso (TMB)
+  renomeado na interface
 
 **Pronto quando:**
-- [ ] Todos os 4 indicadores batem exatamente com os valores esperados no teste
-- [ ] Nenhum valor hardcoded de estatura no código
-- [ ] Dashboard reflete a hierarquia (quarteto em destaque, IMC secundário)
+- [ ] Cintura, RCEst, RCQ e RFM batem exatamente com os valores esperados no teste
+  (RCEst=0,51)
+- [ ] Nenhum valor hardcoded de altura no código
+- [ ] Dashboard reflete a hierarquia (painel em destaque, Cintura-Coxa exploratória, IMC
+  secundário) e nenhuma linguagem diagnóstica aparece na interface
 
 ---
 

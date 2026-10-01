@@ -13,7 +13,11 @@ import { REGIOES_MEDIDA, type RegiaoMedida } from "@/lib/fisico/types";
 export default async function MedidasPage({
   searchParams,
 }: {
-  searchParams: { medidas_salvas?: string; registro_excluido?: string };
+  searchParams: {
+    medidas_salvas?: string;
+    registro_excluido?: string;
+    variacao_atipica?: string;
+  };
 }) {
   const supabase = await createClient();
   const {
@@ -44,6 +48,13 @@ export default async function MedidasPage({
   const registroExcluido = searchParams?.registro_excluido === "1";
   const temMedidaHoje = medidasHoje.length > 0;
 
+  const regioesAtipicas = (searchParams?.variacao_atipica ?? "")
+    .split(",")
+    .filter((r): r is RegiaoMedida => REGIOES_MEDIDA.some((regiao) => regiao.value === r));
+  const labelsAtipicos = regioesAtipicas.map(
+    (r) => REGIOES_MEDIDA.find((regiao) => regiao.value === r)?.label ?? r
+  );
+
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
@@ -63,6 +74,14 @@ export default async function MedidasPage({
       {registroExcluido ? (
         <p className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
           Medidas de hoje excluídas.
+        </p>
+      ) : null}
+
+      {labelsAtipicos.length > 0 ? (
+        <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-2xl p-3">
+          {labelsAtipicos.join(", ")}: a medida foi registrada, mas a diferença foi maior que
+          3 cm em relação à medição mensal de referência. Confira o ponto de medição e, se
+          necessário, registre novamente.
         </p>
       ) : null}
 

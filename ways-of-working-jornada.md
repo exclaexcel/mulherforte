@@ -50,9 +50,10 @@ Antes de considerar qualquer etapa concluída, confirmar:
 - [ ] Segue exatamente o modelo de dados do PRD — qualquer desvio precisa ser sinalizado
   e confirmado antes de seguir
 - [ ] Nenhum item do Backlog Fase 2 foi implementado nesta etapa
-- [ ] Ao implementar cálculos clínicos (RCEst, RCQ, RFM, Cintura-Coxa): sem hardcode de
-  parâmetros do perfil, arredondamento padronizado, e validação de input contra
-  divisão por zero/valor nulo — ver PRD seção 3.4.1
+- [ ] Ao implementar indicadores corporais estimados (RCEst, RCQ, RFM, Cintura-Coxa): sem
+  hardcode de parâmetros do perfil, classificação sempre pelo valor bruto (arredondamento
+  só na exibição), e validação de input contra divisão por zero/valor nulo — ver PRD
+  seção 3.4.1
 
 ## 6. Auditorias
 

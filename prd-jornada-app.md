@@ -61,22 +61,36 @@ direto nele — sem depender da planilha em paralelo.
   sim/não, quantidade de água em ml — comparada à meta diária em litros definida em `metas`)
 - Meta com valor numérico por indicador: peso, cintura e abdômen inferior (cada um com
   valor de referência → valor meta), com prazo estimado
-- **Indicadores clínicos calculados** (não digitados, derivados do que já foi registrado
-  em `perfil_usuario` e `medidas_corporais`):
-  - **RCEst** (relação cintura-estatura) = cintura ÷ estatura
-    - ≤ 0,50: proteção cardiovascular máxima (padrão-ouro) · 0,51-0,59: risco metabólico
-      aumentado · ≥ 0,60: alto risco cardiovascular
+- **Indicadores corporais estimados** (não digitados, derivados do que já foi registrado
+  em `perfil_usuario` e `medidas_corporais`). Resultados são estimativas informativas, não
+  diagnósticos médicos — mensagem fixa exibida junto ao painel. Para cada indicador:
+  calcular e guardar o valor bruto (precisão completa), classificar a partir do valor
+  bruto (nunca do valor já arredondado), e só arredondar na hora de exibir:
+  - **Circunferência da cintura**: valor registrado, exibido direto em cm, sem inferência
+    de risco isolada.
+  - **RCEst** (relação cintura-estatura) = cintura ÷ altura
+    - < 0,50: "Abaixo do ponto de atenção para adiposidade central" · ≥ 0,50 e < 0,60:
+      "Adiposidade central aumentada" · ≥ 0,60: "Adiposidade central elevada"
   - **RCQ** (relação cintura-quadril) = cintura ÷ quadril
-    - ≤ 0,80: baixo risco (distribuição ginoide saudável) · 0,81-0,85: risco moderado ·
-      > 0,85: risco aumentado (corte OMS)
-  - **RFM** (massa gorda relativa) = 76 − (20 × estatura ÷ cintura)
-    - 21-24%: faixa atlética/alta definição · 25-31%: faixa saudável recomendada ·
-      32-39%: faixa de gordura residual/recomposição · ≥ 40%: faixa de obesidade
-  - **Relação Cintura-Coxa** = cintura ÷ coxa
-    - ≤ 1,30: alta proteção metabólica/boa massa muscular de pernas · 1,31-1,50:
-      intermediária · > 1,50: alerta metabólico (predomínio de gordura abdominal)
-  - TMB (taxa metabólica basal, estimativa por fórmula) = a partir de peso, altura, idade
-  - Exibidos como cálculo em tela, com a classificação textual da faixa (não só o número)
+    - < 0,80: "Faixa inferior de distribuição abdominal" · ≥ 0,80 e < 0,85: "Faixa
+      intermediária" · ≥ 0,85: "Ponto de atenção para obesidade abdominal"
+  - **RFM feminina** (relative fat mass) = 76 − (20 × altura ÷ cintura) — exibida só como
+    "Gordura corporal estimada pela RFM: X%", sem categoria clínica (nada de
+    "atlética"/"saudável"/"recomposição"/"obesidade" no MVP), com a mensagem "Estimativa
+    antropométrica. Não equivale a exame de composição corporal."
+  - **Metabolismo de repouso estimado** (sigla TMB mantida só por compatibilidade interna)
+    = fórmula feminina de Mifflin-St Jeor: 10×peso + 6,25×altura − 5×idade − 161 (peso em
+    kg, altura em cm, idade em anos, calculada considerando se o aniversário já ocorreu no
+    ano de referência). Exibido como inteiro em kcal/dia, com a mensagem "Estimativa da
+    energia utilizada pelo organismo em repouso. Não corresponde ao gasto diário total nem
+    define, sozinha, uma meta de alimentação." Não calcula déficit, manutenção, superávit
+    ou recomendação alimentar.
+  - **Relação Cintura-Coxa** = cintura ÷ coxa — indicador exploratório, fora do painel
+    principal, sem classificação clínica. Dados históricos nunca são excluídos; se exibido
+    em algum detalhe, usar a mensagem "Indicador exploratório, sem faixa clínica validada
+    para uso individual."
+  - Cores/badges representam só a faixa do indicador — nunca "sem risco", "risco zero" ou
+    garantia de saúde, mesmo em verde.
 
 ### 3.2.1 Protocolo de coleta (referência estática)
 Tela de referência com o protocolo padrão de medição, para garantir consistência entre
@@ -124,28 +138,38 @@ futura sem atrito.
 
 ## 3.4 Decisão estratégica de acompanhamento
 
-O IMC isolado deixa de ser critério de sucesso. A partir da Fase 2, a bússola oficial de
-evolução no app é o quarteto **RCEst + RCQ + RFM + Relação Cintura-Coxa**, calculado a partir
-de cintura, quadril, coxa e estatura já registrados — não o peso ou o IMC sozinhos. O
-dashboard principal do módulo Jornada Física deve refletir essa prioridade visualmente:
-- O quarteto (RCEst, RCQ, RFM, Relação Cintura-Coxa) ocupa o card principal, no topo,
-  cada um com selo visual de status (ex: "Proteção Máxima", "Faixa Saudável")
-- O IMC aparece em camada secundária/informativa — nunca no topo, para não deixar um
-  cálculo isolado ditar o humor de quem abre o app
+O IMC isolado deixa de ser critério de sucesso. O **Painel de evolução corporal** reúne
+**circunferência da cintura + RCEst + RCQ + RFM feminina**, calculados a partir de cintura,
+quadril e altura já registrados — não o peso ou o IMC sozinhos. A Relação Cintura-Coxa é
+indicador exploratório, à parte do painel principal, sem classificação clínica. O dashboard
+principal do módulo Jornada Física deve refletir essa prioridade visualmente:
+- O painel (cintura, RCEst, RCQ, RFM) ocupa o card principal, no topo. RCEst e RCQ têm selo
+  visual de status com linguagem neutra e não diagnóstica (nunca "proteção máxima",
+  "padrão-ouro" ou qualquer leitura de "sem risco"/"saúde garantida" em verde); cintura e
+  RFM são exibidos sem classificação, só o valor e uma mensagem de contexto.
+- O IMC aparece em camada secundária/informativa — nunca no topo.
+- Mensagem fixa próxima ao painel: "O aplicativo calcula indicadores de acompanhamento
+  corporal a partir das medidas registradas. Os resultados são estimativas informativas,
+  não diagnósticos médicos."
 
 ### 3.4.1 Riscos técnicos a monitorar na implementação
 - **Quebra de input**: tratar separador de vírgula/ponto e validação de entrada nula nas
   medidas, para não gerar erro de divisão (cintura/quadril/coxa não podem ser zero ou vazias)
 - **Inconsistência de arredondamento**: padronizar na camada lógica — 2 casas decimais para
-  RCEst e RCQ; 1 casa decimal para RFM (%)
-- **Acoplamento rígido (hardcode)**: a estatura (152 cm) deve ser lida de `perfil_usuario`,
+  RCEst e RCQ; 1 casa decimal para RFM (%). O arredondamento só acontece na exibição; a
+  classificação de RCEst/RCQ sempre usa o valor bruto, nunca o já arredondado (ex: um RCEst
+  bruto de 0,4996 exibe 0,50 mas classifica na faixa abaixo de 0,50, porque a fronteira usa
+  o valor exato, não o número redondo)
+- **Acoplamento rígido (hardcode)**: a altura (152 cm) deve ser lida de `perfil_usuario`,
   nunca cravada dentro das funções de cálculo
 
 ### 3.4.2 Massa de dados para teste unitário
 Validar as funções de cálculo com os dados reais de setembro/2026 antes de considerar a
 etapa concluída:
-- Entrada: cintura 77 cm, quadril 96 cm, coxa 60 cm, estatura 152 cm
-- Saída esperada: RCEst = 0,50 · RCQ = 0,80 · RFM = 36,5% · Relação Cintura-Coxa = 1,28
+- Entrada: cintura 77 cm, quadril 96 cm, coxa 60 cm, altura 152 cm
+- Saída esperada: RCEst = 0,51 (77÷152=0,506578... arredondado — não truncado) · RCQ = 0,80
+  (bruto 0,802083... classifica como "Faixa intermediária" mesmo exibindo 0,80) · RFM =
+  36,5% (sem classificação) · Relação Cintura-Coxa = 1,28 (exploratório, sem classificação)
 
 ## 4. Fora de escopo (permanente, não é "depois")
 
@@ -247,19 +271,21 @@ O MVP está pronto quando:
 - [ ] Cronograma planejado das 4 semanas cadastrado — app indica o que preparar na semana,
   não só o que já foi preparado
 - [ ] Registro de hidratação por quantidade (ml), com indicador de progresso do dia até a meta
-- [ ] Indicadores clínicos (RCEst, RCQ, RFM, Relação Cintura-Coxa, TMB) calculados
-  corretamente a partir de peso, altura e medidas já registrados, com classificação de
-  faixa exibida junto ao número
+- [ ] Indicadores corporais estimados (cintura, RCEst, RCQ, RFM, metabolismo de repouso)
+  calculados corretamente a partir de peso, altura e medidas já registrados, com
+  classificação de faixa exibida só para RCEst e RCQ (RFM e Relação Cintura-Coxa sem
+  classificação clínica, conforme §3.4)
 - [ ] Metas numéricas de peso, cintura e abdômen inferior configuradas e comparáveis com
   o valor atual registrado
 - [ ] Protocolo de coleta (frequência, momento, postura, posicionamento da fita) disponível
   como referência dentro do app
 - [ ] Funções de cálculo (RCEst, RCQ, RFM, Cintura-Coxa) testadas com a massa de dados de
-  setembro/2026 (seção 3.4.2), batendo exatamente com os valores esperados
+  setembro/2026 (seção 3.4.2), batendo exatamente com os valores esperados (RCEst=0,51)
 - [ ] Validação de input tratando vírgula/ponto e valores nulos/zero nas medidas, sem gerar
   erro de divisão
-- [ ] Estatura lida de `perfil_usuario` nas funções de cálculo, nunca hardcoded
-- [ ] Dashboard exibe o quarteto funcional em destaque no topo, com o IMC em posição
+- [ ] Altura lida de `perfil_usuario` nas funções de cálculo, nunca hardcoded
+- [ ] Dashboard exibe o Painel de evolução corporal (cintura, RCEst, RCQ, RFM) em destaque
+  no topo, Relação Cintura-Coxa como indicador exploratório à parte, e o IMC em posição
   secundária/informativa
 - [ ] Gráfico de peso exibe média móvel de 7 e 28 dias sobre os registros brutos
 - [ ] Alerta de variação atípica (>3cm) funcionando ao registrar medida

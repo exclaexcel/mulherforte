@@ -73,13 +73,32 @@ para envio direto ao treinador, ex:
 
 ```
 Dany Pinheiro | Fechamento Mensal Fase 2
-Adesão aos treinos: 100% | RCEst: 0,50 | RFM: 36,5%
+Adesão aos treinos: 100% | RCEst: 0,51 | RFM: 36,5%
 Cintura: 77 cm (-11 cm acumulados) | Coxa: 60 cm
 Pronta para os ajustes do próximo ciclo.
 ```
 
 Depende dos indicadores calculados (já MVP) e do score de hábitos (já MVP) como fonte —
 é só a camada de formatação/exportação que fica para depois.
+
+### 2.8 Padronização numérica PT-BR
+
+Revisar a formatação numérica do aplicativo para utilizar vírgula decimal na interface,
+preservando ponto decimal apenas no armazenamento e nos cálculos.
+
+Escopo futuro:
+- peso;
+- medidas;
+- metas;
+- indicadores corporais;
+- percentuais;
+- valores energéticos.
+
+Hoje a interface exibe os números como o JavaScript formata por padrão (ponto decimal,
+ex: "58.1kg", "0.51") em todas as telas do módulo Jornada Física — convenção consistente
+em todo o app, mas não é PT-BR. Mudar isso exige uma função central de formatação de
+exibição (separada do cálculo, que deve continuar em ponto decimal) e tocar em todas as
+telas listadas acima de uma vez, pra não deixar o app com mistura de vírgula e ponto.
 
 ## 3. Como usar este documento
 
