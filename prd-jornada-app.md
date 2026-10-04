@@ -35,6 +35,13 @@ direto nele — sem depender da planilha em paralelo.
 - Referências oficiais de conservação (Anvisa Guia 16 e USDA/FSIS) aparecem somente na página
   "Sobre o plano", com a explicação de que são orientações gerais. Os formulários não têm links.
   Nenhum prazo é pesquisado, extraído ou preenchido automaticamente.
+- Referência consultada: Anvisa, Guia nº 16/2018, versão 3 (de 02/04/2025), para determinação de
+  prazo de validade de alimentos. Pontos usados no app: (a) é voltado a alimentos industrializados,
+  então não cobre diretamente a marmita caseira; (b) é orientação recomendatória, não vinculante;
+  (c) a Anvisa não define prazo de validade, quem define é o fabricante; (d) o prazo começa na
+  fabricação, equivalente à data do preparo no app; (e) se o alimento congelado for descongelado
+  antes do consumo, deve passar pela etapa de cozimento (Anexo VI, passo 2). O texto da página
+  "Sobre o plano" já reflete (a), (b) e (e). Nenhum prazo deste guia foi copiado para o app.
 - Validade de congelamento é opcional, no cadastro completo e no cadastro rápido. Campo vazio
   significa "validade não informada". Nenhum prazo padrão é aplicado.
 - Receita sem validade pode ser salva e continua disponível para preparo.

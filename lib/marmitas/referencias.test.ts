@@ -62,6 +62,9 @@ describe("textos do formulário e da página", () => {
     expect(TEXTO_EXPLICACAO_REFERENCIAS[1]).toBe(
       "Quando houver uma orientação específica da receita, dos ingredientes ou da embalagem, prefira essa informação. Se não souber qual prazo se aplica, deixe o campo sem informar."
     );
+    expect(TEXTO_EXPLICACAO_REFERENCIAS[2]).toBe(
+      "Depois de descongelar, siga as orientações de preparo e cozimento da receita antes de consumir. Congelar não dispensa essas etapas."
+    );
   });
 
   it("aviso exato: não é garantia automática de segurança ou qualidade", () => {

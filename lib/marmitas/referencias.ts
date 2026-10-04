@@ -33,6 +33,7 @@ export const TEXTO_AJUDA_PRAZO = "Se não souber, deixe em branco.";
 export const TEXTO_EXPLICACAO_REFERENCIAS = [
   "O prazo de congelamento pode variar conforme os ingredientes, o modo de preparo, a embalagem e a temperatura do freezer. As fontes abaixo apresentam orientações gerais e não determinam automaticamente o prazo exato de cada receita.",
   "Quando houver uma orientação específica da receita, dos ingredientes ou da embalagem, prefira essa informação. Se não souber qual prazo se aplica, deixe o campo sem informar.",
+  "Depois de descongelar, siga as orientações de preparo e cozimento da receita antes de consumir. Congelar não dispensa essas etapas.",
 ] as const;
 
 export const AVISO_REFERENCIAS =

@@ -182,3 +182,30 @@ Fora do escopo agora (não implementar):
 - armazenamento da origem do prazo;
 - base interna de referências;
 - preenchimento automático.
+
+### 2.15 Sugestão assistida de prazo de congelamento (decisão futura)
+
+Funcionalidade futura que ajuda a usuária a identificar uma referência de congelamento ao
+cadastrar ou importar uma receita.
+
+A sugestão poderá considerar: tipo de preparação; ingredientes principais; alimento cru ou
+cozido; presença de molhos ou laticínios; forma de preparo; embalagem; temperatura do freezer;
+orientação específica da receita ou dos ingredientes; fontes oficiais previamente revisadas.
+
+Fluxo esperado:
+analisar receita → identificar categoria → localizar referência aplicável → mostrar fonte e
+condições → apresentar prazo ou intervalo → solicitar revisão → exigir confirmação → preencher
+somente após aprovação.
+
+Regras:
+- não preencher automaticamente;
+- não apresentar a sugestão como validade exata;
+- nunca usar prazo sem fonte;
+- permitir rejeitar a referência;
+- permitir manter o prazo sem informar;
+- diferenciar prazo informado de prazo sugerido;
+- não aconselhar consumo ou descarte;
+- não pesquisar fontes aleatórias na internet;
+- manter histórico da fonte e da data de revisão, caso a funcionalidade seja implementada.
+
+Relação: complementa o item 2.14 (consulta de referência por tipo de preparação).
