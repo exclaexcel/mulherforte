@@ -120,6 +120,15 @@ Se um dia fizer sentido ver a evolução do score ao longo de várias semanas, a
 
 Decisão consciente de não fazer isso agora, pra manter a Etapa 6A pequena e sem migration.
 
+### 2.10 Teste manual de isolamento com duas contas
+
+Executar teste manual de isolamento com duas contas antes de tornar o aplicativo multiusuário,
+compartilhar acesso com terceiros ou disponibilizá-lo como produto.
+
+Hoje o app é pessoal, com uma única usuária. O isolamento é garantido por RLS e por filtro
+explícito `user_id` nas consultas, e tem testes automatizados com usuários fictícios e cliente
+mockado. O teste manual com duas contas real fica para quando o cenário mudar.
+
 ## 3. Como usar este documento
 
 Nenhum item aqui deve ser construído "de brinde" durante o desenvolvimento do MVP, mesmo que

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { calcularSemanaAtual } from "@/lib/marmitas/cronograma";
+import { listarCronograma } from "@/lib/marmitas/consultas";
 
 type DiaCronograma = {
   id: string;
@@ -109,11 +110,7 @@ export default async function CronogramaPage({
     redirect("/login");
   }
 
-  const { data: dias, error } = await supabase
-    .from("cronograma_planejado")
-    .select("id, semana_ciclo, dia_semana, proteina, base, legumes, receita_extra_texto")
-    .order("semana_ciclo")
-    .order("id");
+  const { data: dias, error } = await listarCronograma(supabase, user.id);
 
   const { data: perfil } = await supabase
     .from("perfil_usuario")

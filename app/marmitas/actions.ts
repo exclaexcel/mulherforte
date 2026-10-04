@@ -72,6 +72,19 @@ export async function criarPreparo(formData: FormData) {
     throw new Error("Receita, data e quantidade de porções são obrigatórios.");
   }
 
+  // A FK não passa pela RLS: sem esta checagem, um id de receita de outra
+  // usuária seria aceito. Confere que a receita é da sessão atual.
+  const { data: receitaDaUsuaria } = await supabase
+    .from("receitas")
+    .select("id")
+    .eq("id", receitaId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (!receitaDaUsuaria) {
+    throw new Error("Receita não encontrada. Atualize a página e tente de novo.");
+  }
+
   const { error } = await supabase.from("preparos").insert({
     user_id: user.id,
     receita_id: receitaId,
@@ -92,7 +105,7 @@ export async function criarPreparo(formData: FormData) {
 }
 
 export async function marcarConsumido(formData: FormData) {
-  const { supabase } = await getUserOrRedirect();
+  const { supabase, user } = await getUserOrRedirect();
 
   const id = String(formData.get("id") ?? "");
   if (!id) {
@@ -105,7 +118,8 @@ export async function marcarConsumido(formData: FormData) {
       status: "consumido",
       data_consumo: hojeISO(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("user_id", user.id);
 
   if (error) {
     throw new Error(error.message);
@@ -153,7 +167,7 @@ export async function criarItemCompra(formData: FormData) {
 }
 
 export async function alternarTenhoEmCasa(formData: FormData) {
-  const { supabase } = await getUserOrRedirect();
+  const { supabase, user } = await getUserOrRedirect();
 
   const id = String(formData.get("id") ?? "");
   const tenhoEmCasaAtual = formData.get("tenho_em_casa") === "true";
@@ -165,7 +179,8 @@ export async function alternarTenhoEmCasa(formData: FormData) {
   const { error } = await supabase
     .from("itens_compra")
     .update({ tenho_em_casa: !tenhoEmCasaAtual })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("user_id", user.id);
 
   if (error) {
     throw new Error(error.message);

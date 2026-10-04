@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { listarReceitasBiblioteca } from "@/lib/marmitas/consultas";
 
 const ORDEM_CATEGORIAS = ["café da manhã", "lanche", "jantar", "sobremesa"];
 
@@ -43,10 +44,7 @@ export default async function ReceitasPage() {
     redirect("/login");
   }
 
-  const { data: receitas, error } = await supabase
-    .from("receitas")
-    .select("id, nome, categoria, ingredientes, modo_preparo, notas, selos")
-    .order("nome");
+  const { data: receitas, error } = await listarReceitasBiblioteca(supabase, user.id);
 
   const grupos = receitas ? agruparPorCategoria(receitas) : [];
 

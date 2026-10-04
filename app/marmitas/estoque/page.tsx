@@ -3,6 +3,7 @@ import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { calcularStatusValidade, type StatusValidade } from "@/lib/marmitas/estoque";
+import { listarPreparosCongelados } from "@/lib/marmitas/consultas";
 import { marcarConsumido } from "../actions";
 import { Button } from "@/components/ui/button";
 
@@ -30,11 +31,7 @@ export default async function EstoquePage() {
     redirect("/login");
   }
 
-  const { data: preparos, error } = await supabase
-    .from("preparos")
-    .select("id, data_preparo, quantidade_porcoes, observacoes, receitas ( nome )")
-    .eq("status", "congelado")
-    .order("data_preparo", { ascending: true });
+  const { data: preparos, error } = await listarPreparosCongelados(supabase, user.id);
 
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">

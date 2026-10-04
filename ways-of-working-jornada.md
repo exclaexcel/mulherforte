@@ -31,6 +31,13 @@ Este app lida com dado de saúde pessoal (peso, medidas, composição corporal).
   `.env` / variáveis de ambiente do Vercel
 - Qualquer mudança em autenticação, permissões ou schema do banco deve ser sinalizada
   explicitamente antes de aplicada, com risco e forma de reverter descritos
+- Tabelas expostas à API usam grants mínimos: `anon` sem privilégio direto (o app exige
+  login); `authenticated` só com SELECT, INSERT, UPDATE e DELETE. Nunca usar `GRANT ALL`
+- Filtro explícito `.eq("user_id", user.id)` em toda leitura e em todo update/delete, além
+  da RLS (defesa em profundidade, não substituição da policy)
+- `user_id` sempre obtido da sessão no servidor (`supabase.auth.getUser()`); nunca aceito
+  do cliente, do formulário ou da URL
+- `service_role` não é usada no código da aplicação
 - Fotos corporais permanecem fora de escopo até decisão explícita em contrário — ver
   Backlog Fase 2, item 2.6, para os requisitos de segurança se isso mudar
 

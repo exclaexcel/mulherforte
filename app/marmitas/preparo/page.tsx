@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { hojeISO } from "@/lib/date";
+import { listarReceitasParaPreparo } from "@/lib/marmitas/consultas";
 
 export default async function PreparoPage({
   searchParams,
@@ -22,10 +23,7 @@ export default async function PreparoPage({
     redirect("/login");
   }
 
-  const { data: receitas } = await supabase
-    .from("receitas")
-    .select("id, nome")
-    .order("nome");
+  const { data: receitas } = await listarReceitasParaPreparo(supabase, user.id);
 
   const hoje = hojeISO();
   const temReceitas = Boolean(receitas && receitas.length > 0);

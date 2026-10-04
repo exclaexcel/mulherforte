@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GRUPOS_COMPRA } from "@/lib/marmitas/types";
+import { listarItensCompra } from "@/lib/marmitas/consultas";
 
 export default async function ComprasPage({
   searchParams,
@@ -22,10 +23,7 @@ export default async function ComprasPage({
     redirect("/login");
   }
 
-  const { data: itens } = await supabase
-    .from("itens_compra")
-    .select("id, grupo, item, tenho_em_casa")
-    .order("item");
+  const { data: itens } = await listarItensCompra(supabase, user.id);
 
   const porGrupo = GRUPOS_COMPRA.map((g) => ({
     ...g,
