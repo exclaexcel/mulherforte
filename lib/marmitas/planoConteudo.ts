@@ -20,13 +20,13 @@ export const REGRAS_SEGURANCA_USDA = [
 export const FONTE_USDA = "Fonte oficial: fsis.usda.gov e foodsafety.gov (USDA - United States Department of Agriculture)";
 
 export const PRAZOS_ALERTA = [
-  { cor: "verde", texto: "Dentro da validade: ainda faltam mais de 7 dias para o vencimento." },
-  { cor: "amarelo", texto: "Próximo do vencimento: vence hoje ou faltam até 7 dias." },
-  { cor: "vermelho", texto: "Vencido: a validade informada na receita já passou." },
+  { cor: "verde", texto: "Dentro do prazo: faltam mais de 7 dias para o fim do prazo informado na receita." },
+  { cor: "amarelo", texto: "Prazo próximo do fim: termina hoje ou faltam até 7 dias." },
+  { cor: "vermelho", texto: "Prazo encerrado: o prazo informado na receita já passou." },
 ] as const;
 
 export const VALIDADE_NAO_INFORMADA_TEXTO =
-  "Receita sem validade informada: o app mostra \"Validade não informada\" e não calcula vencimento.";
+  "Receita sem prazo informado: o estoque mostra \"Prazo não informado\" e não calcula data limite.";
 
 export const PONTOS_ATENCAO = [
   "Tilápia: perde textura ao congelar. Asse sem excesso de líquido e evite caldo em excesso na marmita.",

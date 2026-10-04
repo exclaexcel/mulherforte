@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { hojeISO } from "@/lib/date";
 import { listarReceitasParaPreparo } from "@/lib/marmitas/consultas";
+import { CampoPrazoCongelamento } from "@/components/marmitas/campo-prazo-congelamento";
 
 export default async function PreparoPage({
   searchParams,
@@ -104,15 +105,7 @@ export default async function PreparoPage({
             <Label htmlFor="nome">Nome</Label>
             <Input id="nome" name="nome" required />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="validade_congelado_dias">Validade no congelador, em dias, opcional</Label>
-            <Input
-              id="validade_congelado_dias"
-              name="validade_congelado_dias"
-              type="number"
-              min={1}
-            />
-          </div>
+          <CampoPrazoCongelamento />
           <Button type="submit" variant="outline" className="w-full">
             Salvar receita
           </Button>

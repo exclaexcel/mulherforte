@@ -1,4 +1,11 @@
 import Link from "next/link";
+import {
+  ATRIBUTOS_LINK_EXTERNO,
+  AVISO_REFERENCIAS,
+  TEXTO_EXPLICACAO_REFERENCIAS,
+  REFERENCIA_ANVISA_GUIA_16,
+  REFERENCIA_USDA_CONGELAMENTO,
+} from "@/lib/marmitas/referencias";
 import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -64,7 +71,7 @@ export default async function PlanoPage() {
       </section>
 
       <section className="rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm space-y-3">
-        <h2 className="font-semibold text-oliva">Como o estoque mostra a validade</h2>
+        <h2 className="font-semibold text-oliva">Como o estoque mostra o prazo</h2>
         <ul className="space-y-2">
           {PRAZOS_ALERTA.map((p) => (
             <li key={p.cor} className={`text-sm rounded-xl border px-3 py-2 ${COR_BADGE[p.cor]}`}>
@@ -73,6 +80,40 @@ export default async function PlanoPage() {
           ))}
         </ul>
         <p className="text-xs text-stone-500">{VALIDADE_NAO_INFORMADA_TEXTO}</p>
+      </section>
+
+      <section className="rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm space-y-3">
+        <h2 className="font-semibold text-oliva">Referências gerais de conservação</h2>
+        {TEXTO_EXPLICACAO_REFERENCIAS.map((paragrafo) => (
+          <p key={paragrafo.slice(0, 20)} className="text-sm text-stone-700">
+            {paragrafo}
+          </p>
+        ))}
+        <div className="space-y-3">
+          <div className="space-y-1">
+            <a
+              href={REFERENCIA_ANVISA_GUIA_16.url}
+              target={ATRIBUTOS_LINK_EXTERNO.target}
+              rel={ATRIBUTOS_LINK_EXTERNO.rel}
+              className="text-sm text-oliva underline"
+            >
+              {REFERENCIA_ANVISA_GUIA_16.texto}
+            </a>
+            <p className="text-xs text-stone-500">{REFERENCIA_ANVISA_GUIA_16.explicacao}</p>
+          </div>
+          <div className="space-y-1">
+            <a
+              href={REFERENCIA_USDA_CONGELAMENTO.url}
+              target={ATRIBUTOS_LINK_EXTERNO.target}
+              rel={ATRIBUTOS_LINK_EXTERNO.rel}
+              className="text-sm text-oliva underline"
+            >
+              {REFERENCIA_USDA_CONGELAMENTO.texto}
+            </a>
+            <p className="text-xs text-stone-500">{REFERENCIA_USDA_CONGELAMENTO.explicacao}</p>
+          </div>
+        </div>
+        <p className="text-xs text-stone-500">{AVISO_REFERENCIAS}</p>
       </section>
 
       <section className="rounded-2xl bg-rosa-soft/50 border border-rosa/40 p-5 space-y-3">

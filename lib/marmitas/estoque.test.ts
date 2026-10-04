@@ -92,9 +92,9 @@ describe("validade não informada", () => {
     expect(antigo.diasRestantes).toBeNull();
   });
 
-  it("apresenta 'Validade não informada' sem linguagem de segurança", () => {
+  it("apresenta 'Prazo não informado' sem linguagem de segurança", () => {
     const a = apresentarValidade(calcularValidade(PREPARO, null, HOJE));
-    expect(a.titulo).toBe("Validade não informada");
+    expect(a.titulo).toBe("Prazo não informado");
     expect(a.detalhe).toBeNull();
     expect(JSON.stringify(a)).not.toMatch(/seguro|segurança|ótima|-18/i);
   });
@@ -106,9 +106,10 @@ describe("apresentação", () => {
   });
 
   it("vencido mostra quando venceu; próximo mostra dias restantes", () => {
-    expect(apresentarValidade(calcularValidade("2026-09-01", 10, HOJE)).detalhe).toBe("Venceu em 11/09/2026");
+    expect(apresentarValidade(calcularValidade("2026-09-01", 10, HOJE)).detalhe).toBe("Encerrou em 11/09/2026");
     const proximo = apresentarValidade(calcularValidade("2026-09-05", 30, HOJE));
     expect(proximo.detalhe).toContain("Faltam 1 dia(s)");
+    expect(proximo.titulo).toBe("Prazo próximo do fim");
   });
 
   it("nenhuma apresentação usa 'ainda seguro' ou fala de qualidade ótima", () => {

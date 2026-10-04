@@ -28,9 +28,13 @@ direto nele — sem depender da planilha em paralelo.
   biblioteca de receitas), quantidade, observações, status (congelado/consumido)
 - Ver estoque atual do congelador, calculado a partir dos preparos com status "congelado"
 - Validade do estoque pela validade informada em cada receita: data do preparo + validade em dias.
-  Situações: vencido / vence hoje / próximo do vencimento (faltam até 7 dias) / dentro da validade.
+  Situações: prazo encerrado / prazo termina hoje / prazo próximo do fim (faltam até 7 dias) /
+  dentro do prazo (mais de 7 dias).
   Receita sem validade informada mostra "Validade não informada", sem vencimento calculado e sem
   60 ou 90 dias como padrão. Ordem: vencidos, vence hoje, próximos, dentro, sem validade.
+- Referências oficiais de conservação (Anvisa Guia 16 e USDA/FSIS) aparecem somente na página
+  "Sobre o plano", com a explicação de que são orientações gerais. Os formulários não têm links.
+  Nenhum prazo é pesquisado, extraído ou preenchido automaticamente.
 - Validade de congelamento é opcional, no cadastro completo e no cadastro rápido. Campo vazio
   significa "validade não informada". Nenhum prazo padrão é aplicado.
 - Receita sem validade pode ser salva e continua disponível para preparo.

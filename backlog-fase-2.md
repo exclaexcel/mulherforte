@@ -161,3 +161,24 @@ os status `congelado` e `consumido` (constraint no banco).
 Possível solução: novo status `descartado` (migration para alterar a constraint), ação própria
 na tela de estoque e texto neutro de confirmação. Decisão de produto pendente: como a usuária
 quer registrar o descarte. Não implementado no MVP.
+
+### 2.14 Consultar referência de congelamento por tipo de preparação
+
+Recurso futuro: consultar uma referência de congelamento por tipo de preparação.
+
+Quando existir, poderá:
+- usar uma base interna previamente revisada;
+- mostrar a fonte utilizada;
+- informar as condições consideradas;
+- apresentar o prazo como referência geral;
+- exigir confirmação antes de preencher o campo;
+- permitir rejeitar a sugestão;
+- permitir manter o prazo não informado.
+
+Fora do escopo agora (não implementar):
+- busca automática na internet;
+- interpretação automática das páginas da Anvisa ou do USDA/FSIS;
+- sugestão automática de prazo;
+- armazenamento da origem do prazo;
+- base interna de referências;
+- preenchimento automático.

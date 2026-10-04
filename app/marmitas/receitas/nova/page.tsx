@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CATEGORIAS_RECEITA } from "@/lib/marmitas/receita";
+import { CampoPrazoCongelamento } from "@/components/marmitas/campo-prazo-congelamento";
 
 const CAMPO_TEXTO =
   "flex w-full rounded-xl border border-oliva/20 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oliva";
@@ -55,18 +56,7 @@ export default async function NovaReceitaPage() {
           </select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="validade_congelado_dias">Validade no congelador, em dias, opcional</Label>
-          <p className="text-xs text-stone-500">Deixe em branco se não souber.</p>
-          <Input
-            id="validade_congelado_dias"
-            name="validade_congelado_dias"
-            type="number"
-            inputMode="numeric"
-            min={1}
-            step={1}
-          />
-        </div>
+        <CampoPrazoCongelamento />
 
         <div className="space-y-2">
           <Label htmlFor="ingredientes">Ingredientes</Label>

@@ -102,11 +102,11 @@ export default async function ReceitasPage({
                       <div className="mt-3 space-y-3 text-sm text-stone-700">
                         <div>
                           <p className="font-medium text-oliva text-xs uppercase tracking-wide mb-1">
-                            Validade congelado
+                            Prazo de congelamento
                           </p>
                           <p>
                             {r.validade_congelado_dias === null
-                              ? "Validade não informada"
+                              ? "Prazo não informado"
                               : `${r.validade_congelado_dias} ${r.validade_congelado_dias === 1 ? "dia" : "dias"}`}
                           </p>
                         </div>

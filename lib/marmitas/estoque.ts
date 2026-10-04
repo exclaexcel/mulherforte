@@ -105,7 +105,7 @@ export function apresentarValidade(v: ValidadeCalculada): {
   tom: TomValidade;
 } {
   if (v.situacao === "nao_informada") {
-    return { titulo: "Validade não informada", detalhe: null, tom: "neutro" };
+    return { titulo: "Prazo não informado", detalhe: null, tom: "neutro" };
   }
 
   // Daqui em diante v é ValidadeInformada: a data sempre existe, sem asserção.
@@ -113,16 +113,16 @@ export function apresentarValidade(v: ValidadeCalculada): {
 
   switch (v.situacao) {
     case "vencido":
-      return { titulo: "Vencido", detalhe: `Venceu em ${vencimento}`, tom: "urgente" };
+      return { titulo: "Prazo encerrado", detalhe: `Encerrou em ${vencimento}`, tom: "urgente" };
     case "vence_hoje":
-      return { titulo: "Vence hoje", detalhe: null, tom: "urgente" };
+      return { titulo: "Prazo termina hoje", detalhe: null, tom: "urgente" };
     case "proximo":
       return {
-        titulo: "Próximo do vencimento",
-        detalhe: `Faltam ${v.diasRestantes} dia(s) · vence em ${vencimento}`,
+        titulo: "Prazo próximo do fim",
+        detalhe: `Faltam ${v.diasRestantes} dia(s) · termina em ${vencimento}`,
         tom: "atencao",
       };
     case "dentro":
-      return { titulo: "Dentro da validade", detalhe: `Vence em ${vencimento}`, tom: "ok" };
+      return { titulo: "Dentro do prazo", detalhe: `Termina em ${vencimento}`, tom: "ok" };
   }
 }
