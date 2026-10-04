@@ -20,6 +20,7 @@ import {
   Activity,
   Trophy,
   TrendingUp,
+  Download,
 } from "lucide-react";
 
 export default async function HomePage({
@@ -65,6 +66,15 @@ export default async function HomePage({
           Perfil atualizado!
         </p>
       ) : null}
+
+      <div className="mb-6">
+        <NavCard
+          href="/perfil/exportar"
+          icon={Download}
+          titulo="Exportar meus dados"
+          descricao="Planilhas para o Excel e backup completo em JSON"
+        />
+      </div>
 
       <HomeTabs
         groups={[

@@ -129,6 +129,15 @@ Hoje o app é pessoal, com uma única usuária. O isolamento é garantido por RL
 explícito `user_id` nas consultas, e tem testes automatizados com usuários fictícios e cliente
 mockado. O teste manual com duas contas real fica para quando o cenário mudar.
 
+### 2.11 Importação do backup JSON
+
+Permitir restaurar um backup gerado pela exportação (`versao_exportacao` 1.0).
+
+No MVP só existe exportação. Para a importação, as chaves naturais já estão no arquivo
+(`data`; `data`+`regiao`; `indicador`; `(semana_ciclo, dia_semana)`), e `receitas.id` mais
+`preparos.receita_id` mantêm as relações. Precisa de regra de conflito (sobrescrever ou
+mesclar) e de confirmação explícita antes de qualquer escrita.
+
 ## 3. Como usar este documento
 
 Nenhum item aqui deve ser construído "de brinde" durante o desenvolvimento do MVP, mesmo que

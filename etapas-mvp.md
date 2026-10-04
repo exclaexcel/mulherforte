@@ -134,13 +134,24 @@ indicador exploratório sem classificação.
 
 ## Etapa 7 — Exportação e polimento final
 **Objetivo:** fechar os últimos itens de segurança/soberania de dados e acabamento visual.
-- Exportação CSV/JSON de todas as tabelas
+
+### Etapa 7A — Exportação completa (implementada, validação manual pendente)
+- ZIP com 10 CSVs e backup JSON versionado, todos os domínios do app (ver PRD §3.2.3)
+- Página `/perfil/exportar`, link a partir de `/perfil`
+- Rotas `GET /api/exportacao/planilhas` e `GET /api/exportacao/json`, sem cache
+- Biblioteca `fflate` (MIT, sem dependências, só servidor)
+- Testes automatizados com dados fictícios e cliente Supabase mockado
+- Sem importação. Sem migration.
+
+### Etapa 7B — Auditoria final do MVP (próxima)
+- Revisão de tudo o que o MVP entrega, antes de considerar o MVP fechado
 - Protocolo de coleta como tela de referência (se ainda não incluído na Etapa 3)
 - Revisão visual final: paleta, tipografia, padrão de card conforme guia de referência
 
 **Pronto quando:**
-- [ ] Exportação funcionando para todas as tabelas
-- [ ] Todos os 19 itens da seção 8 do PRD marcados como concluídos
+- [x] Exportação funcionando para todas as tabelas do app (7A, código e testes)
+- [ ] Teste manual da exportação no celular e no Excel pt-BR
+- [ ] Todos os 19 itens da seção 8 do PRD marcados como concluídos (7B)
 
 ---
 

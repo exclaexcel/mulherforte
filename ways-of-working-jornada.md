@@ -38,6 +38,10 @@ Este app lida com dado de saúde pessoal (peso, medidas, composição corporal).
 - `user_id` sempre obtido da sessão no servidor (`supabase.auth.getUser()`); nunca aceito
   do cliente, do formulário ou da URL
 - `service_role` não é usada no código da aplicação
+- Exportação (PRD §3.2.3): gerada só no servidor, a partir da sessão; sem cache
+  (`dynamic = "force-dynamic"`, `Cache-Control: no-store`); em memória, sem gravar em disco,
+  Storage, localStorage ou sessionStorage; nenhum payload em log; textos sanitizados contra
+  CSV injection, sem alterar o banco
 - Fotos corporais permanecem fora de escopo até decisão explícita em contrário — ver
   Backlog Fase 2, item 2.6, para os requisitos de segurança se isso mudar
 

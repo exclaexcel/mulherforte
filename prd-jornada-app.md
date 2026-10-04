@@ -163,9 +163,31 @@ um streak diário que zera com uma quebra. Um dia atípico não deve resetar o p
 isso vai contra o "não se cobrar pelos dias que não puder treinar" do guia original.
 
 ### 3.2.3 Exportação de dados (soberania dos dados)
-Botão de exportação em 1 clique de todas as tabelas em CSV ou JSON. Dado de saúde pessoal
-nunca fica refém do aplicativo — permite backup, análise em planilha própria, ou migração
-futura sem atrito.
+Cópia completa dos dados do app, em dois formatos, gerados na hora a partir da sessão:
+- **ZIP com 10 CSVs** (`mulher-forte-planilhas-AAAA-MM-DD.zip`): perfil, pesos, medidas,
+  hábitos, treinos, metas, receitas, preparos, itens de compra e cronograma de marmitas.
+  UTF-8 com BOM, separador `;`, decimal com vírgula, datas `DD/MM/AAAA`, CRLF.
+- **Backup JSON versionado** (`mulher-forte-backup-AAAA-MM-DD.json`, `versao_exportacao`
+  `1.0`): datas ISO, números e booleanos tipados, nulos preservados.
+
+Regras:
+- Sem importação no MVP. O JSON é backup; a importação fica para o backlog.
+- Campos técnicos saem: `user_id`, `updated_at`, IDs internos, e-mail, tokens e sessão.
+  Mantidos só os que têm função: `receitas.id` e `preparos.receita_id` (relação dentro do
+  arquivo), `metas.created_at` (usado pelo score), `habitos.bebeu_agua_meta` (snapshot do dia)
+  e `treinos.obrigatorio` (snapshot do dia).
+- Proteção contra CSV injection: textos que começam com `=`, `+`, `-`, `@`, TAB ou CR recebem
+  apóstrofo só na representação do CSV.
+- Preparo sem receita correspondente interrompe a exportação (nada é removido nem ignorado).
+- Status: 200 arquivo gerado; 401 sem sessão; 422 inconsistência validada nos dados lidos
+  (ex.: preparo sem receita, número ou data inválidos); 500 falha de leitura, permissão,
+  indisponibilidade ou erro inesperado. Mensagens genéricas, sem tabela, query ou UUID.
+- No navegador, sessão expirada (redirecionamento para /login ou HTML no lugar do arquivo)
+  não gera download: mostra aviso e link para entrar de novo.
+- Autenticação: `user.id` vem só da sessão no servidor. Todas as consultas filtram por
+  `user_id`, além da RLS. Sem `service_role`.
+- Sem cache (`no-store`), geração em memória, sem armazenamento no servidor nem no navegador.
+- Só o servidor gera o arquivo (biblioteca `fflate`); nenhum dado vai para terceiros.
 
 ### 3.3 Fora do MVP (ver documento "Backlog Fase 2")
 - Indicadores visuais de percepção subjetiva
@@ -233,8 +255,9 @@ preparos (
 )
 
 cronograma_planejado (
-  id, user_id, semana_ciclo, dia_semana, receita_id (FK -> receitas.id)
-  -- template fixo de rotação, editável; "preparos" registra o que de fato aconteceu
+  id, user_id, semana_ciclo, dia_semana, proteina, base, legumes, receita_extra_texto
+  -- template fixo de rotação, editável; receita_extra_texto é texto livre (não FK);
+  -- único por (user_id, semana_ciclo, dia_semana). "preparos" registra o que de fato aconteceu
 )
 
 itens_compra (
@@ -334,7 +357,8 @@ O MVP está pronto quando:
 - [x] Score de hábitos semanal (proteína, hidratação, treino) calculado como acumulado da
   semana — nunca como streak diário que zera — com "Semana Vencida" a partir de 85% do
   valor bruto, treino obrigatório pelo calendário fixo (Etapa 6A, 2026-10-01)
-- [ ] Exportação de dados em CSV/JSON funcionando para todas as tabelas
+- [ ] Exportação de dados em CSV/JSON funcionando para todas as tabelas (Etapa 7A: código e
+  testes prontos; falta o teste manual no celular e no Excel pt-BR)
 
 ## 9. Documentos relacionados
 
