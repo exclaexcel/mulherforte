@@ -242,7 +242,7 @@ export async function buscarDadosExportacao(
       modo_preparo: (l.modo_preparo as string | null) ?? null,
       dica_congelamento: (l.dica_congelamento as string | null) ?? null,
       selos: Array.isArray(l.selos) ? (l.selos as string[]) : [],
-      validade_congelado_dias: numeroObrigatorio(l.validade_congelado_dias, "validade_congelado_dias"),
+      validade_congelado_dias: numeroOpcional(l.validade_congelado_dias, "validade_congelado_dias"),
       notas: (l.notas as string | null) ?? null,
     }))
     .sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR") || a.id.localeCompare(b.id));

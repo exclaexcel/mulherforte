@@ -44,7 +44,7 @@ export default function LoginPage() {
             <Heart className="h-8 w-8 text-oliva fill-rosa" />
           </div>
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-oliva">App Jornada</h1>
+            <h1 className="text-2xl font-bold text-oliva">Projeto Mulher Forte</h1>
             <p className="text-sm text-stone-500 mt-1">Marmitas + jornada física</p>
           </div>
         </div>

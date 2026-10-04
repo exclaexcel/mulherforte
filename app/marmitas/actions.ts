@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { diaSemanaFromData } from "@/lib/marmitas/preparo";
 import { hojeISO } from "@/lib/date";
+import { interpretarReceita, type DadosReceita } from "@/lib/marmitas/receita";
 
 async function getUserOrRedirect() {
   const supabase = await createClient();
@@ -19,43 +20,66 @@ async function getUserOrRedirect() {
   return { supabase, user };
 }
 
-export async function criarReceita(formData: FormData) {
-  const { supabase, user } = await getUserOrRedirect();
+type ClienteSupabase = Awaited<ReturnType<typeof createClient>>;
 
-  const nome = String(formData.get("nome") ?? "").trim();
-  const validadeDias = Number(formData.get("validade_congelado_dias"));
-
-  if (!nome || !validadeDias || validadeDias <= 0) {
-    throw new Error("Nome e validade (em dias) são obrigatórios.");
-  }
-
+/**
+ * Grava uma receita já validada. Recusa nome repetido para a mesma usuária
+ * (sem diferenciar maiúsculas). Erro do banco vira mensagem genérica.
+ */
+async function inserirReceitaValidada(supabase: ClienteSupabase, userId: string, dados: DadosReceita) {
   const { data: existentes } = await supabase
     .from("receitas")
     .select("nome")
-    .eq("user_id", user.id);
+    .eq("user_id", userId);
 
   const jaExiste = (existentes ?? []).some(
-    (r) => r.nome.trim().toLowerCase() === nome.toLowerCase()
+    (r) => r.nome.trim().toLowerCase() === dados.nome.toLowerCase()
   );
 
   if (jaExiste) {
     throw new Error(
-      `Já existe uma receita chamada "${nome}". Selecione ela na lista, não precisa cadastrar de novo.`
+      `Já existe uma receita chamada "${dados.nome}". Selecione ela na lista, não precisa cadastrar de novo.`
     );
   }
 
   const { error } = await supabase.from("receitas").insert({
-    user_id: user.id,
-    nome,
-    validade_congelado_dias: validadeDias,
+    user_id: userId,
+    ...dados,
   });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error("Não foi possível salvar a receita. Tente novamente.");
   }
+}
+
+/** Cadastro rápido: mesma interpretação e mesmas mensagens do formulário completo. */
+export async function criarReceita(formData: FormData) {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const resultado = interpretarReceita(formData);
+  if (!resultado.ok) {
+    throw new Error(resultado.erro);
+  }
+
+  await inserirReceitaValidada(supabase, user.id, resultado.dados);
 
   revalidatePath("/marmitas/preparo");
   redirect("/marmitas/preparo?receita_salva=1");
+}
+
+/** Cadastro completo de receita: todos os campos, validados antes de gravar. */
+export async function criarReceitaCompleta(formData: FormData) {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const resultado = interpretarReceita(formData);
+  if (!resultado.ok) {
+    throw new Error(resultado.erro);
+  }
+  await inserirReceitaValidada(supabase, user.id, resultado.dados);
+
+  revalidatePath("/marmitas/receitas");
+  revalidatePath("/marmitas/preparo");
+  redirect("/marmitas/receitas?receita_salva=1");
 }
 
 export async function criarPreparo(formData: FormData) {

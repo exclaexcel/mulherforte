@@ -14,6 +14,7 @@ type Receita = {
   modo_preparo: string | null;
   notas: string | null;
   selos: string[] | null;
+  validade_congelado_dias: number | null;
 };
 
 function agruparPorCategoria(receitas: Receita[]) {
@@ -34,7 +35,11 @@ function agruparPorCategoria(receitas: Receita[]) {
   }));
 }
 
-export default async function ReceitasPage() {
+export default async function ReceitasPage({
+  searchParams,
+}: {
+  searchParams: { receita_salva?: string };
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -56,12 +61,29 @@ export default async function ReceitasPage() {
           Início
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Biblioteca de receitas</h1>
+        <Link
+          href="/marmitas/receitas/nova"
+          className="inline-flex items-center rounded-full bg-oliva text-bege px-4 py-2 text-sm font-medium mt-3"
+        >
+          + Nova receita
+        </Link>
       </header>
 
+      {searchParams?.receita_salva === "1" ? (
+        <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
+          Receita salva!
+        </p>
+      ) : null}
+
       {error ? (
-        <p className="text-sm text-red-700">Erro ao carregar receitas: {error.message}</p>
+        <p className="text-sm text-red-700">Não foi possível carregar as receitas agora. Tente novamente.</p>
       ) : !receitas || receitas.length === 0 ? (
-        <p className="text-sm text-stone-600">Nenhuma receita cadastrada ainda.</p>
+        <div className="space-y-3 rounded-2xl bg-white/80 border border-oliva/10 p-5">
+          <p className="text-sm text-stone-600">Nenhuma receita cadastrada ainda.</p>
+          <Link href="/marmitas/receitas/nova" className="text-sm text-oliva underline">
+            Cadastrar a primeira receita
+          </Link>
+        </div>
       ) : (
         <div className="space-y-6">
           {grupos.map((grupo) => (
@@ -78,6 +100,17 @@ export default async function ReceitasPage() {
                       </summary>
 
                       <div className="mt-3 space-y-3 text-sm text-stone-700">
+                        <div>
+                          <p className="font-medium text-oliva text-xs uppercase tracking-wide mb-1">
+                            Validade congelado
+                          </p>
+                          <p>
+                            {r.validade_congelado_dias === null
+                              ? "Validade não informada"
+                              : `${r.validade_congelado_dias} ${r.validade_congelado_dias === 1 ? "dia" : "dias"}`}
+                          </p>
+                        </div>
+
                         {r.ingredientes ? (
                           <div>
                             <p className="font-medium text-oliva text-xs uppercase tracking-wide mb-1">

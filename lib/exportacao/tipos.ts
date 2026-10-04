@@ -79,7 +79,7 @@ export type ReceitaExport = {
   modo_preparo: string | null;
   dica_congelamento: string | null;
   selos: string[];
-  validade_congelado_dias: number;
+  validade_congelado_dias: number | null;
   notas: string | null;
 };
 

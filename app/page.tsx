@@ -51,8 +51,7 @@ export default async function HomePage({
       <header className="flex items-start justify-between gap-4 mb-8">
         <div>
           <p className="text-sm text-oliva/70">Olá, {saudacao}</p>
-          <h1 className="text-2xl font-bold text-oliva">App Jornada</h1>
-          <p className="text-sm text-stone-500 mt-1">Etapa 4 — jornada física: núcleo</p>
+          <h1 className="text-2xl font-bold text-oliva">Projeto Mulher Forte</h1>
           <Link href="/perfil" className="inline-flex items-center gap-1 text-xs text-oliva/70 mt-2">
             <Pencil className="h-3 w-3" />
             Editar perfil

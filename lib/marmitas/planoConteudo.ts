@@ -20,10 +20,13 @@ export const REGRAS_SEGURANCA_USDA = [
 export const FONTE_USDA = "Fonte oficial: fsis.usda.gov e foodsafety.gov (USDA - United States Department of Agriculture)";
 
 export const PRAZOS_ALERTA = [
-  { cor: "verde", texto: "Até 60 dias: qualidade ótima, pode consumir normalmente." },
-  { cor: "amarelo", texto: "De 61 a 90 dias: ainda seguro, mas consumir com atenção (qualidade caindo)." },
-  { cor: "vermelho", texto: "Acima de 90 dias: ainda seguro se mantido a -18°C, mas qualidade comprometida. Priorize o consumo ou descarte se notar alteração de cheiro/textura." },
+  { cor: "verde", texto: "Dentro da validade: ainda faltam mais de 7 dias para o vencimento." },
+  { cor: "amarelo", texto: "Próximo do vencimento: vence hoje ou faltam até 7 dias." },
+  { cor: "vermelho", texto: "Vencido: a validade informada na receita já passou." },
 ] as const;
+
+export const VALIDADE_NAO_INFORMADA_TEXTO =
+  "Receita sem validade informada: o app mostra \"Validade não informada\" e não calcula vencimento.";
 
 export const PONTOS_ATENCAO = [
   "Tilápia: perde textura ao congelar. Asse sem excesso de líquido e evite caldo em excesso na marmita.",

@@ -155,6 +155,22 @@ indicador exploratório sem classificação.
 
 ---
 
+## Ajuste: validade de congelamento opcional e estoque por receita
+
+**Status: não concluído.** Entrega dependente de migration e de validação manual.
+
+- [x] Código preparado: validade opcional no cadastro completo e no rápido; regra única em
+  `interpretarValidadeCongelado`; estoque com validade individual da receita; ordenação nova;
+  "Validade não informada" sem classificação; lista de receitas mostra a validade
+- [x] Testes automatizados passando (fronteiras de data, null, ordenação, exportação)
+- [ ] Migration pendente: `supabase/migrations/20261004000000_receita_validade_opcional.sql`
+  (não aplicada; remove só o NOT NULL, mantém o CHECK de valor positivo)
+- [ ] Pós-checks da migration após aplicação
+- [ ] Validação manual no navegador e no celular
+- [ ] Preparos antigos conferidos (eles usam a validade atual da receita)
+
+Não marcar esta entrega como concluída antes da migration e dos pós-checks.
+
 ## Observação sobre prioridade real
 
 Se o tempo for curto amanhã, as **Etapas 1-4 já entregam o valor original**: sair do Excel

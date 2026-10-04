@@ -138,8 +138,26 @@ No MVP só existe exportação. Para a importação, as chaves naturais já est�
 `preparos.receita_id` mantêm as relações. Precisa de regra de conflito (sobrescrever ou
 mesclar) e de confirmação explícita antes de qualquer escrita.
 
+### 2.12 Validade congelado congelada no preparo
+
+Hoje o preparo guarda só a referência à receita, e o estoque calcula a validade com a
+validade atual da receita. Se a validade de uma receita mudar, o estoque dos preparos antigos
+muda junto. Avaliar em Fase 2 um snapshot histórico: preservar no preparo a validade aplicada no momento do
+congelamento (ex.: `validade_congelado_dias_aplicada`).
+Exige migration e decisão sobre preparos antigos sem o valor guardado. Não implementado no MVP.
+
 ## 3. Como usar este documento
 
 Nenhum item aqui deve ser construído "de brinde" durante o desenvolvimento do MVP, mesmo que
 pareça rápido de adicionar. Ao concluir o MVP (checklist do PRD, seção 8), revisitar este
 backlog e priorizar item a item, um de cada vez.
+
+### 2.13 Descarte de preparo vencido ou sem uso
+
+Hoje o estoque só permite "Marcar como consumido", inclusive para preparos vencidos ou que
+vencem hoje. Isso mistura consumo com descarte no histórico. A tabela `preparos` aceita apenas
+os status `congelado` e `consumido` (constraint no banco).
+
+Possível solução: novo status `descartado` (migration para alterar a constraint), ação própria
+na tela de estoque e texto neutro de confirmação. Decisão de produto pendente: como a usuária
+quer registrar o descarte. Não implementado no MVP.

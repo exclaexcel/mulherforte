@@ -27,7 +27,19 @@ direto nele — sem depender da planilha em paralelo.
 - Registrar um preparo: data, dia da semana, semana do ciclo, receita (referenciando a
   biblioteca de receitas), quantidade, observações, status (congelado/consumido)
 - Ver estoque atual do congelador, calculado a partir dos preparos com status "congelado"
-- Alerta de validade por cor: verde (até 60 dias) / amarelo (61-90) / vermelho (90+)
+- Validade do estoque pela validade informada em cada receita: data do preparo + validade em dias.
+  Situações: vencido / vence hoje / próximo do vencimento (faltam até 7 dias) / dentro da validade.
+  Receita sem validade informada mostra "Validade não informada", sem vencimento calculado e sem
+  60 ou 90 dias como padrão. Ordem: vencidos, vence hoje, próximos, dentro, sem validade.
+- Validade de congelamento é opcional, no cadastro completo e no cadastro rápido. Campo vazio
+  significa "validade não informada". Nenhum prazo padrão é aplicado.
+- Receita sem validade pode ser salva e continua disponível para preparo.
+- Regra do estoque, com validade informada: data de vencimento = data do preparo + validade da
+  receita. Dias restantes = vencimento − hoje. Classificação: vencido (já passou); vence hoje
+  (0 dias); próximo do vencimento (1 a 7 dias); dentro da validade (mais de 7 dias).
+- Com validade não informada, o estoque não calcula vencimento e não classifica a receita.
+- Limitação conhecida: o preparo guarda só a referência à receita, então alterar a validade da
+  receita muda a classificação de preparos antigos (ver backlog, item 2.12).
 - Lista de compras por grupo (proteínas, laticínios, carboidratos, vegetais, despensa),
   com marcação de "tenho em casa"
 - **Biblioteca de receitas**: tudo que hoje está no PDF/guia (ingredientes, modo de preparo,

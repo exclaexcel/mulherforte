@@ -11,7 +11,7 @@ type ClienteSupabase = Awaited<ReturnType<typeof createClient>>;
 export function listarReceitasBiblioteca(supabase: ClienteSupabase, userId: string) {
   return supabase
     .from("receitas")
-    .select("id, nome, categoria, ingredientes, modo_preparo, notas, selos")
+    .select("id, nome, categoria, ingredientes, modo_preparo, notas, selos, validade_congelado_dias")
     .eq("user_id", userId)
     .order("nome");
 }
@@ -44,7 +44,7 @@ export function listarCronograma(supabase: ClienteSupabase, userId: string) {
 export function listarPreparosCongelados(supabase: ClienteSupabase, userId: string) {
   return supabase
     .from("preparos")
-    .select("id, data_preparo, quantidade_porcoes, observacoes, receitas ( nome )")
+    .select("id, data_preparo, quantidade_porcoes, observacoes, receitas ( nome, validade_congelado_dias )")
     .eq("user_id", userId)
     .eq("status", "congelado")
     .order("data_preparo", { ascending: true });

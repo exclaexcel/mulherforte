@@ -105,13 +105,12 @@ export default async function PreparoPage({
             <Input id="nome" name="nome" required />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="validade_congelado_dias">Validade congelado (dias)</Label>
+            <Label htmlFor="validade_congelado_dias">Validade no congelador, em dias, opcional</Label>
             <Input
               id="validade_congelado_dias"
               name="validade_congelado_dias"
               type="number"
               min={1}
-              required
             />
           </div>
           <Button type="submit" variant="outline" className="w-full">

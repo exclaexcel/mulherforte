@@ -2,24 +2,25 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { calcularStatusValidade, type StatusValidade } from "@/lib/marmitas/estoque";
+import {
+  apresentarValidade,
+  calcularValidade,
+  formatarDataBR,
+  ordenarEstoque,
+  type TomValidade,
+} from "@/lib/marmitas/estoque";
 import { listarPreparosCongelados } from "@/lib/marmitas/consultas";
 import { marcarConsumido } from "../actions";
 import { Button } from "@/components/ui/button";
 
-const STATUS_STYLE: Record<StatusValidade, string> = {
-  verde: "bg-green-50 border-green-200 text-green-800",
-  amarelo: "bg-yellow-50 border-yellow-200 text-yellow-800",
-  vermelho: "bg-red-50 border-red-200 text-red-800",
+const TOM_ESTILO: Record<TomValidade, string> = {
+  urgente: "bg-red-50 border-red-200 text-red-800",
+  atencao: "bg-yellow-50 border-yellow-200 text-yellow-800",
+  ok: "bg-green-50 border-green-200 text-green-800",
+  neutro: "bg-stone-50 border-stone-200 text-stone-700",
 };
 
-const STATUS_LABEL: Record<StatusValidade, string> = {
-  verde: "Qualidade ótima, pode consumir normalmente",
-  amarelo: "Ainda seguro, mas consuma com atenção (qualidade caindo)",
-  vermelho: "Ainda seguro a -18°C, mas qualidade comprometida — priorize o consumo",
-};
-
-type ReceitaRef = { nome: string } | null;
+type ReceitaRef = { nome: string; validade_congelado_dias: number | null } | null;
 
 export default async function EstoquePage() {
   const supabase = await createClient();
@@ -33,6 +34,22 @@ export default async function EstoquePage() {
 
   const { data: preparos, error } = await listarPreparosCongelados(supabase, user.id);
 
+  const itens = ordenarEstoque(
+    (preparos ?? []).map((p) => {
+      const receita = (Array.isArray(p.receitas) ? p.receitas[0] : p.receitas) as ReceitaRef;
+      return {
+        id: p.id as string,
+        dataPreparo: p.data_preparo as string,
+        receitaNome: receita?.nome ?? "Receita removida",
+        quantidade: p.quantidade_porcoes as number,
+        validade: calcularValidade(
+          p.data_preparo as string,
+          receita?.validade_congelado_dias ?? null
+        ),
+      };
+    })
+  );
+
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
@@ -44,29 +61,28 @@ export default async function EstoquePage() {
       </header>
 
       {error ? (
-        <p className="text-sm text-red-700">Erro ao carregar estoque: {error.message}</p>
-      ) : !preparos || preparos.length === 0 ? (
+        <p className="text-sm text-red-700">Não foi possível carregar o estoque agora. Tente novamente.</p>
+      ) : itens.length === 0 ? (
         <p className="text-sm text-stone-600">Nada congelado no momento.</p>
       ) : (
         <ul className="space-y-3">
-          {preparos.map((p) => {
-            const receita = (
-              Array.isArray(p.receitas) ? p.receitas[0] : p.receitas
-            ) as ReceitaRef;
-            const { diasDesdePreparo, status } = calcularStatusValidade(p.data_preparo);
-
+          {itens.map((item) => {
+            const apresentacao = apresentarValidade(item.validade);
             return (
-              <li key={p.id} className={`rounded-2xl border p-4 space-y-2 ${STATUS_STYLE[status]}`}>
+              <li
+                key={item.id}
+                className={`rounded-2xl border p-4 space-y-2 ${TOM_ESTILO[apresentacao.tom]}`}
+              >
                 <div>
-                  <p className="font-semibold">{receita?.nome ?? "Receita removida"}</p>
+                  <p className="font-semibold">{item.receitaNome}</p>
                   <p className="text-xs opacity-80">
-                    Preparado em {p.data_preparo} · {diasDesdePreparo} dia(s) atrás ·{" "}
-                    {p.quantidade_porcoes} porção(ões)
+                    Preparado em {formatarDataBR(item.dataPreparo)} · {item.quantidade} porção(ões)
                   </p>
                 </div>
-                <p className="text-xs font-medium">{STATUS_LABEL[status]}</p>
+                <p className="text-sm font-medium">{apresentacao.titulo}</p>
+                {apresentacao.detalhe ? <p className="text-xs">{apresentacao.detalhe}</p> : null}
                 <form action={marcarConsumido}>
-                  <input type="hidden" name="id" value={p.id} />
+                  <input type="hidden" name="id" value={item.id} />
                   <Button type="submit" variant="outline" size="sm">
                     Marcar como consumido
                   </Button>

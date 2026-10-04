@@ -44,7 +44,7 @@ describe("consultas de Marmitas — filtro explícito por user_id", () => {
     expect(temFiltroUsuario(chamadas)).toBe(true);
     expect(chamadas).toContainEqual({
       metodo: "select",
-      args: ["id, nome, categoria, ingredientes, modo_preparo, notas, selos"],
+      args: ["id, nome, categoria, ingredientes, modo_preparo, notas, selos, validade_congelado_dias"],
     });
     expect(chamadas).toContainEqual({ metodo: "order", args: ["nome"] });
   });

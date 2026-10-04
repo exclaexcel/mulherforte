@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "App Jornada",
+  title: "Projeto Mulher Forte",
   description: "Marmitas e jornada física — acompanhamento pessoal da Dany",
 };
 
