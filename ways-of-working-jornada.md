@@ -68,6 +68,9 @@ Antes de considerar qualquer etapa concluída, confirmar:
   hardcode de parâmetros do perfil, classificação sempre pelo valor bruto (arredondamento
   só na exibição), e validação de input contra divisão por zero/valor nulo — ver PRD
   seção 3.4.1
+- [ ] Release com validação manual pendente: a ressalva fica registrada no commit, no PR e
+  nos docs. Não declarar "MVP 100% validado", "mobile aprovado", "WCAG integralmente
+  validada" nem "smoke test concluído" sem evidência
 
 ## 6. Auditorias
 

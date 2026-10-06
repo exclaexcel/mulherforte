@@ -209,3 +209,15 @@ Regras:
 - manter histórico da fonte e da data de revisão, caso a funcionalidade seja implementada.
 
 Relação: complementa o item 2.14 (consulta de referência por tipo de preparação).
+
+### 2.16 Importação de receitas por texto colado, PDF ou OCR
+
+O MVP entrega só o cadastro manual (completo e rápido). Colar texto, importar PDF e OCR não
+entram no MVP. Quando forem avaliados, a importação deve ser assistida: o app sugere, a
+Dany confere e salva. Nenhuma receita é gravada sem revisão.
+
+### 2.17 Integração com Mi Band 5 e Zepp
+
+Leitura de dados de atividade e sono (Mi Band 5, app Zepp) para a Jornada Física. Fica na
+Fase 2. Antes de implementar: avaliar necessidade real, permissões, origem dos dados e
+como os valores entram no registro manual (sem sobrescrever o que a Dany digitou).

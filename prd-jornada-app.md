@@ -69,6 +69,17 @@ direto nele — sem depender da planilha em paralelo.
   "Informações Importantes" da planilha — viram uma tela de referência dentro do app,
   fora do fluxo de registro diário
 
+**Regras de produto consolidadas (release de 2026-10-06):**
+- "Sobre o plano" é orientação geral para uso pessoal: cita fontes oficiais, sem garantia,
+  não substitui orientação profissional e não aconselha consumo nem descarte. Se o app for
+  compartilhado ou vendido, o conteúdo exige revisão profissional antes.
+- A quantidade de receitas não é fixa no texto do app. A Home não cita número; a biblioteca
+  é a fonte de verdade.
+- Validade de congelamento da receita é opcional. Sem valor informado, não há vencimento
+  calculado e o estoque mostra "Validade não informada", sem classificação.
+- Sem importação no MVP: nem do backup JSON, nem de receitas por PDF ou OCR. Essas
+  importações ficam na Fase 2 (ver `backlog-fase-2.md`).
+
 ### 3.2 Módulo Jornada Física
 - Registrar peso (data, peso em kg)
 - **Linha de tendência (implementada na Etapa 6B, 2026-10-01)**: gráfico de peso com média
@@ -260,7 +271,8 @@ etapa concluída:
 
 - Multi-usuário / multi-tenant — é ferramenta pessoal
 - Qualquer forma de monetização ou abertura pra terceiros
-- Integração com balança conectada ou wearables (avaliar só se necessidade real aparecer)
+- Integração com balança conectada ou wearables no MVP. A integração com Mi Band 5 e Zepp
+  fica na Fase 2 (ver `backlog-fase-2.md`, item 2.17)
 
 ## 5. Modelo de dados do MVP
 
@@ -345,6 +357,12 @@ não negociável, mesmo sendo uso pessoal.
 
 ## 8. Definição de "Pronto" (MVP)
 
+**Status em 2026-10-06:** auditoria técnica e correções automatizadas concluídas; TypeScript,
+lint, build e testes automatizados aprovados (631 testes). **O MVP não está marcado como 100%
+validado.** Pendências: validação manual completa no navegador, no Galaxy A34 e com leitor de
+tela; smoke test pós-deploy; aplicação confirmada da migration `20261004000000_receita_validade_opcional`.
+As caixas abaixo só são marcadas com evidência.
+
 O MVP está pronto quando:
 - [ ] Dany consegue logar no app pelo celular
 - [ ] Consegue registrar um preparo de marmita e ver o estoque atualizar sozinho
@@ -352,8 +370,7 @@ O MVP está pronto quando:
 - [ ] Alerta de validade (verde/amarelo/vermelho) aparece corretamente no estoque
 - [ ] App está deployado e acessível via URL, não só rodando local
 - [ ] RLS testado — confirma que sem login não é possível acessar nenhum dado
-- [ ] Biblioteca de receitas populada com as 16 receitas do guia original (ingredientes,
-  modo de preparo, dicas), permitindo abandonar o PDF como referência
+- [x] Biblioteca inicial de receitas cadastradas e disponíveis para o planejamento de marmitas.
 - [ ] Cronograma planejado das 4 semanas cadastrado — app indica o que preparar na semana,
   não só o que já foi preparado
 - [ ] Registro de hidratação por quantidade (ml), com indicador de progresso do dia até a meta

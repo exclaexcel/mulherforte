@@ -2,6 +2,14 @@
 
 Fundação: Next.js 14 + Supabase Auth + `perfil_usuario` (RLS) + deploy.
 
+## Status atual (2026-10-06)
+
+- Auditoria técnica e correções concluídas. TypeScript, lint, build e 631 testes automatizados aprovados.
+- **Validação manual pendente:** navegador, Galaxy A34, leitor de tela e smoke test pós-deploy.
+- O MVP **não** está marcado como 100% validado. Detalhes em `etapas-mvp.md` e `prd-jornada-app.md` (seção 8).
+- Migration `20261004000000_receita_validade_opcional.sql`: confirmar aplicação antes do deploy.
+- Upgrade de Next e dependências: rodada separada.
+
 ## Setup local
 
 1. Copie `.env.example` → `.env.local` e preencha URL + anon key do Supabase (mesmo projeto do MCP / ReForma, se for o caso).

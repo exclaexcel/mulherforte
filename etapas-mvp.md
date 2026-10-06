@@ -171,6 +171,35 @@ indicador exploratório sem classificação.
 
 Não marcar esta entrega como concluída antes da migration e dos pós-checks.
 
+## Auditoria técnica e correções (2026-10-06)
+
+**Status: técnico aprovado; validação manual pendente. O MVP não está marcado como 100% validado.**
+
+- [x] Auditoria por blocos (fundação e segurança, Jornada Física, Marmitas, exportação, UX,
+  arquitetura) com correções em rodadas numeradas (1 a 7 e 4B)
+- [x] Integridade da água: falha de leitura bloqueia a escrita; sem gravação parcial
+- [x] Falhas de leitura não aparecem como vazio falso; mensagem em pt-BR
+- [x] Formulários preservam dados em erros previsíveis (sem `throw` para erro de usuário)
+- [x] Proteção contra duplo envio em formulários e ações
+- [x] Datas futuras bloqueadas no servidor; zero tratado como valor
+- [x] Alternâncias e confirmação de consumo calculadas pelo estado do banco
+- [x] Exportação paginada por cursor, sem depender de Max Rows (dez CSVs e JSON 1.0,
+  sem contagens no JSON)
+- [x] Contraste e acessibilidade: texto 4,5:1, bordas e gráfico 3:1; resumo textual do
+  gráfico; emojis decorativos com `aria-hidden`
+- [x] Telas de erro, 404 e erro global em pt-BR, sem detalhe técnico
+- [x] Home sem quantidade fixa de receitas; cronograma sem separadores vazios
+- [x] Código morto comprovado removido (`ConfirmSubmitButton`)
+- [x] TypeScript, lint e build aprovados; 631 testes automatizados passando
+- [ ] Validação manual completa no navegador, no Galaxy A34, com leitor de tela
+- [ ] Smoke test pós-deploy
+- [ ] Confirmação da aplicação da migration `20261004000000_receita_validade_opcional`
+  (versionada, não confirmada no banco nesta rodada)
+- [ ] Upgrade de Next e dependências: rodada separada, não incluída nesta entrega
+
+Fora do MVP, registrado no backlog: importação do backup JSON, importação de receitas por
+texto, PDF ou OCR, e integração com Mi Band 5 e Zepp.
+
 ## Observação sobre prioridade real
 
 Se o tempo for curto amanhã, as **Etapas 1-4 já entregam o valor original**: sair do Excel
