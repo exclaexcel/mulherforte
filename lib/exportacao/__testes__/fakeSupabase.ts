@@ -1,47 +1,98 @@
 import { vi } from "vitest";
 
 /**
- * Fake do cliente Supabase só para testes, com dados fictícios. Aplica os
- * filtros .eq de verdade, então um teste de isolamento falha se alguma
- * consulta esquecer o user_id. Registra todas as chamadas e qualquer tentativa
- * de escrita (que deve ser zero na exportação).
+ * Fake do cliente Supabase só para testes, com dados fictícios. Aplica de verdade os
+ * filtros .eq e .gt, a ordenação e o .limit, para simular a paginação por cursor.
+ * Registra todas as chamadas e qualquer tentativa de escrita (que deve ser zero na
+ * exportação).
+ *
+ * Opções:
+ * - erroEm: toda consulta da tabela devolve erro.
+ * - erroNaPagina: só a página N (contada por tabela, a partir de 1) devolve erro.
+ * - lancaEm: a consulta lança exceção, como falha de rede.
+ * - limiteServidor: corta cada resposta neste número de linhas, como o Max Rows do
+ *   Supabase faria. A paginação precisa funcionar mesmo assim.
  */
 
 export type Linha = Record<string, unknown>;
 
 export type Chamada = { tabela: string; metodo: string; args: unknown[] };
 
+type Filtro = { coluna: string; op: "eq" | "gt"; valor: unknown };
+
 export function criarFakeSupabase(
   tabelas: Record<string, Linha[]>,
-  opcoes: { erroEm?: string; lancaEm?: string } = {}
+  opcoes: {
+    erroEm?: string;
+    erroNaPagina?: { tabela: string; pagina: number };
+    lancaEm?: string;
+    limiteServidor?: number;
+  } = {}
 ) {
   const chamadas: Chamada[] = [];
   const escritas: Chamada[] = [];
+  const paginasPorTabela: Record<string, number> = {};
 
   function criarConsulta(tabela: string) {
-    const filtros: [string, unknown][] = [];
+    paginasPorTabela[tabela] = (paginasPorTabela[tabela] ?? 0) + 1;
+    const pagina = paginasPorTabela[tabela];
+
+    const filtros: Filtro[] = [];
+    let ordem: string | null = null;
+    let limite: number | null = null;
     const linhasDaTabela = tabelas[tabela] ?? [];
 
-    const filtradas = () =>
-      linhasDaTabela.filter((l) => filtros.every(([coluna, valor]) => l[coluna] === valor));
+    const resultadoDaConsulta = () => {
+      let linhas = linhasDaTabela.filter((l) =>
+        filtros.every((f) =>
+          f.op === "eq" ? l[f.coluna] === f.valor : String(l[f.coluna]) > String(f.valor)
+        )
+      );
+      if (ordem) {
+        linhas = [...linhas].sort((a, b) => (String(a[ordem!]) < String(b[ordem!]) ? -1 : String(a[ordem!]) > String(b[ordem!]) ? 1 : 0));
+      }
+      const corte = Math.min(limite ?? Infinity, opcoes.limiteServidor ?? Infinity);
+      return linhas.slice(0, corte === Infinity ? undefined : corte);
+    };
 
-    const resultado = () =>
-      opcoes.erroEm === tabela
-        ? { data: null, error: { message: "erro simulado" } }
-        : { data: filtradas(), error: null };
+    const resultado = () => {
+      if (opcoes.erroEm === tabela) {
+        return { data: null, error: { message: "erro simulado" } };
+      }
+      if (opcoes.erroNaPagina?.tabela === tabela && opcoes.erroNaPagina.pagina === pagina) {
+        return { data: null, error: { message: "erro simulado na página" } };
+      }
+      return { data: resultadoDaConsulta(), error: null };
+    };
 
     const consulta: Record<string, unknown> = {};
 
-    for (const metodo of ["select", "order"] as const) {
-      consulta[metodo] = (...args: unknown[]) => {
-        chamadas.push({ tabela, metodo, args });
-        return consulta;
-      };
-    }
+    consulta.select = (...args: unknown[]) => {
+      chamadas.push({ tabela, metodo: "select", args });
+      return consulta;
+    };
+
+    consulta.order = (coluna: string, ...resto: unknown[]) => {
+      chamadas.push({ tabela, metodo: "order", args: [coluna, ...resto] });
+      ordem = coluna;
+      return consulta;
+    };
+
+    consulta.limit = (n: number) => {
+      chamadas.push({ tabela, metodo: "limit", args: [n] });
+      limite = n;
+      return consulta;
+    };
 
     consulta.eq = (coluna: string, valor: unknown) => {
       chamadas.push({ tabela, metodo: "eq", args: [coluna, valor] });
-      filtros.push([coluna, valor]);
+      filtros.push({ coluna, op: "eq", valor });
+      return consulta;
+    };
+
+    consulta.gt = (coluna: string, valor: unknown) => {
+      chamadas.push({ tabela, metodo: "gt", args: [coluna, valor] });
+      filtros.push({ coluna, op: "gt", valor });
       return consulta;
     };
 
@@ -76,7 +127,7 @@ export function criarFakeSupabase(
     from: vi.fn((tabela: string) => criarConsulta(tabela)),
   };
 
-  return { supabase, chamadas, escritas };
+  return { supabase, chamadas, escritas, paginasPorTabela };
 }
 
 export const USER_ID = "00000000-0000-4000-8000-0000000000aa";

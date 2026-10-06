@@ -18,7 +18,7 @@ export default async function ExportarPage() {
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Início
         </Link>

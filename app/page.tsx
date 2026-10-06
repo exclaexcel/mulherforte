@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/logout-button";
 import { NavCard } from "@/components/marmitas/nav-card";
 import { HomeTabs } from "@/components/home-tabs";
+import { houveFalhaDeConsulta, MENSAGEM_ERRO_LEITURA } from "@/lib/leitura";
 import { redirect } from "next/navigation";
 import {
   ChefHat,
@@ -37,12 +38,14 @@ export default async function HomePage({
     redirect("/login");
   }
 
-  const { data: perfil } = await supabase
+  const { data: perfil, error: erroPerfil } = await supabase
     .from("perfil_usuario")
     .select("nome")
     .eq("user_id", user.id)
     .maybeSingle();
 
+  // A Home é o menu: a falha só troca a saudação. Os cartões seguem disponíveis.
+  const falhouPerfil = houveFalhaDeConsulta({ error: erroPerfil });
   const saudacao = perfil?.nome ? perfil.nome : user.email;
   const perfilSalvo = searchParams?.perfil_salvo === "1";
 
@@ -50,9 +53,13 @@ export default async function HomePage({
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto">
       <header className="flex items-start justify-between gap-4 mb-8">
         <div>
-          <p className="text-sm text-oliva/70">Olá, {saudacao}</p>
+          {falhouPerfil ? (
+            <p className="text-sm text-stone-600">{MENSAGEM_ERRO_LEITURA}</p>
+          ) : (
+            <p className="text-sm text-oliva/85">Olá, {saudacao}</p>
+          )}
           <h1 className="text-2xl font-bold text-oliva">Projeto Mulher Forte</h1>
-          <Link href="/perfil" className="inline-flex items-center gap-1 text-xs text-oliva/70 mt-2">
+          <Link href="/perfil" className="inline-flex items-center gap-1 text-xs text-oliva/85 mt-2">
             <Pencil className="h-3 w-3" />
             Editar perfil
           </Link>
@@ -61,7 +68,7 @@ export default async function HomePage({
       </header>
 
       {perfilSalvo ? (
-        <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3 mb-6">
+        <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3 mb-6">
           Perfil atualizado!
         </p>
       ) : null}
@@ -171,7 +178,7 @@ export default async function HomePage({
                   href="/marmitas/receitas"
                   icon={BookOpen}
                   titulo="Biblioteca de receitas"
-                  descricao="As 16 receitas do guia, sem precisar abrir o PDF"
+                  descricao="Acesse sua biblioteca de receitas para planejar as marmitas."
                 />
                 <NavCard
                   href="/marmitas/cronograma"

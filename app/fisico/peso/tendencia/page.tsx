@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { dataISOParaUTC, hojeISO, somarDias } from "@/lib/date";
 import { calcularLinhaTendenciaPeso } from "@/lib/fisico/tendenciaPeso";
 import { GraficoTendenciaPeso } from "@/components/fisico/grafico-tendencia-peso";
+import { ResumoTendenciaPeso } from "@/components/fisico/resumo-tendencia";
+import { resumoTendencia } from "@/lib/fisico/resumoTendencia";
 
 const DIAS_JANELA_EXIBICAO = 90;
 
@@ -42,12 +44,12 @@ export default async function TendenciaPesoPage() {
 
   const cabecalho = (
     <header>
-      <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+      <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
         <Home className="h-4 w-4" />
         Início
       </Link>
       <h1 className="text-2xl font-bold text-oliva mt-1">Tendência do peso</h1>
-      <p className="text-sm text-stone-500 mt-2">
+      <p className="text-sm text-stone-600 mt-2">
         Os pontos representam pesagens registradas. As linhas mostram médias calculadas somente
         com os registros disponíveis em cada janela. O peso de um único dia é um ponto — a
         tendência mostra o caminho.
@@ -80,6 +82,10 @@ export default async function TendenciaPesoPage() {
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       {cabecalho}
 
+      {pontosCompletos.length > 0 ? (
+        <ResumoTendenciaPeso resumo={resumoTendencia(pontosCompletos)} />
+      ) : null}
+
       {pontosExibidos.length === 0 ? (
         <section className="rounded-2xl bg-stone-50 border border-stone-200 p-5 space-y-2">
           <p className="text-sm text-stone-600">Ainda não há peso registrado.</p>
@@ -100,7 +106,7 @@ export default async function TendenciaPesoPage() {
       ) : (
         <>
           <GraficoTendenciaPeso pontos={pontosExibidos} />
-          <p className="text-xs text-stone-400">
+          <p className="text-xs text-stone-600">
             Exibindo os últimos {DIAS_JANELA_EXIBICAO} dias. Estimativas informativas, sem meta
             nem previsão.
           </p>

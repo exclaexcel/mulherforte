@@ -18,7 +18,7 @@ export function compararComMeta(
   const diferenca = Number((valorAtual - valorMeta).toFixed(2));
 
   if (diferenca <= 0) {
-    return { diferenca, texto: "Meta batida! 🎉" };
+    return { diferenca, texto: "Meta batida!" };
   }
 
   return { diferenca, texto: `Faltam ${diferenca.toFixed(1)}${unidade} para a meta` };

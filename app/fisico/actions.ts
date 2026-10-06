@@ -3,10 +3,12 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { hojeISO } from "@/lib/date";
+import { ehDataFutura, hojeISO } from "@/lib/date";
 import { treinoObrigatorioDoDia } from "@/lib/fisico/calendarioTreino";
 import { selecionarMedidaReferencia, verificarVariacaoAtipica } from "@/lib/fisico/medidas";
-import type { IndicadorMeta, RegiaoMedida } from "@/lib/fisico/types";
+import { REGIOES_MEDIDA, TIPOS_TREINO, type IndicadorMeta, type RegiaoMedida } from "@/lib/fisico/types";
+import { lerNumeroObrigatorio, lerNumeroOpcional, type LeituraNumero } from "@/lib/numero-formulario";
+import { MENSAGEM_DATA_FUTURA, type ResultadoAcao } from "@/lib/resultado-acao";
 
 async function getUserOrRedirect() {
   const supabase = await createClient();
@@ -21,17 +23,41 @@ async function getUserOrRedirect() {
   return { supabase, user };
 }
 
-export async function registrarPeso(formData: FormData) {
+const MENSAGEM_PERCENTUAL = (rotulo: string) =>
+  `O percentual de ${rotulo} deve ser um número entre 0 e 100.`;
+
+const entre0e100 = (n: number) => n >= 0 && n <= 100;
+
+export async function registrarPeso(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
   const data = String(formData.get("data") ?? "");
   const pesoKg = Number(formData.get("peso_kg"));
-  const percentualGorduraRaw = formData.get("percentual_gordura");
-  const percentualMassaMuscularRaw = formData.get("percentual_massa_muscular");
-  const percentualAguaRaw = formData.get("percentual_agua");
 
-  if (!data || !pesoKg || pesoKg <= 0) {
-    throw new Error("Data e peso são obrigatórios.");
+  if (!data) {
+    return { ok: false, erro: "Informe a data do registro." };
+  }
+
+  if (ehDataFutura(data)) {
+    return { ok: false, erro: MENSAGEM_DATA_FUTURA };
+  }
+
+  if (!Number.isFinite(pesoKg) || pesoKg <= 0) {
+    return { ok: false, erro: "Informe um peso maior que zero." };
+  }
+
+  const gordura = lerNumeroOpcional(formData.get("percentual_gordura"), entre0e100, MENSAGEM_PERCENTUAL("gordura"));
+  const massaMuscular = lerNumeroOpcional(
+    formData.get("percentual_massa_muscular"),
+    entre0e100,
+    MENSAGEM_PERCENTUAL("massa muscular")
+  );
+  const agua = lerNumeroOpcional(formData.get("percentual_agua"), entre0e100, MENSAGEM_PERCENTUAL("água"));
+
+  const leituras: LeituraNumero[] = [gordura, massaMuscular, agua];
+  const falha = leituras.find((l) => !l.ok);
+  if (falha && !falha.ok) {
+    return { ok: false, erro: falha.erro };
   }
 
   const { error } = await supabase.from("registros_peso").upsert(
@@ -39,51 +65,74 @@ export async function registrarPeso(formData: FormData) {
       user_id: user.id,
       data,
       peso_kg: pesoKg,
-      percentual_gordura: percentualGorduraRaw ? Number(percentualGorduraRaw) : null,
-      percentual_massa_muscular: percentualMassaMuscularRaw
-        ? Number(percentualMassaMuscularRaw)
-        : null,
-      percentual_agua: percentualAguaRaw ? Number(percentualAguaRaw) : null,
+      percentual_gordura: gordura.ok ? gordura.valor : null,
+      percentual_massa_muscular: massaMuscular.ok ? massaMuscular.valor : null,
+      percentual_agua: agua.ok ? agua.valor : null,
     },
     { onConflict: "user_id,data" }
   );
 
   if (error) {
-    throw new Error(error.message);
+    return { ok: false, erro: "Não foi possível salvar o peso. Tente novamente." };
   }
 
   revalidatePath("/fisico/peso");
   revalidatePath("/fisico/metas");
   revalidatePath("/fisico/indicadores");
-  redirect("/fisico/peso?peso_salvo=1");
+  return { ok: true, destino: "/fisico/peso?peso_salvo=1" };
 }
 
-export async function excluirPesoHoje() {
+/**
+ * Exclui o registro de hoje de uma tabela da Jornada, filtrando por user_id e data.
+ * Zero linhas apagadas não é sucesso: a tela informa que não há registro para excluir.
+ */
+async function excluirRegistroDeHoje(
+  tabela: "registros_peso" | "medidas_corporais" | "adesao_treino" | "adesao_habitos",
+  caminhosRevalidados: string[],
+  destino: string
+): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
-  const { error } = await supabase
-    .from("registros_peso")
+  const { data, error } = await supabase
+    .from(tabela)
     .delete()
     .eq("user_id", user.id)
-    .eq("data", hojeISO());
+    .eq("data", hojeISO())
+    .select("id");
 
   if (error) {
-    throw new Error(error.message);
+    return { ok: false, erro: "Não foi possível excluir o registro agora. Tente novamente." };
   }
 
-  revalidatePath("/fisico/peso");
-  revalidatePath("/fisico/metas");
-  revalidatePath("/fisico/indicadores");
-  redirect("/fisico/peso?registro_excluido=1");
+  if (!data || data.length === 0) {
+    return { ok: false, erro: "Não há registro de hoje para excluir. Atualize a página." };
+  }
+
+  for (const caminho of caminhosRevalidados) {
+    revalidatePath(caminho);
+  }
+  return { ok: true, destino };
 }
 
-export async function registrarMedidas(formData: FormData) {
+export async function excluirPesoHoje(): Promise<ResultadoAcao> {
+  return excluirRegistroDeHoje(
+    "registros_peso",
+    ["/fisico/peso", "/fisico/metas", "/fisico/indicadores"],
+    "/fisico/peso?registro_excluido=1"
+  );
+}
+
+export async function registrarMedidas(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
   const data = String(formData.get("data") ?? "");
 
   if (!data) {
-    throw new Error("Data é obrigatória.");
+    return { ok: false, erro: "Informe a data das medidas." };
+  }
+
+  if (ehDataFutura(data)) {
+    return { ok: false, erro: MENSAGEM_DATA_FUTURA };
   }
 
   const campos: { regiao: RegiaoMedida; raw: FormDataEntryValue | null }[] = [
@@ -93,23 +142,23 @@ export async function registrarMedidas(formData: FormData) {
     { regiao: "abdomen_inferior", raw: formData.get("abdomen_inferior_cm") },
   ];
 
-  const registros = campos
-    .filter((c) => c.raw !== null && String(c.raw).trim() !== "")
-    .map((c) => {
-      const valorCm = Number(c.raw);
-      if (!valorCm || valorCm <= 0) {
-        throw new Error(`Valor inválido para ${c.regiao}.`);
-      }
-      return {
-        user_id: user.id,
-        data,
-        regiao: c.regiao,
-        valor_cm: valorCm,
-      };
-    });
+  const registros: { user_id: string; data: string; regiao: RegiaoMedida; valor_cm: number }[] = [];
+  for (const campo of campos) {
+    const leitura = lerNumeroOpcional(
+      campo.raw,
+      (n) => n > 0,
+      `Valor inválido para ${rotuloRegiao(campo.regiao)}. Use centímetros, maior que zero.`
+    );
+    if (!leitura.ok) {
+      return { ok: false, erro: leitura.erro };
+    }
+    if (leitura.valor !== null) {
+      registros.push({ user_id: user.id, data, regiao: campo.regiao, valor_cm: leitura.valor });
+    }
+  }
 
   if (registros.length === 0) {
-    throw new Error("Preencha pelo menos uma medida.");
+    return { ok: false, erro: "Preencha pelo menos uma medida." };
   }
 
   // Sanity check de variação atípica (PRD §3.2): compara com a medida de
@@ -117,79 +166,103 @@ export async function registrarMedidas(formData: FormData) {
   // margem), a mais próxima de 30 dias. Não bloqueia o salvamento, só
   // sinaliza pra tela avisar depois do redirect.
   const regioesSendoSalvas = registros.map((r) => r.regiao);
-  const { data: candidatas } = await supabase
+  const { data: candidatas, error: erroCandidatas } = await supabase
     .from("medidas_corporais")
     .select("regiao, data, valor_cm")
     .eq("user_id", user.id)
     .in("regiao", regioesSendoSalvas)
     .neq("data", data);
 
-  const variacoesAtipicas = registros
-    .filter((registro) => {
-      const candidatasRegiao = (candidatas ?? [])
-        .filter((c) => c.regiao === registro.regiao)
-        .map((c) => ({ data: c.data, valorCm: c.valor_cm }));
+  // Sem as medidas anteriores, o alerta não é calculado. O salvamento segue normalmente.
+  const variacoesAtipicas = erroCandidatas
+    ? []
+    : registros
+        .filter((registro) => {
+          const candidatasRegiao = (candidatas ?? [])
+            .filter((c) => c.regiao === registro.regiao)
+            .map((c) => ({ data: c.data, valorCm: c.valor_cm }));
 
-      const referencia = selecionarMedidaReferencia(candidatasRegiao, data);
+          const referencia = selecionarMedidaReferencia(candidatasRegiao, data);
 
-      return referencia !== null && verificarVariacaoAtipica(registro.valor_cm, referencia.valorCm);
-    })
-    .map((registro) => registro.regiao);
+          return referencia !== null && verificarVariacaoAtipica(registro.valor_cm, referencia.valorCm);
+        })
+        .map((registro) => registro.regiao);
 
   const { error } = await supabase
     .from("medidas_corporais")
     .upsert(registros, { onConflict: "user_id,data,regiao" });
 
   if (error) {
-    throw new Error(error.message);
+    return { ok: false, erro: "Não foi possível salvar as medidas. Tente novamente." };
   }
 
   revalidatePath("/fisico/medidas");
   revalidatePath("/fisico/metas");
   revalidatePath("/fisico/indicadores");
+
+  const aviso =
+    variacoesAtipicas.length > 0
+      ? `Atenção: ${variacoesAtipicas.map(rotuloRegiao).join(", ")} com diferença maior que 3 cm em relação à medição de referência. Confira o ponto de medição e, se necessário, registre novamente.`
+      : undefined;
 
   const query =
     variacoesAtipicas.length > 0
       ? `medidas_salvas=1&variacao_atipica=${variacoesAtipicas.join(",")}`
       : "medidas_salvas=1";
-  redirect(`/fisico/medidas?${query}`);
+  return { ok: true, destino: `/fisico/medidas?${query}`, aviso };
 }
 
-export async function excluirMedidasHoje() {
-  const { supabase, user } = await getUserOrRedirect();
-
-  const { error } = await supabase
-    .from("medidas_corporais")
-    .delete()
-    .eq("user_id", user.id)
-    .eq("data", hojeISO());
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/fisico/medidas");
-  revalidatePath("/fisico/metas");
-  revalidatePath("/fisico/indicadores");
-  redirect("/fisico/medidas?registro_excluido=1");
+function rotuloRegiao(regiao: RegiaoMedida): string {
+  return REGIOES_MEDIDA.find((r) => r.value === regiao)?.label ?? regiao;
 }
 
-export async function registrarTreino(formData: FormData) {
+export async function excluirMedidasHoje(): Promise<ResultadoAcao> {
+  return excluirRegistroDeHoje(
+    "medidas_corporais",
+    ["/fisico/medidas", "/fisico/metas", "/fisico/indicadores"],
+    "/fisico/medidas?registro_excluido=1"
+  );
+}
+
+export async function registrarTreino(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
   const data = String(formData.get("data") ?? "");
   const tipo = String(formData.get("tipo") ?? "");
   const realizado = formData.get("realizado") === "on";
   const tipoOutroDescricao = String(formData.get("tipo_outro_descricao") ?? "").trim() || null;
-  const duracaoRaw = formData.get("duracao_minutos");
-  const caloriasRaw = formData.get("calorias");
 
   if (!data || !tipo) {
-    throw new Error("Data e tipo de treino são obrigatórios.");
+    return { ok: false, erro: "Informe a data e o tipo de treino." };
+  }
+
+  if (ehDataFutura(data)) {
+    return { ok: false, erro: MENSAGEM_DATA_FUTURA };
+  }
+
+  if (!TIPOS_TREINO.some((t) => t.value === tipo)) {
+    return { ok: false, erro: "Tipo de treino inválido. Escolha uma das opções da lista." };
   }
 
   if (tipo === "outro" && !tipoOutroDescricao) {
-    throw new Error('Descreva qual atividade foi, já que o tipo é "Outro".');
+    return { ok: false, erro: 'Descreva qual atividade foi, já que o tipo é "Outro".' };
+  }
+
+  const duracao = lerNumeroOpcional(
+    formData.get("duracao_minutos"),
+    (n) => Number.isInteger(n) && n > 0,
+    "A duração deve ser um número inteiro de minutos, maior que zero."
+  );
+  const calorias = lerNumeroOpcional(
+    formData.get("calorias"),
+    (n) => Number.isInteger(n) && n > 0,
+    "As calorias devem ser um número inteiro, maior que zero."
+  );
+
+  const leituras = [duracao, calorias];
+  const falha = leituras.find((l) => !l.ok);
+  if (falha && !falha.ok) {
+    return { ok: false, erro: falha.erro };
   }
 
   // Obrigatoriedade vem só do calendário fixo (Etapa 6A) — nunca de um
@@ -206,86 +279,124 @@ export async function registrarTreino(formData: FormData) {
       obrigatorio,
       realizado,
       tipo_outro_descricao: tipo === "outro" ? tipoOutroDescricao : null,
-      duracao_minutos: duracaoRaw ? Number(duracaoRaw) : null,
-      calorias: caloriasRaw ? Number(caloriasRaw) : null,
+      duracao_minutos: duracao.ok ? duracao.valor : null,
+      calorias: calorias.ok ? calorias.valor : null,
     },
     { onConflict: "user_id,data" }
   );
 
   if (error) {
-    throw new Error(error.message);
+    return { ok: false, erro: "Não foi possível salvar o treino. Tente novamente." };
   }
 
   revalidatePath("/fisico/treino");
-  redirect("/fisico/treino?treino_salvo=1");
+  return { ok: true, destino: "/fisico/treino?treino_salvo=1" };
 }
 
-export async function excluirTreinoHoje() {
-  const { supabase, user } = await getUserOrRedirect();
-
-  const { error } = await supabase
-    .from("adesao_treino")
-    .delete()
-    .eq("user_id", user.id)
-    .eq("data", hojeISO());
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/fisico/treino");
-  redirect("/fisico/treino?registro_excluido=1");
+export async function excluirTreinoHoje(): Promise<ResultadoAcao> {
+  return excluirRegistroDeHoje("adesao_treino", ["/fisico/treino"], "/fisico/treino?registro_excluido=1");
 }
 
-export async function incrementarAgua(formData: FormData) {
+const MENSAGEM_AGUA_INDISPONIVEL = "Não foi possível atualizar a água agora. Tente novamente.";
+
+type ClienteSupabase = Awaited<ReturnType<typeof createClient>>;
+
+type LeituraAgua = { ok: true; quantidadeMl: number } | { ok: false };
+
+/**
+ * Incremento somado ao total do dia. Erros previsíveis voltam como resultado; a
+ * escrita só acontece depois de ler o total e a meta com sucesso.
+ */
+export async function incrementarAgua(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
   const incrementoMl = Number(formData.get("incremento_ml"));
-  if (!incrementoMl || incrementoMl <= 0) {
-    throw new Error("Incremento inválido.");
+  if (!Number.isFinite(incrementoMl) || incrementoMl <= 0) {
+    return { ok: false, erro: "Incremento inválido." };
   }
 
   const hoje = hojeISO();
-
-  const { data: registroHoje } = await supabase
-    .from("adesao_habitos")
-    .select("quantidade_agua_ml")
-    .eq("user_id", user.id)
-    .eq("data", hoje)
-    .maybeSingle();
-
-  const novaQuantidade = (registroHoje?.quantidade_agua_ml ?? 0) + incrementoMl;
-
-  await salvarQuantidadeAgua(user.id, hoje, novaQuantidade);
-
-  revalidatePath("/fisico/habitos");
-}
-
-export async function ajustarAguaManual(formData: FormData) {
-  const { user } = await getUserOrRedirect();
-
-  const valorMl = Number(formData.get("valor_ml"));
-  if (valorMl === null || valorMl < 0 || Number.isNaN(valorMl)) {
-    throw new Error("Quantidade inválida.");
+  const leitura = await lerQuantidadeAgua(supabase, user.id, hoje);
+  if (!leitura.ok) {
+    return { ok: false, erro: MENSAGEM_AGUA_INDISPONIVEL };
   }
 
-  await salvarQuantidadeAgua(user.id, hojeISO(), valorMl);
-
-  revalidatePath("/fisico/habitos");
+  return salvarQuantidadeAgua(supabase, user.id, hoje, leitura.quantidadeMl + incrementoMl);
 }
 
-async function salvarQuantidadeAgua(userId: string, data: string, quantidadeMl: number) {
-  const supabase = await createClient();
+/**
+ * Substitui o total do dia pelo valor informado. Campo vazio é inválido: sem essa
+ * checagem, apagar o campo gravaria zero em silêncio.
+ */
+export async function ajustarAguaManual(formData: FormData): Promise<ResultadoAcao> {
+  const { supabase, user } = await getUserOrRedirect();
 
-  const { data: meta } = await supabase
+  const bruto = String(formData.get("valor_ml") ?? "").trim();
+  const valorMl = Number(bruto);
+  if (bruto === "" || !Number.isFinite(valorMl) || valorMl < 0) {
+    return { ok: false, erro: "Informe uma quantidade de água válida." };
+  }
+
+  // O ajuste substitui o total, mas a leitura confirma que o banco responde antes de gravar.
+  const hoje = hojeISO();
+  const leitura = await lerQuantidadeAgua(supabase, user.id, hoje);
+  if (!leitura.ok) {
+    return { ok: false, erro: MENSAGEM_AGUA_INDISPONIVEL };
+  }
+
+  return salvarQuantidadeAgua(supabase, user.id, hoje, valorMl);
+}
+
+/**
+ * Lê o total de água do dia. Sem registro (consulta bem-sucedida) vale zero.
+ * Erro de leitura não é zero: é falha, e a escrita não acontece.
+ */
+async function lerQuantidadeAgua(
+  supabase: ClienteSupabase,
+  userId: string,
+  data: string
+): Promise<LeituraAgua> {
+  const { data: registro, error } = await supabase
+    .from("adesao_habitos")
+    .select("quantidade_agua_ml")
+    .eq("user_id", userId)
+    .eq("data", data)
+    .maybeSingle();
+
+  if (error) {
+    return { ok: false };
+  }
+
+  return { ok: true, quantidadeMl: registro?.quantidade_agua_ml ?? 0 };
+}
+
+/**
+ * Grava o total do dia e o snapshot de bebeu_agua_meta. Falha de leitura da meta
+ * ou de gravação para antes do upsert: nada parcial e nenhum false de fallback.
+ */
+async function salvarQuantidadeAgua(
+  supabase: ClienteSupabase,
+  userId: string,
+  data: string,
+  quantidadeMl: number
+): Promise<ResultadoAcao> {
+  if (!Number.isFinite(quantidadeMl) || quantidadeMl < 0) {
+    return { ok: false, erro: MENSAGEM_AGUA_INDISPONIVEL };
+  }
+
+  const { data: meta, error: erroMeta } = await supabase
     .from("metas")
     .select("meta_hidratacao_litros_dia")
     .eq("user_id", userId)
     .eq("indicador", "hidratacao")
     .maybeSingle();
 
+  if (erroMeta) {
+    return { ok: false, erro: MENSAGEM_AGUA_INDISPONIVEL };
+  }
+
   const metaLitros = meta?.meta_hidratacao_litros_dia ?? null;
-  // Sem meta válida, a hidratação é excluída do score semanal.
+  // Sem meta válida (consulta concluída sem meta), a hidratação fica fora do score semanal.
   const bebeuAguaMeta = metaLitros ? quantidadeMl / 1000 >= metaLitros : false;
 
   const { error } = await supabase.from("adesao_habitos").upsert(
@@ -299,46 +410,54 @@ async function salvarQuantidadeAgua(userId: string, data: string, quantidadeMl: 
   );
 
   if (error) {
-    throw new Error(error.message);
+    return { ok: false, erro: MENSAGEM_AGUA_INDISPONIVEL };
   }
+
+  revalidatePath("/fisico/habitos");
+  return { ok: true, destino: "/fisico/habitos" };
 }
 
-export async function alternarProteina(formData: FormData) {
+/**
+ * Inverte a proteína do dia a partir do valor gravado, não do valor do formulário.
+ * Falha de leitura não grava: sem saber o estado atual, não há valor correto a gravar.
+ */
+export async function alternarProteina(): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
+  const hoje = hojeISO();
 
-  const priorizouAtual = formData.get("priorizou_proteina_atual") === "true";
+  const { data: registro, error: erroLeitura } = await supabase
+    .from("adesao_habitos")
+    .select("priorizou_proteina")
+    .eq("user_id", user.id)
+    .eq("data", hoje)
+    .maybeSingle();
 
+  if (erroLeitura) {
+    return { ok: false, erro: "Não foi possível atualizar agora. Tente novamente." };
+  }
+
+  const priorizouAtual = registro?.priorizou_proteina === true;
+
+  // O upsert só envia a proteína: a quantidade de água do dia não é alterada.
   const { error } = await supabase.from("adesao_habitos").upsert(
     {
       user_id: user.id,
-      data: hojeISO(),
+      data: hoje,
       priorizou_proteina: !priorizouAtual,
     },
     { onConflict: "user_id,data" }
   );
 
   if (error) {
-    throw new Error(error.message);
+    return { ok: false, erro: "Não foi possível atualizar agora. Tente novamente." };
   }
 
   revalidatePath("/fisico/habitos");
+  return { ok: true, destino: "/fisico/habitos" };
 }
 
-export async function excluirHabitosHoje() {
-  const { supabase, user } = await getUserOrRedirect();
-
-  const { error } = await supabase
-    .from("adesao_habitos")
-    .delete()
-    .eq("user_id", user.id)
-    .eq("data", hojeISO());
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  revalidatePath("/fisico/habitos");
-  redirect("/fisico/habitos?registro_excluido=1");
+export async function excluirHabitosHoje(): Promise<ResultadoAcao> {
+  return excluirRegistroDeHoje("adesao_habitos", ["/fisico/habitos"], "/fisico/habitos?registro_excluido=1");
 }
 
 const UNIDADE_POR_INDICADOR: Record<IndicadorMeta, "kg" | "cm" | null> = {
@@ -348,21 +467,30 @@ const UNIDADE_POR_INDICADOR: Record<IndicadorMeta, "kg" | "cm" | null> = {
   hidratacao: null,
 };
 
-export async function salvarMeta(formData: FormData) {
+export async function salvarMeta(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
   const indicador = String(formData.get("indicador") ?? "") as IndicadorMeta;
+  // data_inicio segue o comportamento atual: vem do formulário ou é hoje.
   const dataInicio = String(formData.get("data_inicio") ?? "") || hojeISO();
   const fase = String(formData.get("fase") ?? "").trim() || null;
 
   if (!indicador || !(indicador in UNIDADE_POR_INDICADOR)) {
-    throw new Error("Indicador inválido.");
+    return { ok: false, erro: "Indicador inválido." };
+  }
+
+  if (ehDataFutura(dataInicio)) {
+    return { ok: false, erro: MENSAGEM_DATA_FUTURA };
   }
 
   if (indicador === "hidratacao") {
-    const metaHidratacao = Number(formData.get("meta_hidratacao_litros_dia"));
-    if (!metaHidratacao || metaHidratacao <= 0) {
-      throw new Error("Meta diária de hidratação é obrigatória.");
+    const metaHidratacao = lerNumeroObrigatorio(
+      formData.get("meta_hidratacao_litros_dia"),
+      (n) => n > 0,
+      "Informe a meta diária de hidratação em litros, maior que zero."
+    );
+    if (!metaHidratacao.ok) {
+      return { ok: false, erro: metaHidratacao.erro };
     }
 
     const { error } = await supabase.from("metas").upsert(
@@ -370,21 +498,35 @@ export async function salvarMeta(formData: FormData) {
         user_id: user.id,
         indicador,
         data_inicio: dataInicio,
-        meta_hidratacao_litros_dia: metaHidratacao,
+        meta_hidratacao_litros_dia: metaHidratacao.valor,
       },
       { onConflict: "user_id,indicador" }
     );
 
     if (error) {
-      throw new Error(error.message);
+      return { ok: false, erro: "Não foi possível salvar a meta. Tente novamente." };
     }
   } else {
-    const valorReferenciaRaw = formData.get("valor_referencia");
-    const valorMeta = Number(formData.get("valor_meta"));
-    const prazoRaw = formData.get("prazo_estimado_semanas");
+    const valorMeta = lerNumeroObrigatorio(
+      formData.get("valor_meta"),
+      (n) => n > 0,
+      "Informe o valor da meta, maior que zero."
+    );
+    const valorReferencia = lerNumeroOpcional(
+      formData.get("valor_referencia"),
+      (n) => n >= 0,
+      "O valor inicial deve ser um número maior ou igual a zero."
+    );
+    const prazo = lerNumeroOpcional(
+      formData.get("prazo_estimado_semanas"),
+      (n) => Number.isInteger(n) && n > 0,
+      "O prazo deve ser um número inteiro de semanas, maior que zero."
+    );
 
-    if (!valorMeta || valorMeta <= 0) {
-      throw new Error("Valor da meta é obrigatório.");
+    const leituras = [valorMeta, valorReferencia, prazo];
+    const falha = leituras.find((l) => !l.ok);
+    if (falha && !falha.ok) {
+      return { ok: false, erro: falha.erro };
     }
 
     const { error } = await supabase.from("metas").upsert(
@@ -393,19 +535,19 @@ export async function salvarMeta(formData: FormData) {
         indicador,
         data_inicio: dataInicio,
         fase,
-        valor_referencia: valorReferenciaRaw ? Number(valorReferenciaRaw) : null,
-        valor_meta: valorMeta,
+        valor_referencia: valorReferencia.ok ? valorReferencia.valor : null,
+        valor_meta: valorMeta.ok ? valorMeta.valor : null,
         unidade: UNIDADE_POR_INDICADOR[indicador],
-        prazo_estimado_semanas: prazoRaw ? Number(prazoRaw) : null,
+        prazo_estimado_semanas: prazo.ok ? prazo.valor : null,
       },
       { onConflict: "user_id,indicador" }
     );
 
     if (error) {
-      throw new Error(error.message);
+      return { ok: false, erro: "Não foi possível salvar a meta. Tente novamente." };
     }
   }
 
   revalidatePath("/fisico/metas");
-  redirect("/fisico/metas?meta_salva=1");
+  return { ok: true, destino: "/fisico/metas?meta_salva=1" };
 }

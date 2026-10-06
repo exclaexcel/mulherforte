@@ -14,6 +14,14 @@ import {
 import { dataISOParaUTC } from "@/lib/date";
 import type { PontoTendenciaPeso } from "@/lib/fisico/tendenciaPeso";
 
+/**
+ * Média de 7 dias: tracejada e em verde-oliva escuro, com 4,45:1 sobre branco (mínimo
+ * para elemento gráfico: 3:1). O tracejado é o segundo sinal, além da cor, que separa
+ * a média dos pontos de peso (pontos) e da média de 28 dias (linha contínua e grossa).
+ */
+export const COR_MEDIA_7 = "#6B7F3A";
+export const TRACO_MEDIA_7 = "6 4";
+
 const formatarPesoKg = (valor: number) =>
   `${new Intl.NumberFormat("pt-BR", {
     minimumFractionDigits: 1,
@@ -108,8 +116,9 @@ export function GraficoTendenciaPeso({ pontos }: { pontos: PontoTendenciaPeso[] 
             <Line
               name="Média 7 dias"
               dataKey="mediaMovel7d"
-              stroke="#E8B4B8"
+              stroke={COR_MEDIA_7}
               strokeWidth={2}
+              strokeDasharray={TRACO_MEDIA_7}
               dot={false}
               connectNulls={false}
               type="monotone"
@@ -128,7 +137,7 @@ export function GraficoTendenciaPeso({ pontos }: { pontos: PontoTendenciaPeso[] 
       </div>
 
       {haJanelaParcial ? (
-        <p className="text-xs text-stone-500">
+        <p className="text-xs text-stone-600">
           Alguns pontos ainda têm histórico limitado — as médias desses pontos usam só as pesagens
           disponíveis até agora.
         </p>

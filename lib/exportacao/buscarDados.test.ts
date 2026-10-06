@@ -29,7 +29,7 @@ async function buscar(tabelas = tabelasFicticias()) {
 }
 
 describe("isolamento e segurança das consultas", () => {
-  it("consulta as 10 tabelas, uma vez cada", async () => {
+  it("consulta as 10 tabelas (cada uma pelo menos uma vez, por páginas)", async () => {
     const { chamadas } = await buscar();
     const tabelasConsultadas = chamadas.filter((c) => c.metodo === "select").map((c) => c.tabela);
     expect(Array.from(new Set(tabelasConsultadas)).sort()).toEqual([...TABELAS_EXPORTADAS].sort());
@@ -82,7 +82,7 @@ describe("isolamento e segurança das consultas", () => {
     const erro = await buscarDadosExportacao(fake.supabase as never, USER_ID).catch((e) => e);
     expect(erro).toBeInstanceOf(ExportacaoLeituraErro);
     expect(erro).not.toBeInstanceOf(ExportacaoIntegridadeErro);
-    expect(erro.message).toBe("Não foi possível ler os dados agora. Tente novamente.");
+    expect(erro.message).toBe("Não foi possível gerar o arquivo agora. Tente novamente.");
     expect(erro.message).not.toContain("erro simulado");
     expect(erro.message).not.toContain("registros_peso");
   });

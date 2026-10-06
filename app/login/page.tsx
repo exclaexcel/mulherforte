@@ -45,7 +45,7 @@ export default function LoginPage() {
           </div>
           <div className="text-center">
             <h1 className="text-2xl font-bold text-oliva">Projeto Mulher Forte</h1>
-            <p className="text-sm text-stone-500 mt-1">Marmitas + jornada física</p>
+            <p className="text-sm text-stone-600 mt-1">Marmitas + jornada física</p>
           </div>
         </div>
 

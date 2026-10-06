@@ -3,11 +3,26 @@ import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { criarItemCompra, alternarTenhoEmCasa } from "../actions";
-import { Button } from "@/components/ui/button";
+import { BotaoAcao } from "@/components/botao-acao";
+import { FormularioAcao } from "@/components/formulario-acao";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GRUPOS_COMPRA } from "@/lib/marmitas/types";
 import { listarItensCompra } from "@/lib/marmitas/consultas";
+
+/**
+ * Rótulo do item na lista. O ✓ e o ○ são decorativos; o estado vai em texto oculto
+ * visualmente, então quem usa leitor de tela também sabe se o item já está em casa.
+ */
+function rotuloItem(item: { tenho_em_casa: boolean; item: string }) {
+  return (
+    <>
+      <span aria-hidden="true">{item.tenho_em_casa ? "✓" : "○"}</span>{" "}
+      <span className="sr-only">{item.tenho_em_casa ? "Já tenho: " : "Preciso comprar: "}</span>
+      {item.item}
+    </>
+  );
+}
 
 export default async function ComprasPage({
   searchParams,
@@ -35,7 +50,7 @@ export default async function ComprasPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
-        <Link href="/?aba=dia-a-dia" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/?aba=dia-a-dia" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Início
         </Link>
@@ -43,7 +58,7 @@ export default async function ComprasPage({
       </header>
 
       {itemSalvo ? (
-        <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
+        <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
           Item salvo!
         </p>
       ) : null}
@@ -61,22 +76,16 @@ export default async function ComprasPage({
               <ul className="space-y-2">
                 {grupo.itens.map((item) => (
                   <li key={item.id}>
-                    <form action={alternarTenhoEmCasa}>
-                      <input type="hidden" name="id" value={item.id} />
-                      <input
-                        type="hidden"
-                        name="tenho_em_casa"
-                        value={String(item.tenho_em_casa)}
-                      />
-                      <button
-                        type="submit"
-                        className={`text-sm text-left ${
-                          item.tenho_em_casa ? "line-through text-stone-400" : "text-stone-800"
-                        }`}
-                      >
-                        {item.tenho_em_casa ? "✓" : "○"} {item.item}
-                      </button>
-                    </form>
+                    <BotaoAcao
+                      acao={alternarTenhoEmCasa}
+                      campos={{ id: item.id }}
+                      rotulo={rotuloItem(item)}
+                      rotuloEnviando={rotuloItem(item)}
+                      estilo="nativo"
+                      className={`text-sm text-left ${
+                        item.tenho_em_casa ? "line-through text-stone-500" : "text-stone-800"
+                      }`}
+                    />
                   </li>
                 ))}
               </ul>
@@ -87,14 +96,22 @@ export default async function ComprasPage({
 
       <details className="rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm">
         <summary className="font-semibold text-oliva cursor-pointer">+ Novo item</summary>
-        <form action={criarItemCompra} className="space-y-4 mt-4">
+        <FormularioAcao
+          acao={criarItemCompra}
+          rotuloEnviar="Adicionar item"
+          rotuloEnviando="Adicionando item…"
+          mensagemSucesso="Item adicionado à lista."
+          variante="outline"
+          classeBotao="w-full"
+          className="space-y-4 mt-4"
+        >
           <div className="space-y-2">
             <Label htmlFor="grupo">Grupo</Label>
             <select
               id="grupo"
               name="grupo"
               required
-              className="flex h-11 w-full rounded-xl border border-oliva/20 bg-white px-3 py-2 text-sm text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oliva"
+              className="flex h-11 w-full rounded-xl border border-oliva/70 bg-white px-3 py-2 text-sm text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oliva"
             >
               {GRUPOS_COMPRA.map((g) => (
                 <option key={g.value} value={g.value}>
@@ -107,10 +124,7 @@ export default async function ComprasPage({
             <Label htmlFor="item">Item</Label>
             <Input id="item" name="item" required />
           </div>
-          <Button type="submit" variant="outline" className="w-full">
-            Adicionar item
-          </Button>
-        </form>
+        </FormularioAcao>
       </details>
     </main>
   );

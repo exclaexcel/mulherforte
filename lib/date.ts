@@ -26,6 +26,15 @@ export function timestampParaDataLocalISO(timestampISO: string): string {
   return formatarDataLocal(new Date(timestampISO));
 }
 
+/**
+ * True se a data (AAAA-MM-DD) é posterior a hoje no fuso de Brasília. Datas nesse
+ * formato ordenam como texto, então a comparação é direta. Formato inválido = false:
+ * quem valida o formato é a action.
+ */
+export function ehDataFutura(dataISO: string, hoje: string = hojeISO()): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dataISO) && dataISO > hoje;
+}
+
 export function dataISOParaUTC(dataISO: string): number {
   const [ano, mes, dia] = dataISO.split("-").map(Number);
   return Date.UTC(ano, mes - 1, dia);

@@ -3,11 +3,14 @@ import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { registrarPeso, excluirPesoHoje } from "../actions";
-import { Button } from "@/components/ui/button";
+import { FormularioAcao } from "@/components/formulario-acao";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { BotaoAcao } from "@/components/botao-acao";
+import { temValor } from "@/lib/valor-exibicao";
 import { hojeISO } from "@/lib/date";
+import { houveFalhaDeConsulta } from "@/lib/leitura";
+import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 
 export default async function PesoPage({
   searchParams,
@@ -25,14 +28,14 @@ export default async function PesoPage({
 
   const hoje = hojeISO();
 
-  const { data: registroHoje } = await supabase
+  const { data: registroHoje, error: erroRegistroHoje } = await supabase
     .from("registros_peso")
     .select("peso_kg, percentual_gordura, percentual_massa_muscular, percentual_agua")
     .eq("user_id", user.id)
     .eq("data", hoje)
     .maybeSingle();
 
-  const { data: ultimoRegistro } = await supabase
+  const { data: ultimoRegistro, error: erroUltimoRegistro } = await supabase
     .from("registros_peso")
     .select("data, peso_kg, percentual_gordura, percentual_massa_muscular, percentual_agua")
     .eq("user_id", user.id)
@@ -40,30 +43,47 @@ export default async function PesoPage({
     .limit(1)
     .maybeSingle();
 
+  // Sem leitura confiável do dia, o formulário ficaria vazio e pareceria um novo cadastro.
+  // Por isso o formulário não aparece nesse estado. A action de registro não muda.
+  if (houveFalhaDeConsulta({ error: erroRegistroHoje }, { error: erroUltimoRegistro })) {
+    return (
+      <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
+        <header>
+          <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
+            <Home className="h-4 w-4" />
+            Início
+          </Link>
+          <h1 className="text-2xl font-bold text-oliva mt-1">Registrar peso</h1>
+        </header>
+        <AvisoErroLeitura novaTentativaHref="/fisico/peso" />
+      </main>
+    );
+  }
+
   const pesoSalvo = searchParams?.peso_salvo === "1";
   const registroExcluido = searchParams?.registro_excluido === "1";
 
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Início
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Registrar peso</h1>
-        <Link href="/fisico/peso/tendencia" className="inline-block text-xs text-oliva/70 underline mt-1">
+        <Link href="/fisico/peso/tendencia" className="inline-block text-xs text-oliva/85 underline mt-1">
           Ver tendência
         </Link>
       </header>
 
       {pesoSalvo ? (
-        <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
+        <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
           Peso salvo!
         </p>
       ) : null}
 
       {registroExcluido ? (
-        <p className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
+        <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
           Registro de hoje excluído.
         </p>
       ) : null}
@@ -71,21 +91,27 @@ export default async function PesoPage({
       {ultimoRegistro && ultimoRegistro.data !== hoje ? (
         <p className="text-xs text-stone-500 bg-stone-50 border border-stone-200 rounded-2xl p-3">
           Último registrado: {ultimoRegistro.peso_kg}kg em {ultimoRegistro.data}
-          {ultimoRegistro.percentual_gordura ? ` · gordura ${ultimoRegistro.percentual_gordura}%` : ""}
-          {ultimoRegistro.percentual_massa_muscular
+          {temValor(ultimoRegistro.percentual_gordura)
+            ? ` · gordura ${ultimoRegistro.percentual_gordura}%`
+            : ""}
+          {temValor(ultimoRegistro.percentual_massa_muscular)
             ? ` · massa muscular ${ultimoRegistro.percentual_massa_muscular}%`
             : ""}
-          {ultimoRegistro.percentual_agua ? ` · água ${ultimoRegistro.percentual_agua}%` : ""}
+          {temValor(ultimoRegistro.percentual_agua) ? ` · água ${ultimoRegistro.percentual_agua}%` : ""}
         </p>
       ) : null}
 
-      <form
-        action={registrarPeso}
+      <FormularioAcao
+        acao={registrarPeso}
+        rotuloEnviar="Registrar peso"
+        rotuloEnviando="Registrando peso…"
+        mensagemSucesso="Peso salvo."
+        classeBotao="w-full"
         className="space-y-4 rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm"
       >
         <div className="space-y-2">
           <Label htmlFor="data">Data</Label>
-          <Input id="data" name="data" type="date" defaultValue={hoje} required />
+          <Input id="data" name="data" type="date" defaultValue={hoje} max={hoje} required />
         </div>
 
         <div className="space-y-2">
@@ -101,9 +127,6 @@ export default async function PesoPage({
           />
         </div>
 
-        <Button type="submit" className="w-full">
-          Registrar peso
-        </Button>
 
         <details className="pt-2" open>
           <summary className="font-semibold text-oliva cursor-pointer text-sm">
@@ -148,19 +171,18 @@ export default async function PesoPage({
             </div>
           </div>
         </details>
-      </form>
+      </FormularioAcao>
 
       {registroHoje ? (
-        <form action={excluirPesoHoje}>
-          <ConfirmSubmitButton
-            type="submit"
-            variant="outline"
-            className="w-full text-red-700 border-red-200 hover:bg-red-50"
-            confirmMessage="Excluir o registro de peso de hoje?"
-          >
-            Excluir registro de hoje
-          </ConfirmSubmitButton>
-        </form>
+        <BotaoAcao
+          acao={excluirPesoHoje}
+          rotulo="Excluir registro de hoje"
+          rotuloEnviando="Excluindo registro…"
+          confirmacao="Excluir o registro de peso de hoje?"
+          destinoSucesso="/fisico/peso?registro_excluido=1"
+          variante="outline"
+          className="w-full text-red-700 border-red-200 hover:bg-red-50"
+        />
       ) : null}
     </main>
   );

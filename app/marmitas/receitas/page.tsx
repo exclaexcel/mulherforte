@@ -56,7 +56,7 @@ export default async function ReceitasPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
-        <Link href="/?aba=planejamento" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/?aba=planejamento" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Início
         </Link>
@@ -70,7 +70,7 @@ export default async function ReceitasPage({
       </header>
 
       {searchParams?.receita_salva === "1" ? (
-        <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
+        <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
           Receita salva!
         </p>
       ) : null}
@@ -88,7 +88,7 @@ export default async function ReceitasPage({
         <div className="space-y-6">
           {grupos.map((grupo) => (
             <section key={grupo.categoria}>
-              <h2 className="text-xs font-semibold uppercase tracking-wide text-oliva/60 px-1 mb-2">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-oliva/85 px-1 mb-2">
                 {grupo.categoria} · {grupo.receitas.length}
               </h2>
               <ul className="space-y-3">

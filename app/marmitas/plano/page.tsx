@@ -40,12 +40,12 @@ export default async function PlanoPage() {
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
-        <Link href="/?aba=planejamento" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/?aba=planejamento" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Início
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Sobre o plano</h1>
-        <p className="text-sm text-stone-500 mt-1">Referência fixa — não muda no dia a dia</p>
+        <p className="text-sm text-stone-600 mt-1">Referência fixa — não muda no dia a dia</p>
       </header>
 
       <section className="rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm space-y-3">

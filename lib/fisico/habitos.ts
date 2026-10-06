@@ -18,3 +18,13 @@ export function calcularProgressoAgua(
 
   return { litros, metaLitros, percentual, atingiuMeta: litros >= metaLitros };
 }
+
+/**
+ * Mensagem de sucesso da proteína pelo estado final: se estava marcada, agora está
+ * desmarcada, e vice-versa. Assim o texto diz o que aconteceu, sem depender da cor.
+ */
+export function mensagemAlternarProteina(priorizouAntes: boolean): string {
+  return priorizouAntes
+    ? "Proteína do dia desmarcada."
+    : "Proteína do dia marcada como priorizada.";
+}

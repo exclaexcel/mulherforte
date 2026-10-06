@@ -12,11 +12,11 @@ const TAB_ESTILO: Record<TabCor, { ativa: string; inativa: string }> = {
   },
   rosa: {
     ativa: "bg-rosa text-oliva-dark border border-rosa font-semibold",
-    inativa: "bg-rosa-soft/60 text-oliva-dark/70 border border-rosa/30",
+    inativa: "bg-rosa-soft/60 text-oliva-dark/85 border border-rosa/30",
   },
   neutro: {
     ativa: "bg-stone-300 text-stone-800 border border-stone-400 font-semibold",
-    inativa: "bg-stone-100 text-stone-500 border border-stone-200",
+    inativa: "bg-stone-100 text-stone-600 border border-stone-200",
   },
 };
 

@@ -189,7 +189,7 @@ describe("erros seguros", () => {
     const res = await getPlanilhas();
     expect(res.status).toBe(500);
     const corpo = await res.text();
-    expect(corpo).toContain("Não foi possível ler os dados agora");
+    expect(corpo).toContain("Não foi possível gerar o arquivo agora");
     expect(corpo).not.toContain("erro simulado");
     expect(corpo).not.toContain("metas");
   });

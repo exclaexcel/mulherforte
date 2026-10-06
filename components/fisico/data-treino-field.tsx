@@ -20,6 +20,7 @@ export function DataTreinoField({ defaultValue }: { defaultValue: string }) {
         type="date"
         value={data}
         onChange={(e) => setData(e.target.value)}
+        max={defaultValue}
         required
       />
       <p className="text-xs text-stone-500">

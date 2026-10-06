@@ -7,7 +7,7 @@ import { OUTRA_USUARIA_ID, RECEITA_ID, RECEITA_ID_2, USER_ID, type Linha } from 
  * Uma linha de outra usuária existe para testar o isolamento.
  */
 export function tabelasFicticias(): Record<string, Linha[]> {
-  return {
+  return comIdsSequenciais({
     perfil_usuario: [
       {
         user_id: USER_ID,
@@ -222,5 +222,19 @@ export function tabelasFicticias(): Record<string, Linha[]> {
         receita_extra_texto: null,
       },
     ],
-  };
+  });
+}
+
+/**
+ * A paginação lê por `id` (cursor). Linhas sem id ganham um id sequencial por tabela,
+ * como o banco teria. Linhas que já têm id (receitas) são mantidas.
+ */
+function comIdsSequenciais(tabelas: Record<string, Linha[]>): Record<string, Linha[]> {
+  const saida: Record<string, Linha[]> = {};
+  for (const [tabela, linhas] of Object.entries(tabelas)) {
+    saida[tabela] = linhas.map((l, i) =>
+      l.id ? l : { id: `${tabela}-${String(i + 1).padStart(6, "0")}`, ...l }
+    );
+  }
+  return saida;
 }

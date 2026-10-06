@@ -16,14 +16,20 @@ import {
   type ReceitaExport,
   type TreinoExport,
 } from "./tipos";
+import { lerTodasAsLinhas, MENSAGEM_FALHA_GERACAO } from "./paginacao";
 
 type ClienteSupabase = Awaited<ReturnType<typeof createClient>>;
 
 /**
- * Busca centralizada da exportação. O user.id chega sempre da sessão no
- * servidor (nunca de query, body ou URL), todas as consultas filtram por
- * .eq("user_id") e usam lista explícita de colunas. Só leitura: nenhum insert,
- * update, upsert ou delete. A RLS continua ativa por baixo.
+ * Busca centralizada da exportação. O user.id chega sempre da sessão no servidor
+ * (nunca de query, body ou URL), todas as consultas filtram por .eq("user_id") e
+ * usam lista explícita de colunas. Só leitura: nenhum insert, update, upsert ou
+ * delete. A RLS continua ativa por baixo.
+ *
+ * As listas são lidas por páginas (lerTodasAsLinhas), então o resultado não depende
+ * do limite de linhas do Supabase. A ordem final é a funcional, feita pelos sorts
+ * abaixo; o `id` ordena apenas a leitura paginada e não vai para o arquivo.
+ * Perfil é leitura única: `user_id` é UNIQUE em perfil_usuario.
  */
 
 const ORDEM_DIAS_SEMANA = [
@@ -72,29 +78,21 @@ function timestampUTC(valor: unknown, campo: string): string {
 
 type Linha = Record<string, unknown>;
 
-const MENSAGEM_LEITURA = "Não foi possível ler os dados agora. Tente novamente.";
-
 /**
- * Executa uma consulta do Supabase. Tanto um erro retornado (permissão,
- * indisponibilidade) quanto uma exceção da biblioteca viram ExportacaoLeituraErro,
- * sem repassar a mensagem crua nem o nome da tabela.
+ * Executa uma consulta única (perfil). Erro retornado ou exceção da biblioteca viram
+ * ExportacaoLeituraErro, sem repassar a mensagem crua nem o nome da tabela.
  */
 async function executarLeitura<T>(consulta: PromiseLike<{ data: unknown; error: unknown }>): Promise<T> {
   let resposta: { data: unknown; error: unknown };
   try {
     resposta = await consulta;
   } catch {
-    throw new ExportacaoLeituraErro(MENSAGEM_LEITURA);
+    throw new ExportacaoLeituraErro(MENSAGEM_FALHA_GERACAO);
   }
   if (resposta.error) {
-    throw new ExportacaoLeituraErro(MENSAGEM_LEITURA);
+    throw new ExportacaoLeituraErro(MENSAGEM_FALHA_GERACAO);
   }
   return resposta.data as T;
-}
-
-async function lerLista(consulta: PromiseLike<{ data: unknown; error: unknown }>): Promise<Linha[]> {
-  const data = await executarLeitura<Linha[] | null>(consulta);
-  return data ?? [];
 }
 
 async function lerUm(consulta: PromiseLike<{ data: unknown; error: unknown }>): Promise<Linha | null> {
@@ -115,60 +113,89 @@ export async function buscarDadosExportacao(
           .eq("user_id", userId)
           .maybeSingle()
       ),
-      lerLista(
-        supabase
+      lerTodasAsLinhas((cursor, tamanho) => {
+        const consulta = supabase
           .from("registros_peso")
-          .select("data, peso_kg, percentual_gordura, percentual_massa_muscular, percentual_agua")
+          .select("id, data, peso_kg, percentual_gordura, percentual_massa_muscular, percentual_agua")
           .eq("user_id", userId)
-          .order("data", { ascending: true })
-      ),
-      lerLista(
-        supabase.from("medidas_corporais").select("data, regiao, valor_cm").eq("user_id", userId)
-      ),
-      lerLista(
-        supabase
+          .order("id", { ascending: true })
+          .limit(tamanho);
+        return cursor ? consulta.gt("id", cursor) : consulta;
+      }),
+      lerTodasAsLinhas((cursor, tamanho) => {
+        const consulta = supabase
+          .from("medidas_corporais")
+          .select("id, data, regiao, valor_cm")
+          .eq("user_id", userId)
+          .order("id", { ascending: true })
+          .limit(tamanho);
+        return cursor ? consulta.gt("id", cursor) : consulta;
+      }),
+      lerTodasAsLinhas((cursor, tamanho) => {
+        const consulta = supabase
           .from("adesao_habitos")
-          .select("data, quantidade_agua_ml, priorizou_proteina, bebeu_agua_meta")
+          .select("id, data, quantidade_agua_ml, priorizou_proteina, bebeu_agua_meta")
           .eq("user_id", userId)
-      ),
-      lerLista(
-        supabase
+          .order("id", { ascending: true })
+          .limit(tamanho);
+        return cursor ? consulta.gt("id", cursor) : consulta;
+      }),
+      lerTodasAsLinhas((cursor, tamanho) => {
+        const consulta = supabase
           .from("adesao_treino")
-          .select("data, tipo, tipo_outro_descricao, realizado, duracao_minutos, calorias, obrigatorio")
+          .select("id, data, tipo, tipo_outro_descricao, realizado, duracao_minutos, calorias, obrigatorio")
           .eq("user_id", userId)
-      ),
-      lerLista(
-        supabase
+          .order("id", { ascending: true })
+          .limit(tamanho);
+        return cursor ? consulta.gt("id", cursor) : consulta;
+      }),
+      lerTodasAsLinhas((cursor, tamanho) => {
+        const consulta = supabase
           .from("metas")
           .select(
-            "indicador, fase, data_inicio, valor_referencia, valor_meta, unidade, prazo_estimado_semanas, meta_hidratacao_litros_dia, created_at"
+            "id, indicador, fase, data_inicio, valor_referencia, valor_meta, unidade, prazo_estimado_semanas, meta_hidratacao_litros_dia, created_at"
           )
           .eq("user_id", userId)
-      ),
-      lerLista(
-        supabase
+          .order("id", { ascending: true })
+          .limit(tamanho);
+        return cursor ? consulta.gt("id", cursor) : consulta;
+      }),
+      lerTodasAsLinhas((cursor, tamanho) => {
+        const consulta = supabase
           .from("receitas")
           .select("id, nome, categoria, ingredientes, modo_preparo, dica_congelamento, selos, validade_congelado_dias, notas")
           .eq("user_id", userId)
-      ),
-      lerLista(
-        supabase
+          .order("id", { ascending: true })
+          .limit(tamanho);
+        return cursor ? consulta.gt("id", cursor) : consulta;
+      }),
+      lerTodasAsLinhas((cursor, tamanho) => {
+        const consulta = supabase
           .from("preparos")
-          .select("receita_id, data_preparo, dia_semana, semana_ciclo, quantidade_porcoes, observacoes, status, data_consumo")
+          .select("id, receita_id, data_preparo, dia_semana, semana_ciclo, quantidade_porcoes, observacoes, status, data_consumo")
           .eq("user_id", userId)
-      ),
-      lerLista(
-        supabase
+          .order("id", { ascending: true })
+          .limit(tamanho);
+        return cursor ? consulta.gt("id", cursor) : consulta;
+      }),
+      lerTodasAsLinhas((cursor, tamanho) => {
+        const consulta = supabase
           .from("itens_compra")
-          .select("grupo, item, tenho_em_casa, observacao")
+          .select("id, grupo, item, tenho_em_casa, observacao")
           .eq("user_id", userId)
-      ),
-      lerLista(
-        supabase
+          .order("id", { ascending: true })
+          .limit(tamanho);
+        return cursor ? consulta.gt("id", cursor) : consulta;
+      }),
+      lerTodasAsLinhas((cursor, tamanho) => {
+        const consulta = supabase
           .from("cronograma_planejado")
-          .select("semana_ciclo, dia_semana, proteina, base, legumes, receita_extra_texto")
+          .select("id, semana_ciclo, dia_semana, proteina, base, legumes, receita_extra_texto")
           .eq("user_id", userId)
-      ),
+          .order("id", { ascending: true })
+          .limit(tamanho);
+        return cursor ? consulta.gt("id", cursor) : consulta;
+      }),
     ]);
 
   const perfil: PerfilExport | null = perfilLinha
@@ -311,8 +338,10 @@ export async function buscarDadosExportacao(
 }
 
 /**
- * Integridade receita → preparo. Preparo órfão interrompe a exportação: não é
- * removido nem ignorado em silêncio, e a mensagem não traz UUID nem conteúdo.
+ * Integridade receita → preparo. Chamada só depois de todas as páginas de receitas e
+ * preparos terem sido lidas: sobre um conjunto parcial, a checagem daria falso órfão.
+ * Preparo órfão interrompe a exportação: não é removido nem ignorado em silêncio, e a
+ * mensagem não traz UUID nem conteúdo.
  */
 export function validarReferenciasReceitas(dados: DadosExportacao): void {
   const idsReceitas = new Set(dados.receitas.map((r) => r.id));

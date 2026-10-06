@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fimDaSemana, hojeISO, inicioDaSemana } from "@/lib/date";
 import { calcularScoreSemanal, metaHidratacaoValidaNaSemana } from "@/lib/fisico/score";
+import { houveFalhaDeConsulta } from "@/lib/leitura";
+import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 
 export default async function ScorePage() {
   const supabase = await createClient();
@@ -19,7 +21,11 @@ export default async function ScorePage() {
   const inicioSemana = inicioDaSemana(hoje);
   const fimSemana = fimDaSemana(hoje);
 
-  const [{ data: habitos }, { data: treinos }, { data: metaHidratacao }] = await Promise.all([
+  const [
+    { data: habitos, error: erroHabitos },
+    { data: treinos, error: erroTreinos },
+    { data: metaHidratacao, error: erroMeta },
+  ] = await Promise.all([
     supabase
       .from("adesao_habitos")
       .select("data, priorizou_proteina, bebeu_agua_meta")
@@ -39,6 +45,22 @@ export default async function ScorePage() {
       .eq("indicador", "hidratacao")
       .maybeSingle(),
   ]);
+
+  // Score depende das três consultas. Com qualquer falha, não mostra score parcial.
+  if (houveFalhaDeConsulta({ error: erroHabitos }, { error: erroTreinos }, { error: erroMeta })) {
+    return (
+      <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
+        <header>
+          <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
+            <Home className="h-4 w-4" />
+            Início
+          </Link>
+          <h1 className="text-2xl font-bold text-oliva mt-1">Score da semana</h1>
+        </header>
+        <AvisoErroLeitura novaTentativaHref="/fisico/score" />
+      </main>
+    );
+  }
 
   const metaValidaNaSemana =
     (metaHidratacao?.meta_hidratacao_litros_dia ?? 0) > 0 &&
@@ -60,12 +82,12 @@ export default async function ScorePage() {
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Início
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Score da semana</h1>
-        <p className="text-sm text-stone-500 mt-1">
+        <p className="text-sm text-stone-600 mt-1">
           Segunda a domingo · {inicioSemana} a {fimSemana}
         </p>
       </header>
@@ -86,7 +108,9 @@ export default async function ScorePage() {
         >
           <p className="text-4xl font-bold text-oliva">{resultado.scoreExibicao}%</p>
           {resultado.semanaVencida ? (
-            <p className="text-sm font-semibold text-green-800">Semana Vencida 🎉</p>
+            <p className="text-sm font-semibold text-green-800">
+              Semana Vencida <span aria-hidden="true">🎉</span>
+            </p>
           ) : null}
           <p className="text-xs text-stone-500">
             {resultado.pontosObtidos} de {resultado.oportunidades} oportunidades cumpridas. O dia

@@ -3,12 +3,14 @@ import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { salvarMeta } from "../actions";
-import { Button } from "@/components/ui/button";
+import { FormularioAcao } from "@/components/formulario-acao";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { hojeISO } from "@/lib/date";
 import { compararComMeta } from "@/lib/fisico/metas";
 import { INDICADORES_META, type IndicadorMeta } from "@/lib/fisico/types";
+import { houveFalhaDeConsulta } from "@/lib/leitura";
+import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 
 export default async function MetasPage({
   searchParams,
@@ -24,7 +26,11 @@ export default async function MetasPage({
     redirect("/login");
   }
 
-  const [{ data: metas }, { data: ultimoPeso }, { data: ultimasMedidas }] = await Promise.all([
+  const [
+    { data: metas, error: erroMetas },
+    { data: ultimoPeso, error: erroPeso },
+    { data: ultimasMedidas, error: erroMedidas },
+  ] = await Promise.all([
     supabase.from("metas").select("*").eq("user_id", user.id),
     supabase
       .from("registros_peso")
@@ -40,6 +46,22 @@ export default async function MetasPage({
       .in("regiao", ["cintura", "abdomen_inferior"])
       .order("data", { ascending: false }),
   ]);
+
+  // Cada meta compara com peso ou medida. Sem essas leituras, "Atual" e a diferença estariam errados.
+  if (houveFalhaDeConsulta({ error: erroMetas }, { error: erroPeso }, { error: erroMedidas })) {
+    return (
+      <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
+        <header>
+          <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
+            <Home className="h-4 w-4" />
+            Início
+          </Link>
+          <h1 className="text-2xl font-bold text-oliva mt-1">Metas</h1>
+        </header>
+        <AvisoErroLeitura novaTentativaHref="/fisico/metas" />
+      </main>
+    );
+  }
 
   const metaPorIndicador = (indicador: IndicadorMeta) =>
     metas?.find((m) => m.indicador === indicador) ?? null;
@@ -60,7 +82,7 @@ export default async function MetasPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Início
         </Link>
@@ -68,7 +90,7 @@ export default async function MetasPage({
       </header>
 
       {metaSalva ? (
-        <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
+        <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
           Meta salva!
         </p>
       ) : null}
@@ -83,7 +105,15 @@ export default async function MetasPage({
               className="space-y-4 rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm"
             >
               <p className="font-semibold text-oliva">{ind.label}</p>
-              <form action={salvarMeta} className="space-y-4">
+              <FormularioAcao
+                acao={salvarMeta}
+                rotuloEnviar="Salvar meta"
+                rotuloEnviando="Salvando meta…"
+                mensagemSucesso="Meta salva."
+                variante="outline"
+                classeBotao="w-full"
+                className="space-y-4"
+              >
                 <input type="hidden" name="indicador" value={ind.value} />
                 <input
                   type="hidden"
@@ -102,10 +132,7 @@ export default async function MetasPage({
                     required
                   />
                 </div>
-                <Button type="submit" variant="outline" className="w-full">
-                  Salvar meta
-                </Button>
-              </form>
+              </FormularioAcao>
             </section>
           );
         }
@@ -131,7 +158,15 @@ export default async function MetasPage({
               <p className="text-sm text-oliva mt-1">{comparacao.texto}</p>
             </div>
 
-            <form action={salvarMeta} className="space-y-4">
+            <FormularioAcao
+              acao={salvarMeta}
+              rotuloEnviar="Salvar meta"
+              rotuloEnviando="Salvando meta…"
+              mensagemSucesso="Meta salva."
+              variante="outline"
+              classeBotao="w-full"
+              className="space-y-4"
+            >
               <input type="hidden" name="indicador" value={ind.value} />
               <input type="hidden" name="data_inicio" value={meta?.data_inicio ?? hoje} />
 
@@ -171,10 +206,7 @@ export default async function MetasPage({
                 />
               </div>
 
-              <Button type="submit" variant="outline" className="w-full">
-                Salvar meta
-              </Button>
-            </form>
+            </FormularioAcao>
           </section>
         );
       })}

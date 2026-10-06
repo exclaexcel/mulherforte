@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { calcularIdadeAnos } from "@/lib/date";
+import { calcularIdadeAnos, hojeISO } from "@/lib/date";
 import {
   calcularIMC,
   calcularRCEst,
@@ -12,6 +12,8 @@ import {
   calcularTMB,
   type ResultadoComClassificacao,
 } from "@/lib/fisico/indicadores";
+import { houveFalhaDeConsulta } from "@/lib/leitura";
+import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 
 type Tier = "boa" | "atencao" | "risco";
 
@@ -96,7 +98,11 @@ export default async function IndicadoresPage() {
     redirect("/login");
   }
 
-  const [{ data: perfil }, { data: medidas }, { data: ultimoPeso }] = await Promise.all([
+  const [
+    { data: perfil, error: erroPerfil },
+    { data: medidas, error: erroMedidas },
+    { data: ultimoPeso, error: erroPeso },
+  ] = await Promise.all([
     supabase
       .from("perfil_usuario")
       .select("altura_cm, data_nascimento")
@@ -117,11 +123,27 @@ export default async function IndicadoresPage() {
       .maybeSingle(),
   ]);
 
+  // Todos os cards dependem de perfil, medidas ou peso. Sem essas leituras, não há cálculo honesto.
+  if (houveFalhaDeConsulta({ error: erroPerfil }, { error: erroMedidas }, { error: erroPeso })) {
+    return (
+      <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
+        <header>
+          <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
+            <Home className="h-4 w-4" />
+            Início
+          </Link>
+          <h1 className="text-2xl font-bold text-oliva mt-1">Indicadores corporais estimados</h1>
+        </header>
+        <AvisoErroLeitura novaTentativaHref="/fisico/indicadores" />
+      </main>
+    );
+  }
+
   const alturaCm = perfil?.altura_cm ?? null;
   const pesoKg = ultimoPeso?.peso_kg ?? null;
 
   const dataNascimentoValida =
-    perfil?.data_nascimento && perfil.data_nascimento <= new Date().toISOString().slice(0, 10);
+    perfil?.data_nascimento && perfil.data_nascimento <= hojeISO();
   const idadeAnos = dataNascimentoValida ? calcularIdadeAnos(perfil!.data_nascimento) : null;
 
   const valorMedida = (regiao: "cintura" | "quadril" | "coxa"): number | null =>
@@ -141,19 +163,19 @@ export default async function IndicadoresPage() {
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Início
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Indicadores corporais estimados</h1>
-        <p className="text-sm text-stone-500 mt-2">
+        <p className="text-sm text-stone-600 mt-2">
           O aplicativo calcula indicadores de acompanhamento corporal a partir das medidas
           registradas. Os resultados são estimativas informativas, não diagnósticos médicos.
         </p>
       </header>
 
       <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-oliva/70 uppercase tracking-wide">
+        <h2 className="text-sm font-semibold text-oliva/85 uppercase tracking-wide">
           Painel de evolução corporal
         </h2>
         <div className="grid grid-cols-2 gap-3">
@@ -183,7 +205,7 @@ export default async function IndicadoresPage() {
             }
           />
         </div>
-        <p className="text-xs text-stone-400 italic">
+        <p className="text-xs text-stone-600 italic">
           As faixas são determinadas pelo valor completo do cálculo. O número exibido é
           arredondado para facilitar a leitura.
         </p>

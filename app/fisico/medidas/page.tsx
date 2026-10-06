@@ -3,12 +3,14 @@ import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { registrarMedidas, excluirMedidasHoje } from "../actions";
-import { Button } from "@/components/ui/button";
+import { FormularioAcao } from "@/components/formulario-acao";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ConfirmSubmitButton } from "@/components/confirm-submit-button";
+import { BotaoAcao } from "@/components/botao-acao";
 import { hojeISO } from "@/lib/date";
 import { REGIOES_MEDIDA, type RegiaoMedida } from "@/lib/fisico/types";
+import { houveFalhaDeConsulta } from "@/lib/leitura";
+import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 
 export default async function MedidasPage({
   searchParams,
@@ -30,11 +32,27 @@ export default async function MedidasPage({
 
   const hoje = hojeISO();
 
-  const { data: todasMedidas } = await supabase
+  const { data: todasMedidas, error: erroMedidas } = await supabase
     .from("medidas_corporais")
     .select("data, regiao, valor_cm")
     .eq("user_id", user.id)
     .order("data", { ascending: false });
+
+  // Sem leitura confiável, o formulário ficaria vazio e pareceria um novo cadastro.
+  if (houveFalhaDeConsulta({ error: erroMedidas })) {
+    return (
+      <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
+        <header>
+          <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
+            <Home className="h-4 w-4" />
+            Início
+          </Link>
+          <h1 className="text-2xl font-bold text-oliva mt-1">Registrar medidas</h1>
+        </header>
+        <AvisoErroLeitura novaTentativaHref="/fisico/medidas" />
+      </main>
+    );
+  }
 
   const medidasHoje = todasMedidas?.filter((m) => m.data === hoje) ?? [];
 
@@ -58,7 +76,7 @@ export default async function MedidasPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Início
         </Link>
@@ -66,13 +84,13 @@ export default async function MedidasPage({
       </header>
 
       {medidasSalvas ? (
-        <p className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
+        <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
           Medidas salvas!
         </p>
       ) : null}
 
       {registroExcluido ? (
-        <p className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
+        <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
           Medidas de hoje excluídas.
         </p>
       ) : null}
@@ -85,13 +103,17 @@ export default async function MedidasPage({
         </p>
       ) : null}
 
-      <form
-        action={registrarMedidas}
+      <FormularioAcao
+        acao={registrarMedidas}
+        rotuloEnviar="Registrar medidas"
+        rotuloEnviando="Registrando medidas…"
+        mensagemSucesso="Medidas salvas."
+        classeBotao="w-full"
         className="space-y-4 rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm"
       >
         <div className="space-y-2">
           <Label htmlFor="data">Data</Label>
-          <Input id="data" name="data" type="date" defaultValue={hoje} required />
+          <Input id="data" name="data" type="date" defaultValue={hoje} max={hoje} required />
         </div>
 
         <p className="text-xs text-stone-500">Preencha só as medidas que for tirar hoje.</p>
@@ -118,22 +140,18 @@ export default async function MedidasPage({
           );
         })}
 
-        <Button type="submit" className="w-full">
-          Registrar medidas
-        </Button>
-      </form>
+      </FormularioAcao>
 
       {temMedidaHoje ? (
-        <form action={excluirMedidasHoje}>
-          <ConfirmSubmitButton
-            type="submit"
-            variant="outline"
-            className="w-full text-red-700 border-red-200 hover:bg-red-50"
-            confirmMessage="Excluir todas as medidas registradas hoje?"
-          >
-            Excluir medidas de hoje
-          </ConfirmSubmitButton>
-        </form>
+        <BotaoAcao
+          acao={excluirMedidasHoje}
+          rotulo="Excluir medidas de hoje"
+          rotuloEnviando="Excluindo medidas…"
+          confirmacao="Excluir todas as medidas registradas hoje?"
+          destinoSucesso="/fisico/medidas?registro_excluido=1"
+          variante="outline"
+          className="w-full text-red-700 border-red-200 hover:bg-red-50"
+        />
       ) : null}
     </main>
   );

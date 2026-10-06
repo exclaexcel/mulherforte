@@ -11,7 +11,8 @@ import {
 } from "@/lib/marmitas/estoque";
 import { listarPreparosCongelados } from "@/lib/marmitas/consultas";
 import { marcarConsumido } from "../actions";
-import { Button } from "@/components/ui/button";
+import { BotaoAcao } from "@/components/botao-acao";
+import { textoConfirmacaoConsumo } from "@/lib/marmitas/consumo";
 
 const TOM_ESTILO: Record<TomValidade, string> = {
   urgente: "bg-red-50 border-red-200 text-red-800",
@@ -53,7 +54,7 @@ export default async function EstoquePage() {
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
-        <Link href="/?aba=dia-a-dia" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/?aba=dia-a-dia" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Início
         </Link>
@@ -81,12 +82,15 @@ export default async function EstoquePage() {
                 </div>
                 <p className="text-sm font-medium">{apresentacao.titulo}</p>
                 {apresentacao.detalhe ? <p className="text-xs">{apresentacao.detalhe}</p> : null}
-                <form action={marcarConsumido}>
-                  <input type="hidden" name="id" value={item.id} />
-                  <Button type="submit" variant="outline" size="sm">
-                    Marcar como consumido
-                  </Button>
-                </form>
+                <BotaoAcao
+                  acao={marcarConsumido}
+                  campos={{ id: item.id }}
+                  rotulo="Marcar como consumido"
+                  rotuloEnviando="Registrando consumo…"
+                  confirmacao={textoConfirmacaoConsumo(item.validade.situacao)}
+                  variante="outline"
+                  tamanho="sm"
+                />
               </li>
             );
           })}

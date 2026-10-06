@@ -3,14 +3,14 @@ import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { criarReceitaCompleta } from "../../actions";
-import { Button } from "@/components/ui/button";
+import { FormularioAcao } from "@/components/formulario-acao";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CATEGORIAS_RECEITA } from "@/lib/marmitas/receita";
 import { CampoPrazoCongelamento } from "@/components/marmitas/campo-prazo-congelamento";
 
 const CAMPO_TEXTO =
-  "flex w-full rounded-xl border border-oliva/20 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oliva";
+  "flex w-full rounded-xl border border-oliva/70 bg-white px-3 py-2 text-sm text-stone-900 placeholder:text-stone-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oliva";
 
 export default async function NovaReceitaPage() {
   const supabase = await createClient();
@@ -25,18 +25,21 @@ export default async function NovaReceitaPage() {
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/marmitas/receitas" className="inline-flex items-center gap-1 text-sm text-oliva/70">
+        <Link href="/marmitas/receitas" className="inline-flex items-center gap-1 text-sm text-oliva/85">
           <Home className="h-4 w-4" />
           Biblioteca de receitas
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Nova receita</h1>
-        <p className="text-sm text-stone-500 mt-1">
+        <p className="text-sm text-stone-600 mt-1">
           Preencha o que souber. Só o nome é obrigatório.
         </p>
       </header>
 
-      <form
-        action={criarReceitaCompleta}
+      <FormularioAcao
+        acao={criarReceitaCompleta}
+        rotuloEnviar="Salvar receita"
+        rotuloEnviando="Salvando receita…"
+        classeBotao="w-full"
         className="space-y-5 rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm"
       >
         <div className="space-y-2">
@@ -85,10 +88,7 @@ export default async function NovaReceitaPage() {
           <textarea id="notas" name="notas" rows={4} className={CAMPO_TEXTO} />
         </div>
 
-        <Button type="submit" className="w-full">
-          Salvar receita
-        </Button>
-      </form>
+      </FormularioAcao>
     </main>
   );
 }
