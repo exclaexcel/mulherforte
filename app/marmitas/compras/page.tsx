@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home } from "lucide-react";
+import { Home, Pencil } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { criarItemCompra, alternarTenhoEmCasa } from "../actions";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { GRUPOS_COMPRA } from "@/lib/marmitas/types";
 import { listarItensCompra } from "@/lib/marmitas/consultas";
+import { CorrigirItemCompra } from "@/components/marmitas/corrigir-item-compra";
 
 /**
  * Rótulo do item na lista. O ✓ e o ○ são decorativos; o estado vai em texto oculto
@@ -27,7 +28,7 @@ function rotuloItem(item: { tenho_em_casa: boolean; item: string }) {
 export default async function ComprasPage({
   searchParams,
 }: {
-  searchParams: { item_salvo?: string };
+  searchParams: { item_salvo?: string; item_atualizado?: string };
 }) {
   const supabase = await createClient();
   const {
@@ -47,6 +48,10 @@ export default async function ComprasPage({
 
   const itemSalvo = searchParams?.item_salvo === "1";
 
+  const itensParaCorrecao = porGrupo.flatMap((grupo) =>
+    grupo.itens.map((item) => ({ id: item.id, item: item.item, grupoLabel: grupo.label }))
+  );
+
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
@@ -63,6 +68,12 @@ export default async function ComprasPage({
         </p>
       ) : null}
 
+      {searchParams?.item_atualizado === "1" ? (
+        <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
+          Item atualizado!
+        </p>
+      ) : null}
+
       <div className="space-y-5">
         {porGrupo.map((grupo) => (
           <section
@@ -73,7 +84,7 @@ export default async function ComprasPage({
             {grupo.itens.length === 0 ? (
               <p className="text-xs text-stone-500">Nenhum item cadastrado.</p>
             ) : (
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {grupo.itens.map((item) => (
                   <li key={item.id}>
                     <BotaoAcao
@@ -126,6 +137,16 @@ export default async function ComprasPage({
           </div>
         </FormularioAcao>
       </details>
+
+      {itensParaCorrecao.length > 0 ? (
+        <details className="rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm">
+          <summary className="inline-flex items-center gap-1 font-semibold text-oliva cursor-pointer">
+            <Pencil className="h-4 w-4" />
+            Corrigir nome de um item
+          </summary>
+          <CorrigirItemCompra itens={itensParaCorrecao} />
+        </details>
+      ) : null}
     </main>
   );
 }

@@ -372,6 +372,78 @@ export async function criarItemCompra(formData: FormData): Promise<ResultadoAcao
 }
 
 /**
+ * Corrige o texto de um item já cadastrado (ex.: erro de digitação). O grupo não
+ * muda aqui — só o nome do item. Checa duplicidade só dentro do grupo atual do item,
+ * excluindo ele mesmo da checagem.
+ */
+export async function atualizarItemCompra(formData: FormData): Promise<ResultadoAcao> {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const id = String(formData.get("id") ?? "");
+  const item = String(formData.get("item") ?? "").trim();
+
+  if (!id) {
+    return { ok: false, erro: "Item não encontrado. Atualize a página e tente de novo." };
+  }
+
+  if (!item) {
+    return { ok: false, erro: "Informe o nome do item." };
+  }
+
+  const { data: atual, error: erroAtual } = await supabase
+    .from("itens_compra")
+    .select("grupo")
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (erroAtual) {
+    return { ok: false, erro: MENSAGEM_VALIDACAO_INDISPONIVEL };
+  }
+
+  if (!atual) {
+    return { ok: false, erro: "Item não encontrado. Atualize a página e tente de novo." };
+  }
+
+  const { data: existentes, error: erroExistentes } = await supabase
+    .from("itens_compra")
+    .select("item")
+    .eq("user_id", user.id)
+    .eq("grupo", atual.grupo)
+    .neq("id", id);
+
+  if (erroExistentes) {
+    return { ok: false, erro: MENSAGEM_VALIDACAO_INDISPONIVEL };
+  }
+
+  const jaExiste = (existentes ?? []).some(
+    (i) => i.item.trim().toLowerCase() === item.toLowerCase()
+  );
+
+  if (jaExiste) {
+    return { ok: false, erro: `"${item}" já está na lista desse grupo.` };
+  }
+
+  const { data, error } = await supabase
+    .from("itens_compra")
+    .update({ item })
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id");
+
+  if (error) {
+    return { ok: false, erro: "Não foi possível salvar o item. Tente novamente." };
+  }
+
+  if (!data || data.length === 0) {
+    return { ok: false, erro: "Item não encontrado. Atualize a página e tente de novo." };
+  }
+
+  revalidatePath("/marmitas/compras");
+  return { ok: true, destino: "/marmitas/compras?item_atualizado=1" };
+}
+
+/**
  * Inverte "tenho em casa" a partir do valor gravado, não do valor que veio no
  * formulário: uma tela antiga não grava o estado errado. Leitura com erro, item
  * ausente ou zero linhas alteradas não gravam nada.
