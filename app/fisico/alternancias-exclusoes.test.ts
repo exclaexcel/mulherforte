@@ -23,9 +23,13 @@ vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidatePath }));
 
 import {
   alternarProteina,
+  excluirHabitosData,
   excluirHabitosHoje,
+  excluirMedidasData,
   excluirMedidasHoje,
+  excluirPesoData,
   excluirPesoHoje,
+  excluirTreinoData,
   excluirTreinoHoje,
 } from "./actions";
 
@@ -133,6 +137,15 @@ describe("alternarProteina — estado vem do banco e água não é tocada", () =
     expect(r).toEqual({ ok: false, erro: MENSAGEM_ATUALIZAR });
     expect(JSON.stringify(r)).not.toContain("pg_upsert");
   });
+
+  it("com campo 'data' de um dia passado: lê e grava nesse dia, não em hoje", async () => {
+    preparar({ adesao_habitos: { leitura: { data: null } } });
+
+    await alternarProteina(formulario({ data: "2026-09-20" }));
+
+    expect(temEq("adesao_habitos", "data", "2026-09-20")).toBe(true);
+    expect(chamadas("adesao_habitos", "upsert")[0].args[0]).toMatchObject({ data: "2026-09-20" });
+  });
 });
 
 describe.each([
@@ -176,5 +189,108 @@ describe.each([
     await excluir();
 
     expect(mocks.revalidatePath).not.toHaveBeenCalled();
+  });
+});
+
+function formulario(campos: Record<string, string>) {
+  const fd = new FormData();
+  for (const [k, v] of Object.entries(campos)) fd.set(k, v);
+  return fd;
+}
+
+describe("excluirTreinoData — exclusão de um dia específico (correção a partir do histórico)", () => {
+  it("data inválida: erro previsível, sem acessar o banco", async () => {
+    preparar();
+
+    const r = await excluirTreinoData(formulario({ data: "" }));
+
+    expect(r).toEqual({ ok: false, erro: "Data inválida. Atualize a página e tente de novo." });
+    expect(chamadas("adesao_treino", "delete")).toHaveLength(0);
+  });
+
+  it("sucesso: filtra por user_id e pela data informada (não por hoje)", async () => {
+    preparar();
+
+    const r = await excluirTreinoData(formulario({ data: "2026-09-20" }));
+
+    expect(r).toEqual({ ok: true, destino: "/fisico/historico?aba=treino&registro_excluido=1" });
+    expect(temEq("adesao_treino", "user_id", USER_ID)).toBe(true);
+    expect(temEq("adesao_treino", "data", "2026-09-20")).toBe(true);
+  });
+
+  it("zero linhas apagadas: mensagem não presume 'hoje'", async () => {
+    preparar({ adesao_treino: { escrita: { data: [] } } });
+
+    const r = await excluirTreinoData(formulario({ data: "2026-09-20" }));
+
+    expect(r).toEqual({
+      ok: false,
+      erro: "Não há registro nessa data para excluir. Atualize a página.",
+    });
+  });
+
+  it("falha do banco: mensagem neutra", async () => {
+    preparar({ adesao_treino: { escrita: { error: { message: "pg_excluir_data" } } } });
+
+    const r = await excluirTreinoData(formulario({ data: "2026-09-20" }));
+
+    expect(r).toEqual({ ok: false, erro: "Não foi possível excluir o registro agora. Tente novamente." });
+    expect(JSON.stringify(r)).not.toContain("pg_");
+  });
+});
+
+describe.each([
+  ["excluirPesoData", excluirPesoData, "registros_peso", "/fisico/historico?aba=peso&registro_excluido=1"],
+  [
+    "excluirMedidasData",
+    excluirMedidasData,
+    "medidas_corporais",
+    "/fisico/historico?aba=medidas&registro_excluido=1",
+  ],
+  [
+    "excluirHabitosData",
+    excluirHabitosData,
+    "adesao_habitos",
+    "/fisico/historico?aba=habitos&registro_excluido=1",
+  ],
+])("%s — exclusão de um dia específico (correção a partir do histórico)", (_nome, excluir, tabela, destino) => {
+  it("data inválida: erro previsível, sem acessar o banco", async () => {
+    preparar();
+
+    const r = await excluir(formulario({ data: "" }));
+
+    expect(r).toEqual({ ok: false, erro: "Data inválida. Atualize a página e tente de novo." });
+    expect(chamadas(tabela, "delete")).toHaveLength(0);
+  });
+
+  it("sucesso: filtra por user_id e pela data informada (não por hoje)", async () => {
+    preparar();
+
+    const r = await excluir(formulario({ data: "2026-09-20" }));
+
+    expect(r).toEqual({ ok: true, destino });
+    expect(temEq(tabela, "user_id", USER_ID)).toBe(true);
+    expect(temEq(tabela, "data", "2026-09-20")).toBe(true);
+  });
+
+  it("zero linhas apagadas: mensagem não presume 'hoje'", async () => {
+    preparar({ [tabela]: { escrita: { data: [] } } });
+
+    const r = await excluir(formulario({ data: "2026-09-20" }));
+
+    expect(r).toEqual({
+      ok: false,
+      erro: "Não há registro nessa data para excluir. Atualize a página.",
+    });
+  });
+
+  it("falha do banco: mensagem neutra", async () => {
+    preparar({ [tabela]: { escrita: { error: { message: `violates ${tabela} pg_excluir` } } } });
+
+    const r = await excluir(formulario({ data: "2026-09-20" }));
+
+    expect(r).toEqual({ ok: false, erro: "Não foi possível excluir o registro agora. Tente novamente." });
+    expect(JSON.stringify(r)).not.toContain(tabela);
+    expect(JSON.stringify(r)).not.toContain("pg_");
   });
 });

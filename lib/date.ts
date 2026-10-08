@@ -95,3 +95,25 @@ export function listarDiasDaSemana(dataISO: string): string[] {
   const inicio = dataISOParaUTC(inicioDaSemana(dataISO));
   return Array.from({ length: 7 }, (_, i) => utcParaDataISO(inicio + i * MS_POR_DIA));
 }
+
+/** AAAA-MM-DD para DD/MM/AAAA. Só apresentação. */
+export function formatarDataBR(dataISO: string): string {
+  const [ano, mes, dia] = dataISO.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
+const FORMATADOR_DATA_EXTENSA = new Intl.DateTimeFormat("pt-BR", {
+  timeZone: "UTC",
+  weekday: "long",
+  day: "2-digit",
+  month: "long",
+});
+
+/**
+ * Ex.: "Segunda-feira, 06 de outubro". Usa UTC na formatação (mesmo método de
+ * `obterDiaSemana`) para não arriscar virar o dia por fuso horário.
+ */
+export function formatarDataExtensa(dataISO: string): string {
+  const texto = FORMATADOR_DATA_EXTENSA.format(new Date(dataISOParaUTC(dataISO)));
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}

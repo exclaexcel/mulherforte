@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { treinoObrigatorioDoDia } from "@/lib/fisico/calendarioTreino";
 import { TIPOS_TREINO } from "@/lib/fisico/types";
 
-export function DataTreinoField({ defaultValue }: { defaultValue: string }) {
+export function DataTreinoField({ defaultValue, max }: { defaultValue: string; max?: string }) {
   const [data, setData] = useState(defaultValue);
   const tipoObrigatorio = treinoObrigatorioDoDia(data);
   const labelTipoObrigatorio = TIPOS_TREINO.find((t) => t.value === tipoObrigatorio)?.label;
@@ -20,7 +20,7 @@ export function DataTreinoField({ defaultValue }: { defaultValue: string }) {
         type="date"
         value={data}
         onChange={(e) => setData(e.target.value)}
-        max={defaultValue}
+        max={max ?? defaultValue}
         required
       />
       <p className="text-xs text-stone-500">

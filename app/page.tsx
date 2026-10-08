@@ -117,54 +117,65 @@ export default async function HomePage({
             cor: "rosa",
             content: (
               <>
-                <NavCard
-                  href="/fisico/peso"
-                  icon={Scale}
-                  titulo="Registrar peso"
-                  descricao="Pesagem do dia, com bioimpedância opcional"
-                />
-                <NavCard
-                  href="/fisico/peso/tendencia"
-                  icon={TrendingUp}
-                  titulo="Tendência do peso"
-                  descricao="Pontos registrados e médias de 7/28 dias"
-                />
-                <NavCard
-                  href="/fisico/medidas"
-                  icon={Ruler}
-                  titulo="Registrar medidas"
-                  descricao="Cintura, quadril, coxa e abdômen inferior"
-                />
-                <NavCard
-                  href="/fisico/treino"
-                  icon={Dumbbell}
-                  titulo="Registrar treino"
-                  descricao="Move's, Zumba ou outra atividade do dia"
-                />
-                <NavCard
-                  href="/fisico/habitos"
-                  icon={Droplet}
-                  titulo="Hábitos do dia"
-                  descricao="Hidratação e proteína"
-                />
-                <NavCard
-                  href="/fisico/metas"
-                  icon={Target}
-                  titulo="Metas"
-                  descricao="Peso, cintura, abdômen e hidratação"
-                />
-                <NavCard
-                  href="/fisico/indicadores"
-                  icon={Activity}
-                  titulo="Indicadores corporais"
-                  descricao="Cintura, RCEst, RCQ e RFM — estimativas, não diagnóstico"
-                />
-                <NavCard
-                  href="/fisico/score"
-                  icon={Trophy}
-                  titulo="Score da semana"
-                  descricao="Proteína, hidratação e treino obrigatório, acumulado"
-                />
+                <section className="space-y-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-wide text-oliva/85 px-1">
+                    Hoje
+                  </h2>
+                  <NavCard
+                    href="/fisico/peso"
+                    icon={Scale}
+                    titulo="Registrar peso"
+                    descricao="Pesagem do dia, com bioimpedância opcional"
+                  />
+                  <NavCard
+                    href="/fisico/medidas"
+                    icon={Ruler}
+                    titulo="Registrar medidas"
+                    descricao="Cintura, quadril, coxa e abdômen inferior"
+                  />
+                  <NavCard
+                    href="/fisico/treino"
+                    icon={Dumbbell}
+                    titulo="Registrar treino"
+                    descricao="Move's, Zumba ou outra atividade do dia"
+                  />
+                  <NavCard
+                    href="/fisico/habitos"
+                    icon={Droplet}
+                    titulo="Hábitos do dia"
+                    descricao="Hidratação e proteína"
+                  />
+                </section>
+
+                <section className="space-y-3">
+                  <h2 className="text-xs font-semibold uppercase tracking-wide text-oliva/85 px-1">
+                    Minha evolução
+                  </h2>
+                  <NavCard
+                    href="/fisico/peso/tendencia"
+                    icon={TrendingUp}
+                    titulo="Tendência do peso"
+                    descricao="Pontos registrados e médias de 7/28 dias"
+                  />
+                  <NavCard
+                    href="/fisico/metas"
+                    icon={Target}
+                    titulo="Metas"
+                    descricao="Peso, cintura, abdômen e hidratação"
+                  />
+                  <NavCard
+                    href="/fisico/indicadores"
+                    icon={Activity}
+                    titulo="Indicadores corporais"
+                    descricao="Cintura, RCEst, RCQ e RFM — estimativas, não diagnóstico"
+                  />
+                  <NavCard
+                    href="/fisico/score"
+                    icon={Trophy}
+                    titulo="Score da semana"
+                    descricao="Proteína, hidratação e treino obrigatório, acumulado"
+                  />
+                </section>
               </>
             ),
           },

@@ -3,6 +3,8 @@ import {
   calcularIdadeAnos,
   diasEntre,
   fimDaSemana,
+  formatarDataBR,
+  formatarDataExtensa,
   inicioDaSemana,
   listarDiasDaSemana,
   obterDiaSemana,
@@ -89,6 +91,23 @@ describe("somarDias", () => {
 
   it("atravessa a virada de ano", () => {
     expect(somarDias("2026-01-01", -3)).toBe("2025-12-29");
+  });
+});
+
+describe("formatarDataBR", () => {
+  it("converte AAAA-MM-DD para DD/MM/AAAA", () => {
+    expect(formatarDataBR("2026-09-30")).toBe("30/09/2026");
+  });
+});
+
+describe("formatarDataExtensa", () => {
+  it("formata com dia da semana em português, sem risco de fuso", () => {
+    // 2026-09-28 é segunda-feira (confirmado em obterDiaSemana.test).
+    expect(formatarDataExtensa("2026-09-28")).toBe("Segunda-feira, 28 de setembro");
+  });
+
+  it("identifica domingo corretamente", () => {
+    expect(formatarDataExtensa("2026-10-04")).toBe("Domingo, 04 de outubro");
   });
 });
 

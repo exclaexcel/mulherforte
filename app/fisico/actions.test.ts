@@ -20,6 +20,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+import { hojeISO } from "@/lib/date";
 import { ajustarAguaManual, incrementarAgua } from "./actions";
 
 type Chamada = { metodo: string; args: unknown[] };
@@ -83,6 +84,14 @@ function upserts(): Record<string, unknown>[] {
     .flatMap((t) => t.chamadas)
     .filter((c) => c.metodo === "upsert")
     .map((c) => c.args[0] as Record<string, unknown>);
+}
+
+/** Valores usados em `.eq("data", valor)`, em ordem — pra confirmar qual dia foi lido/gravado. */
+function datasConsultadas(): unknown[] {
+  return tabelasConsultadas
+    .flatMap((t) => t.chamadas)
+    .filter((c) => c.metodo === "eq" && c.args[0] === "data")
+    .map((c) => c.args[1]);
 }
 
 /**
@@ -215,6 +224,31 @@ describe("incrementarAgua — caminhos normais", () => {
     expect(await erroDe(incrementarAgua(formulario({ incremento_ml: "1e308" })))).toBe(MENSAGEM);
     expect(upserts()).toHaveLength(0);
   });
+
+  it("sem campo 'data': lê e grava no dia de hoje", async () => {
+    preparar({ registro: { data: null, error: null }, meta: { data: null, error: null } });
+
+    await incrementarAgua(formulario({ incremento_ml: "250" }));
+
+    expect(datasConsultadas().every((d) => d === hojeISO())).toBe(true);
+  });
+
+  it("com campo 'data' de um dia passado: lê e grava nesse dia, não em hoje", async () => {
+    preparar({ registro: { data: null, error: null }, meta: { data: null, error: null } });
+
+    await incrementarAgua(formulario({ incremento_ml: "250", data: "2026-09-20" }));
+
+    expect(datasConsultadas().every((d) => d === "2026-09-20")).toBe(true);
+    expect(upserts()[0]).toMatchObject({ data: "2026-09-20" });
+  });
+
+  it("data futura no campo 'data' é ignorada: cai em hoje", async () => {
+    preparar({ registro: { data: null, error: null }, meta: { data: null, error: null } });
+
+    await incrementarAgua(formulario({ incremento_ml: "250", data: "2099-01-01" }));
+
+    expect(datasConsultadas().every((d) => d === hojeISO())).toBe(true);
+  });
 });
 
 describe("ajustarAguaManual", () => {
@@ -246,6 +280,18 @@ describe("ajustarAguaManual", () => {
 
     expect(await erroDe(ajustarAguaManual(formulario({ valor_ml: "2500" })))).toBe(MENSAGEM);
     expect(upserts()).toHaveLength(0);
+  });
+
+  it("com campo 'data' de um dia passado: lê e grava nesse dia, não em hoje", async () => {
+    preparar({
+      registro: { data: { quantidade_agua_ml: 100 }, error: null },
+      meta: { data: null, error: null },
+    });
+
+    await ajustarAguaManual(formulario({ valor_ml: "1200", data: "2026-09-20" }));
+
+    expect(datasConsultadas().every((d) => d === "2026-09-20")).toBe(true);
+    expect(upserts()[0]).toMatchObject({ data: "2026-09-20", quantidade_agua_ml: 1200 });
   });
 
   it.each(["Infinity", "-Infinity", "abc", "-5"])(

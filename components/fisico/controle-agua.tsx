@@ -27,11 +27,14 @@ export function ControleAgua({
   acaoIncremento,
   acaoAjuste,
   quantidadeAtualMl,
+  data,
 }: {
   incrementos: { label: string; value: number }[];
   acaoIncremento: Acao;
   acaoAjuste: Acao;
   quantidadeAtualMl: number;
+  /** Dia sendo editado. Sem informar, as actions assumem hoje. */
+  data?: string;
 }) {
   const router = useRouter();
   const [trava] = useState(() => criarTravaCompartilhada());
@@ -91,13 +94,16 @@ export function ControleAgua({
   function incrementar(valor: number) {
     const formData = new FormData();
     formData.set("incremento_ml", String(valor));
+    if (data) formData.set("data", data);
     void enviar(`incremento-${valor}`, acaoIncremento, formData);
   }
 
   function ajustar(evento: FormEvent<HTMLFormElement>) {
     evento.preventDefault();
     const formulario = evento.currentTarget;
-    void enviar("ajuste", acaoAjuste, new FormData(formulario), formulario);
+    const formData = new FormData(formulario);
+    if (data) formData.set("data", data);
+    void enviar("ajuste", acaoAjuste, formData, formulario);
   }
 
   return (

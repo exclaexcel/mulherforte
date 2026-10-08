@@ -20,6 +20,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
+import { hojeISO } from "@/lib/date";
 import {
   registrarMedidas,
   registrarPeso,
@@ -158,11 +159,19 @@ describe("registrarPeso", () => {
     preparar();
 
     const r = await registrarPeso(
-      formulario({ data: "2026-10-05", peso_kg: "58.1", user_id: OUTRA_USUARIA_ID })
+      formulario({ data: hojeISO(), peso_kg: "58.1", user_id: OUTRA_USUARIA_ID })
     );
 
     expect(r).toEqual({ ok: true, destino: "/fisico/peso?peso_salvo=1" });
     expect(gravacoes("registros_peso")[0]).toMatchObject({ user_id: USER_ID, peso_kg: 58.1 });
+  });
+
+  it("correção de um dia passado: destino volta pro histórico", async () => {
+    preparar();
+
+    const r = await registrarPeso(formulario({ data: "2020-01-06", peso_kg: "58.1" }));
+
+    expect(r).toEqual({ ok: true, destino: "/fisico/historico?aba=peso&peso_salvo=1" });
   });
 });
 
@@ -204,7 +213,7 @@ describe("registrarMedidas", () => {
   it("sem histórico comparável: salva sem aviso", async () => {
     preparar({ medidas_corporais: { leitura: { data: [] } } });
 
-    const r = await registrarMedidas(formulario({ data: "2026-10-06", cintura_cm: "80" }));
+    const r = await registrarMedidas(formulario({ data: hojeISO(), cintura_cm: "80" }));
 
     expect(r).toEqual({ ok: true, destino: "/fisico/medidas?medidas_salvas=1", aviso: undefined });
     expect(gravacoes("medidas_corporais")[0]).toMatchObject({ user_id: USER_ID, regiao: "cintura", valor_cm: 80 });
@@ -215,7 +224,7 @@ describe("registrarMedidas", () => {
       medidas_corporais: { leitura: { data: [{ regiao: "cintura", data: "2026-09-06", valor_cm: 86 }] } },
     });
 
-    const r = await registrarMedidas(formulario({ data: "2026-10-06", cintura_cm: "80" }));
+    const r = await registrarMedidas(formulario({ data: hojeISO(), cintura_cm: "80" }));
 
     expect(gravacoes("medidas_corporais")).toHaveLength(1);
     expect(r).toMatchObject({
@@ -230,7 +239,7 @@ describe("registrarMedidas", () => {
       medidas_corporais: { leitura: { error: { message: "falha" } } },
     });
 
-    const r = await registrarMedidas(formulario({ data: "2026-10-06", cintura_cm: "80" }));
+    const r = await registrarMedidas(formulario({ data: hojeISO(), cintura_cm: "80" }));
 
     expect(gravacoes("medidas_corporais")).toHaveLength(1);
     expect(r).toEqual({ ok: true, destino: "/fisico/medidas?medidas_salvas=1", aviso: undefined });
@@ -239,10 +248,22 @@ describe("registrarMedidas", () => {
   it("falha de gravação: mensagem neutra", async () => {
     preparar({ medidas_corporais: { escrita: { error: FALHA_BANCO } } });
 
-    const r = await registrarMedidas(formulario({ data: "2026-10-06", cintura_cm: "80" }));
+    const r = await registrarMedidas(formulario({ data: hojeISO(), cintura_cm: "80" }));
 
     expect(r).toEqual({ ok: false, erro: "Não foi possível salvar as medidas. Tente novamente." });
     expect(JSON.stringify(r)).not.toContain("pg_secret");
+  });
+
+  it("correção de um dia passado: destino volta pro histórico", async () => {
+    preparar({ medidas_corporais: { leitura: { data: [] } } });
+
+    const r = await registrarMedidas(formulario({ data: "2020-01-06", cintura_cm: "80" }));
+
+    expect(r).toEqual({
+      ok: true,
+      destino: "/fisico/historico?aba=medidas&medidas_salvas=1",
+      aviso: undefined,
+    });
   });
 });
 
@@ -309,9 +330,10 @@ describe("registrarTreino", () => {
 
   it("sucesso: campos vazios viram null, user_id da sessão, destino correto", async () => {
     preparar();
+    const hoje = hojeISO();
 
     const r = await registrarTreino(
-      formulario({ data: "2026-10-05", tipo: "moves", realizado: "on", user_id: OUTRA_USUARIA_ID })
+      formulario({ data: hoje, tipo: "moves", realizado: "on", user_id: OUTRA_USUARIA_ID })
     );
 
     expect(r).toEqual({ ok: true, destino: "/fisico/treino?treino_salvo=1" });
@@ -323,6 +345,23 @@ describe("registrarTreino", () => {
       calorias: null,
     });
     expect(temEq("adesao_treino", "user_id", USER_ID)).toBe(false);
+  });
+
+  it("data de hoje: destino continua na tela de registro", async () => {
+    preparar();
+
+    const r = await registrarTreino(formulario({ data: hojeISO(), tipo: "moves" }));
+
+    expect(r).toEqual({ ok: true, destino: "/fisico/treino?treino_salvo=1" });
+  });
+
+  it("correção de um dia passado: destino volta pro histórico", async () => {
+    preparar();
+
+    // Segunda-feira certamente no passado, independente de quando o teste roda.
+    const r = await registrarTreino(formulario({ data: "2020-01-06", tipo: "moves" }));
+
+    expect(r).toEqual({ ok: true, destino: "/fisico/historico?aba=treino&treino_salvo=1" });
   });
 });
 

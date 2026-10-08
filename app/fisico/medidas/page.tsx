@@ -1,13 +1,13 @@
 import Link from "next/link";
-import { Home } from "lucide-react";
+import { Home, History } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { registrarMedidas, excluirMedidasHoje } from "../actions";
+import { registrarMedidas, excluirMedidasHoje, excluirMedidasData } from "../actions";
 import { FormularioAcao } from "@/components/formulario-acao";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BotaoAcao } from "@/components/botao-acao";
-import { hojeISO } from "@/lib/date";
+import { ehDataFutura, formatarDataExtensa, hojeISO } from "@/lib/date";
 import { REGIOES_MEDIDA, type RegiaoMedida } from "@/lib/fisico/types";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
@@ -19,6 +19,7 @@ export default async function MedidasPage({
     medidas_salvas?: string;
     registro_excluido?: string;
     variacao_atipica?: string;
+    data?: string;
   };
 }) {
   const supabase = await createClient();
@@ -31,6 +32,13 @@ export default async function MedidasPage({
   }
 
   const hoje = hojeISO();
+
+  // ?data= vem do histórico, pra corrigir um dia específico. Qualquer valor
+  // inválido ou futuro cai de volta em hoje — nunca abre um dia que não existe ainda.
+  const dataParam = searchParams?.data ?? "";
+  const dataSelecionada =
+    /^\d{4}-\d{2}-\d{2}$/.test(dataParam) && !ehDataFutura(dataParam, hoje) ? dataParam : hoje;
+  const editandoOutroDia = dataSelecionada !== hoje;
 
   const { data: todasMedidas, error: erroMedidas } = await supabase
     .from("medidas_corporais")
@@ -54,17 +62,17 @@ export default async function MedidasPage({
     );
   }
 
-  const medidasHoje = todasMedidas?.filter((m) => m.data === hoje) ?? [];
+  const medidasDoDia = todasMedidas?.filter((m) => m.data === dataSelecionada) ?? [];
 
   const valorAtual = (regiao: RegiaoMedida) =>
-    medidasHoje.find((m) => m.regiao === regiao)?.valor_cm ?? undefined;
+    medidasDoDia.find((m) => m.regiao === regiao)?.valor_cm ?? undefined;
 
   const ultimaMedida = (regiao: RegiaoMedida) =>
-    todasMedidas?.find((m) => m.regiao === regiao && m.data !== hoje) ?? null;
+    todasMedidas?.find((m) => m.regiao === regiao && m.data !== dataSelecionada) ?? null;
 
   const medidasSalvas = searchParams?.medidas_salvas === "1";
   const registroExcluido = searchParams?.registro_excluido === "1";
-  const temMedidaHoje = medidasHoje.length > 0;
+  const temMedidaDoDia = medidasDoDia.length > 0;
 
   const regioesAtipicas = (searchParams?.variacao_atipica ?? "")
     .split(",")
@@ -81,17 +89,33 @@ export default async function MedidasPage({
           Início
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Registrar medidas</h1>
+        <Link
+          href="/fisico/historico?aba=medidas"
+          className="inline-flex items-center gap-1 text-xs text-oliva/85 underline mt-1"
+        >
+          <History className="h-3 w-3" />
+          Ver histórico
+        </Link>
       </header>
+
+      {editandoOutroDia ? (
+        <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
+          Corrigindo as medidas de {formatarDataExtensa(dataSelecionada)}.{" "}
+          <Link href="/fisico/medidas" className="underline">
+            Voltar para hoje
+          </Link>
+        </p>
+      ) : null}
 
       {medidasSalvas ? (
         <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
-          Medidas salvas!
+          Medidas {editandoOutroDia ? "corrigidas" : "salvas"}!
         </p>
       ) : null}
 
       {registroExcluido ? (
         <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
-          Medidas de hoje excluídas.
+          Medidas excluídas.
         </p>
       ) : null}
 
@@ -105,18 +129,18 @@ export default async function MedidasPage({
 
       <FormularioAcao
         acao={registrarMedidas}
-        rotuloEnviar="Registrar medidas"
+        rotuloEnviar={editandoOutroDia ? "Salvar correção" : "Registrar medidas"}
         rotuloEnviando="Registrando medidas…"
-        mensagemSucesso="Medidas salvas."
+        mensagemSucesso={editandoOutroDia ? undefined : "Medidas salvas."}
         classeBotao="w-full"
         className="space-y-4 rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm"
       >
         <div className="space-y-2">
           <Label htmlFor="data">Data</Label>
-          <Input id="data" name="data" type="date" defaultValue={hoje} max={hoje} required />
+          <Input id="data" name="data" type="date" defaultValue={dataSelecionada} max={hoje} required />
         </div>
 
-        <p className="text-xs text-stone-500">Preencha só as medidas que for tirar hoje.</p>
+        <p className="text-xs text-stone-500">Preencha só as medidas que for tirar nesse dia.</p>
 
         {REGIOES_MEDIDA.map((r) => {
           const ultima = ultimaMedida(r.value);
@@ -142,13 +166,26 @@ export default async function MedidasPage({
 
       </FormularioAcao>
 
-      {temMedidaHoje ? (
+      {temMedidaDoDia && !editandoOutroDia ? (
         <BotaoAcao
           acao={excluirMedidasHoje}
           rotulo="Excluir medidas de hoje"
           rotuloEnviando="Excluindo medidas…"
           confirmacao="Excluir todas as medidas registradas hoje?"
           destinoSucesso="/fisico/medidas?registro_excluido=1"
+          variante="outline"
+          className="w-full text-red-700 border-red-200 hover:bg-red-50"
+        />
+      ) : null}
+
+      {temMedidaDoDia && editandoOutroDia ? (
+        <BotaoAcao
+          acao={excluirMedidasData}
+          campos={{ data: dataSelecionada }}
+          rotulo={`Excluir medidas de ${formatarDataExtensa(dataSelecionada)}`}
+          rotuloEnviando="Excluindo medidas…"
+          confirmacao={`Excluir todas as medidas registradas em ${formatarDataExtensa(dataSelecionada)}?`}
+          destinoSucesso="/fisico/historico?aba=medidas&registro_excluido=1"
           variante="outline"
           className="w-full text-red-700 border-red-200 hover:bg-red-50"
         />
