@@ -1,8 +1,10 @@
 import Link from "next/link";
-import { Home } from "lucide-react";
+import { Home, Pencil } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listarReceitasBiblioteca } from "@/lib/marmitas/consultas";
+import { excluirReceita } from "../actions";
+import { BotaoAcao } from "@/components/botao-acao";
 
 const ORDEM_CATEGORIAS = ["café da manhã", "lanche", "jantar", "sobremesa"];
 
@@ -38,7 +40,7 @@ function agruparPorCategoria(receitas: Receita[]) {
 export default async function ReceitasPage({
   searchParams,
 }: {
-  searchParams: { receita_salva?: string };
+  searchParams: { receita_salva?: string; receita_atualizada?: string; receita_excluida?: string };
 }) {
   const supabase = await createClient();
   const {
@@ -72,6 +74,18 @@ export default async function ReceitasPage({
       {searchParams?.receita_salva === "1" ? (
         <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
           Receita salva!
+        </p>
+      ) : null}
+
+      {searchParams?.receita_atualizada === "1" ? (
+        <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
+          Receita atualizada!
+        </p>
+      ) : null}
+
+      {searchParams?.receita_excluida === "1" ? (
+        <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
+          Receita excluída.
         </p>
       ) : null}
 
@@ -150,6 +164,25 @@ export default async function ReceitasPage({
                             ))}
                           </div>
                         ) : null}
+
+                        <div className="flex items-center gap-3 pt-2">
+                          <Link
+                            href={`/marmitas/receitas/${r.id}/editar`}
+                            className="inline-flex items-center gap-1 text-xs text-oliva underline"
+                          >
+                            <Pencil className="h-3 w-3" />
+                            Editar
+                          </Link>
+                          <BotaoAcao
+                            acao={excluirReceita}
+                            campos={{ id: r.id }}
+                            rotulo="Excluir"
+                            rotuloEnviando="Excluindo…"
+                            confirmacao={`Excluir a receita "${r.nome}"? Essa ação não pode ser desfeita.`}
+                            estilo="nativo"
+                            className="text-xs text-red-700 underline"
+                          />
+                        </div>
                       </div>
                     </details>
                   </li>

@@ -124,6 +124,112 @@ export async function criarReceitaCompleta(formData: FormData): Promise<Resultad
   return gravado;
 }
 
+export async function atualizarReceita(formData: FormData): Promise<ResultadoAcao> {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    return { ok: false, erro: "Receita não encontrada. Atualize a página e tente de novo." };
+  }
+
+  const resultado = interpretarReceita(formData);
+  if (!resultado.ok) {
+    return { ok: false, erro: resultado.erro };
+  }
+
+  // Recusa nome repetido com outra receita da mesma usuária (sem diferenciar maiúsculas).
+  // Sem conferir, não há como afirmar que o novo nome está livre.
+  const { data: existentes, error: erroLeitura } = await supabase
+    .from("receitas")
+    .select("nome")
+    .eq("user_id", user.id)
+    .neq("id", id);
+
+  if (erroLeitura) {
+    return { ok: false, erro: MENSAGEM_VALIDACAO_INDISPONIVEL };
+  }
+
+  const jaExiste = (existentes ?? []).some(
+    (r) => r.nome.trim().toLowerCase() === resultado.dados.nome.toLowerCase()
+  );
+  if (jaExiste) {
+    return {
+      ok: false,
+      erro: `Já existe uma receita chamada "${resultado.dados.nome}". Escolha outro nome.`,
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("receitas")
+    .update(resultado.dados)
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id");
+
+  if (error) {
+    return { ok: false, erro: "Não foi possível salvar a receita. Tente novamente." };
+  }
+
+  if (!data || data.length === 0) {
+    return { ok: false, erro: "Receita não encontrada. Atualize a página e tente de novo." };
+  }
+
+  revalidatePath("/marmitas/receitas");
+  revalidatePath("/marmitas/preparo");
+  revalidatePath("/marmitas/estoque");
+  return { ok: true, destino: "/marmitas/receitas?receita_atualizada=1" };
+}
+
+/**
+ * Exclui uma receita sem preparo vinculado. A FK (`preparos.receita_id`) já bloqueia
+ * no banco a exclusão de receita com preparo, mas a confirmação prévia aqui explica o
+ * motivo pra usuária em vez de devolver um erro técnico de constraint.
+ */
+export async function excluirReceita(formData: FormData): Promise<ResultadoAcao> {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    return { ok: false, erro: "Receita não encontrada. Atualize a página e tente de novo." };
+  }
+
+  const { count, error: erroPreparos } = await supabase
+    .from("preparos")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("receita_id", id);
+
+  if (erroPreparos) {
+    return { ok: false, erro: MENSAGEM_VALIDACAO_INDISPONIVEL };
+  }
+
+  if (count && count > 0) {
+    return {
+      ok: false,
+      erro: "Essa receita já tem preparos registrados e não pode ser excluída. Você pode editá-la.",
+    };
+  }
+
+  const { data, error } = await supabase
+    .from("receitas")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id");
+
+  if (error) {
+    return { ok: false, erro: "Não foi possível excluir a receita. Tente novamente." };
+  }
+
+  if (!data || data.length === 0) {
+    return { ok: false, erro: "Receita não encontrada. Atualize a página e tente de novo." };
+  }
+
+  revalidatePath("/marmitas/receitas");
+  revalidatePath("/marmitas/preparo");
+  return { ok: true, destino: "/marmitas/receitas?receita_excluida=1" };
+}
+
 export async function criarPreparo(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 

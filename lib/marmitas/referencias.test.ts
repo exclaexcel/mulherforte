@@ -96,7 +96,12 @@ describe("garantias de implementação", () => {
   });
 
   it("formulário completo e cadastro rápido usam o mesmo componente", () => {
-    expect(lerArquivo("app", "marmitas", "receitas", "nova", "page.tsx")).toContain("CampoPrazoCongelamento");
+    // O formulário completo (nova e editar) usa CamposReceita, que por sua vez usa
+    // CampoPrazoCongelamento — mesma fonte única, com um nível de indireção.
+    expect(lerArquivo("components", "marmitas", "campos-receita.tsx")).toContain(
+      "CampoPrazoCongelamento"
+    );
+    expect(lerArquivo("app", "marmitas", "receitas", "nova", "page.tsx")).toContain("CamposReceita");
     expect(lerArquivo("app", "marmitas", "preparo", "page.tsx")).toContain("CampoPrazoCongelamento");
   });
 

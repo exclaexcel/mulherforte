@@ -16,6 +16,15 @@ export function listarReceitasBiblioteca(supabase: ClienteSupabase, userId: stri
     .order("nome");
 }
 
+export function buscarReceitaPorId(supabase: ClienteSupabase, userId: string, id: string) {
+  return supabase
+    .from("receitas")
+    .select("id, nome, categoria, validade_congelado_dias, ingredientes, modo_preparo, dica_congelamento, selos, notas")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+}
+
 export function listarReceitasParaPreparo(supabase: ClienteSupabase, userId: string) {
   return supabase
     .from("receitas")
