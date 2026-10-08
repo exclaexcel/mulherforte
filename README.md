@@ -2,12 +2,12 @@
 
 Fundação: Next.js 14 + Supabase Auth + `perfil_usuario` (RLS) + deploy.
 
-## Status atual (2026-10-06)
+## Status atual (2026-10-08)
 
-- Auditoria técnica e correções concluídas. TypeScript, lint, build e 631 testes automatizados aprovados.
+- Auditoria técnica e correções concluídas. TypeScript, lint, build e 696 testes automatizados aprovados.
 - **Validação manual pendente:** navegador, Galaxy A34, leitor de tela e smoke test pós-deploy.
 - O MVP **não** está marcado como 100% validado. Detalhes em `etapas-mvp.md` e `prd-jornada-app.md` (seção 8).
-- Migration `20261004000000_receita_validade_opcional.sql`: confirmar aplicação antes do deploy.
+- Migration `20261004000000_receita_validade_opcional.sql`: **aplicada e confirmada** por leitura direta do catálogo do banco (06/10 e 08/10/2026).
 - Upgrade de Next e dependências: rodada separada.
 
 ## Setup local

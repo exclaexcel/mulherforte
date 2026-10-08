@@ -157,19 +157,19 @@ indicador exploratório sem classificação.
 
 ## Ajuste: validade de congelamento opcional e estoque por receita
 
-**Status: não concluído.** Entrega dependente de migration e de validação manual.
+**Status: migration aplicada; falta só a validação manual.**
 
 - [x] Código preparado: validade opcional no cadastro completo e no rápido; regra única em
   `interpretarValidadeCongelado`; estoque com validade individual da receita; ordenação nova;
   "Validade não informada" sem classificação; lista de receitas mostra a validade
 - [x] Testes automatizados passando (fronteiras de data, null, ordenação, exportação)
-- [ ] Migration pendente: `supabase/migrations/20261004000000_receita_validade_opcional.sql`
-  (não aplicada; remove só o NOT NULL, mantém o CHECK de valor positivo)
-- [ ] Pós-checks da migration após aplicação
+- [x] Migration aplicada: `supabase/migrations/20261004000000_receita_validade_opcional.sql`
+  — confirmado por leitura direta do catálogo do banco (`validade_congelado_dias` nullable),
+  em 06/10 e reconfirmado em 08/10/2026
 - [ ] Validação manual no navegador e no celular
 - [ ] Preparos antigos conferidos (eles usam a validade atual da receita)
 
-Não marcar esta entrega como concluída antes da migration e dos pós-checks.
+Não marcar esta entrega como concluída antes da validação manual.
 
 ## Auditoria técnica e correções (2026-10-06)
 
@@ -193,8 +193,8 @@ Não marcar esta entrega como concluída antes da migration e dos pós-checks.
 - [x] TypeScript, lint e build aprovados; 631 testes automatizados passando
 - [ ] Validação manual completa no navegador, no Galaxy A34, com leitor de tela
 - [ ] Smoke test pós-deploy
-- [ ] Confirmação da aplicação da migration `20261004000000_receita_validade_opcional`
-  (versionada, não confirmada no banco nesta rodada)
+- [x] Confirmação da aplicação da migration `20261004000000_receita_validade_opcional`
+  — confirmada por leitura direta do catálogo do banco em 06/10 e 08/10/2026
 - [ ] Upgrade de Next e dependências: rodada separada, não incluída nesta entrega
 
 Fora do MVP, registrado no backlog: importação do backup JSON, importação de receitas por
