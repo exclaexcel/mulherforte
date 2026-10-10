@@ -1,0 +1,573 @@
+Vamos realizar uma auditoria de UX como parte da Etapa 7B, antes de declarar o MVP encerrado.
+
+Esta rodada é exclusivamente de auditoria e planejamento.
+
+Não altere arquivos.
+Não escreva código.
+Não crie componentes.
+Não instale dependências.
+Não altere package.json ou package-lock.json.
+Não altere o Supabase.
+Não crie migration.
+Não crie conta.
+Não faça git add.
+Não faça commit.
+Não faça push.
+Não faça deploy.
+Não execute comandos destrutivos.
+
+## 1. Objetivo e limites da auditoria
+
+O objetivo é verificar se a experiência atual:
+
+- usa linguagem adequada para a usuária;
+- possui navegação clara;
+- funciona de forma coerente no celular;
+- permite encontrar facilmente as principais funcionalidades;
+- apresenta ações, retornos, estados vazios, sucessos e erros com clareza;
+- possui um fluxo suficientemente completo para cadastrar receitas manualmente;
+- está pronta para o fechamento do MVP do ponto de vista de UX.
+
+Também deve ser avaliada, apenas como planejamento futuro, a viabilidade de:
+
+- colar texto de receita;
+- importar receita por PDF;
+- usar OCR em PDFs escaneados ou imagens;
+- importar treinos da Mi Band 5;
+- integrar futuramente com o aplicativo usado pela pulseira ou com recursos do Android.
+
+Essas funcionalidades futuras não devem ser tratadas automaticamente como bloqueadoras do MVP.
+
+A auditoria não deve repetir toda a análise de banco, RLS, grants, dependências ou segurança já realizada, exceto quando um ponto tiver impacto direto na UX auditada.
+
+## 2. Pré-check do estado atual
+
+Antes da auditoria, executar somente comandos de leitura:
+
+- git status --short;
+- git status -sb;
+- git log -1 --oneline;
+- git diff --stat;
+- git diff --name-status.
+
+Informar:
+
+1. commit atual;
+2. se o working tree está limpo;
+3. se a Etapa 7A ainda está no working tree;
+4. quantidade de arquivos pendentes;
+5. se existe alguma alteração inesperada;
+6. se a auditoria está avaliando o estado completo e atual do working tree.
+
+Não modificar o estado do Git.
+
+## 3. Linguagem interna na interface
+
+Fazer uma varredura completa nos arquivos que geram conteúdo visível para a usuária.
+
+Pesquisar por referências como:
+
+- Etapa 1;
+- Etapa 2;
+- Etapa 3;
+- Etapa 4;
+- Etapa 5;
+- Etapa 6;
+- Etapa 7;
+- MVP;
+- backlog;
+- fase de implementação;
+- migration;
+- PRD;
+- nomes ou mensagens destinados à equipe de desenvolvimento.
+
+Separar os resultados em:
+
+1. interface visível;
+2. documentação;
+3. testes;
+4. comentários;
+5. nomes técnicos internos que não aparecem para a usuária.
+
+Regras:
+
+- referências em documentação, testes e comentários técnicos não são defeitos de UX por si só;
+- somente textos visíveis na interface devem ser candidatos à substituição;
+- não sugerir renomear funções, arquivos, testes ou migrations sem necessidade funcional;
+- não remover a numeração das etapas dos documentos técnicos.
+
+Para cada ocorrência visível, informar:
+
+- texto atual;
+- rota ou tela;
+- arquivo e linha;
+- contexto;
+- substituição recomendada;
+- motivo.
+
+A expressão “Etapa 4” ou equivalente, quando visível na interface, deve ser tratada como bloqueadora do fechamento do MVP.
+
+## 4. Auditoria da tela inicial
+
+Auditar `app/page.tsx` e todos os componentes utilizados na Home.
+
+Registrar a estrutura atual:
+
+- seções existentes;
+- cards;
+- ordem;
+- título;
+- descrição;
+- destino;
+- ação representada;
+- quantidade total de cards.
+
+Identificar:
+
+- funções duplicadas;
+- caminhos diferentes para a mesma ação;
+- cards com textos longos;
+- nomes técnicos;
+- funcionalidades difíceis de encontrar;
+- ações diárias misturadas com análises;
+- recursos físicos misturados de forma confusa com Marmitas;
+- excesso de destaque;
+- falta de hierarquia;
+- relação entre Perfil, exportação e logout;
+- risco de rolagem excessiva no celular;
+- cards importantes escondidos ao final da página.
+
+Propor uma organização visual com estas categorias conceituais:
+
+### Hoje
+
+Ações frequentes ou registros do dia.
+
+### Minha evolução
+
+Análises, indicadores, metas e tendências.
+
+### Marmitas
+
+Receitas, preparos, estoque, compras e cronograma.
+
+### Minha conta e dados
+
+Perfil, exportação e logout.
+
+Essas categorias representam agrupamento visual na Home. Não presumir que devem virar páginas ou menus separados.
+
+Para cada card, recomendar:
+
+- manter;
+- mover para outra seção;
+- combinar;
+- remover da Home;
+- manter apenas dentro do módulo;
+- renomear;
+- encurtar descrição.
+
+Apresentar a ordem final sugerida da Home.
+
+Não implementar.
+
+## 5. Auditoria geral das rotas
+
+Levantar todas as rotas acessíveis do aplicativo.
+
+Para cada tela, preencher o mesmo modelo:
+
+- rota;
+- título atual;
+- finalidade;
+- ação principal;
+- ação secundária;
+- caminho de entrada;
+- caminho de retorno;
+- estado sem dados;
+- estado de carregamento;
+- feedback de sucesso;
+- feedback de erro;
+- prevenção de dupla ação;
+- linguagem interna;
+- responsividade inferida pelo código;
+- acessibilidade;
+- consistência com telas semelhantes;
+- problema encontrado;
+- recomendação;
+- necessidade de validação manual logada.
+
+Não afirmar que uma tela está visualmente aprovada apenas pela leitura do código.
+
+Quando necessário, escrever:
+
+“Requer validação manual logada.”
+
+Classificar cada problema como:
+
+- Bloqueador do fechamento do MVP;
+- Corrigir antes do próximo deploy;
+- Melhoria de Fase 2;
+- Sem problema relevante.
+
+## 6. Consistência de conteúdo
+
+Auditar o texto visível de:
+
+- títulos;
+- subtítulos;
+- descrições;
+- labels;
+- placeholders;
+- botões;
+- links;
+- banners;
+- mensagens de sucesso;
+- mensagens de erro;
+- avisos;
+- estados vazios;
+- tooltips;
+- textos de ajuda.
+
+Verificar:
+
+- linguagem simples;
+- termos técnicos desnecessários;
+- frases longas;
+- inconsistência de singular e plural;
+- capitalização;
+- pontuação;
+- uso consistente de “você”;
+- consistência entre “cadastrar”, “registrar”, “adicionar” e “salvar”;
+- mensagens que não informam o próximo passo;
+- mensagens punitivas;
+- linguagem que possa parecer diagnóstico médico;
+- textos repetidos.
+
+Propor uma convenção de conteúdo para o app.
+
+Não reescrever toda a interface sem necessidade. Priorizar textos confusos, internos ou inconsistentes.
+
+## 7. Auditoria detalhada do módulo de receitas
+
+Auditar todas as rotas, actions, componentes, consultas, validações e estados relacionados a receitas.
+
+Confirmar por evidência de código:
+
+1. Existe um botão visível “Nova receita” ou equivalente?
+2. Em qual tela aparece?
+3. É visível sem rolagem excessiva no celular?
+4. Existe uma rota específica de criação ou o formulário fica na lista?
+5. Quais campos existem atualmente?
+6. Quais campos são obrigatórios?
+7. Quais validações existem no cliente?
+8. Quais validações existem no servidor?
+9. É possível colar textos longos em ingredientes e modo de preparo?
+10. Quebras de linha são preservadas?
+11. O formulário possui labels claros?
+12. Existe feedback de carregamento?
+13. Existe feedback de sucesso?
+14. Existe feedback de erro?
+15. Após salvar, qual rota é exibida?
+16. A receita aparece imediatamente na lista?
+17. Existe proteção contra duplo envio?
+18. Existe prevenção de duplicidade?
+19. Existe edição?
+20. Existe exclusão?
+21. Existe busca?
+22. Existe filtro?
+23. Existe estado vazio?
+24. Existe retorno claro para a lista?
+25. O fluxo é encontrável a partir da Home?
+26. O fluxo é encontrável a partir da lista de receitas?
+27. A relação com preparos está claramente comunicada?
+28. Há risco de excluir ou alterar uma receita vinculada?
+29. O banco bloqueia exclusão de receita vinculada?
+30. A interface explica esse bloqueio?
+
+Não presumir que a existência de `criarReceita` representa um bom fluxo de UX.
+
+### Classificação mínima
+
+Avaliar separadamente:
+
+- descoberta do cadastro;
+- criação manual;
+- edição;
+- exclusão;
+- busca e filtros;
+- experiência mobile;
+- feedback;
+- relação com preparos.
+
+### Critério para o MVP
+
+A criação manual de receita deve ser considerada suficiente para o MVP somente se:
+
+- for fácil de encontrar;
+- funcionar de ponta a ponta;
+- aceitar os campos necessários;
+- preservar textos longos;
+- informar erro e sucesso;
+- retornar a um local previsível;
+- apresentar a receita salva.
+
+Edição, exclusão, busca e filtros não devem ser classificados automaticamente como bloqueadores. Avaliar o impacto real de cada ausência.
+
+## 8. Proposta “Colar receita”
+
+Sem implementar, desenhar uma funcionalidade de apoio ao cadastro.
+
+Fluxo desejado:
+
+1. usuária escolhe “Colar receita”;
+2. cola o texto completo;
+3. o sistema identifica sugestões de:
+   - nome;
+   - categoria;
+   - ingredientes;
+   - modo de preparo;
+   - congelamento;
+   - validade;
+   - notas;
+4. os campos são preenchidos em uma prévia;
+5. a usuária revisa todos os campos;
+6. a usuária corrige o que for necessário;
+7. a usuária confirma;
+8. somente então a receita é salva.
+
+Regras obrigatórias:
+
+- nenhuma gravação automática;
+- nenhum campo sugerido deve ser tratado como certeza;
+- todos os campos devem continuar editáveis;
+- texto original deve permanecer disponível durante a revisão;
+- quebras de linha devem ser preservadas;
+- a usuária pode cancelar sem salvar;
+- duplicidade por nome deve ser verificada;
+- a criação manual deve permanecer disponível.
+
+Comparar as opções:
+
+1. criação manual atual;
+2. colar texto sem interpretação automática;
+3. colar texto com identificação assistida;
+4. importar PDF textual;
+5. OCR de PDF ou imagem.
+
+Para cada opção, informar:
+
+- valor para a usuária;
+- esforço estimado;
+- dependências;
+- privacidade;
+- necessidade de serviço externo;
+- taxa provável de erro;
+- testes;
+- impacto no banco;
+- recomendação:
+  - antes de fechar o MVP;
+  - Fase 2;
+  - não recomendado.
+
+Não implementar.
+
+## 9. Importação de PDF e imagem
+
+Auditar a viabilidade para o projeto web atual, sem implementar.
+
+Separar:
+
+- PDF com texto selecionável;
+- PDF escaneado;
+- fotografia;
+- uma receita por arquivo;
+- várias receitas por arquivo;
+- PDF protegido;
+- PDF sem conteúdo reconhecível;
+- arquivo muito grande;
+- conteúdo que não seja receita.
+
+Desenhar o fluxo:
+
+seleção do arquivo
+→ validação
+→ extração
+→ identificação
+→ prévia
+→ revisão
+→ confirmação
+→ salvamento
+
+Definir como proposta:
+
+- formatos aceitos;
+- tamanho máximo;
+- quantidade máxima de páginas;
+- processamento local ou no servidor;
+- descarte do arquivo;
+- armazenamento temporário;
+- privacidade;
+- tratamento de erro;
+- duplicidade;
+- segurança contra arquivo malicioso;
+- dependências necessárias;
+- impacto no bundle;
+- impacto no ambiente da Vercel;
+- custo de OCR;
+- necessidade de serviço externo.
+
+A importação nunca deve salvar uma receita sem revisão e confirmação.
+
+Classificar a recomendação como:
+
+- MVP;
+- Fase 2;
+- não recomendado.
+
+## 10. Integração com pulseira e treinos
+
+Usar este contexto:
+
+- dispositivo: Mi Band 5;
+- celular: Samsung Galaxy A34;
+- sistema: Android;
+- aplicativo informado pela usuária: Zepp;
+- nome exato instalado, Zepp ou Zepp Life: requer confirmação manual;
+- Projeto Mulher Forte: aplicação web em Next.js.
+
+A auditoria deve comparar:
+
+1. registro manual atual;
+2. exportação de arquivo pelo aplicativo da pulseira;
+3. importação de CSV;
+4. importação de JSON;
+5. importação de GPX;
+6. importação de TCX;
+7. importação de FIT;
+8. Health Connect;
+9. Google Health API;
+10. integração oficial da Zepp, se disponível;
+11. aplicativo Android, wrapper ou camada nativa.
+
+Para cada alternativa, informar:
+
+- compatibilidade com Mi Band 5;
+- compatibilidade conhecida ou não comprovada com o aplicativo informado;
+- compatibilidade com Galaxy A34;
+- compatibilidade com o app web;
+- necessidade de código Android;
+- necessidade de OAuth;
+- necessidade de SDK;
+- necessidade de parceria;
+- dados disponíveis;
+- permissões;
+- consentimento;
+- privacidade;
+- deduplicação;
+- sincronização;
+- tratamento de exclusão na origem;
+- manutenção;
+- esforço;
+- recomendação.
+
+Não assumir que Zepp e Zepp Life possuem as mesmas integrações.
+
+Quando depender da verificação no aparelho, escrever:
+
+“Requer confirmação manual no Galaxy A34.”
+
+### Planejamento futuro
+
+Separar a recomendação em:
+
+#### Fase 2A: importação por arquivo
+
+- selecionar arquivo;
+- identificar exercícios;
+- mostrar prévia;
+- selecionar registros;
+- revisar;
+- confirmar;
+- registrar origem;
+- evitar duplicidade;
+- manter cadastro manual.
+
+#### Fase 2B: integração Android
+
+- verificar disponibilidade no Health Connect;
+- solicitar permissões;
+- ler sessões autorizadas;
+- enviar dados ao Supabase;
+- permitir revogação;
+- tratar alterações;
+- manter rastreabilidade;
+- impedir duplicidade.
+
+Auditar se o schema atual de `adesao_treino` seria suficiente.
+
+Se forem necessários campos futuros, listar como proposta, sem migration:
+
+- origem;
+- identificador externo;
+- início;
+- término;
+- distância;
+- frequência cardíaca;
+- passos;
+- calorias;
+- sincronizado_em.
+
+Não implementar.
+
+## 11. Navegação futura das importações
+
+Propor onde cada função futura apareceria:
+
+- “Nova receita”;
+- “Colar receita”;
+- “Importar PDF”;
+- “Importar treino”;
+- “Conectar dispositivo”.
+
+Evitar que funcionalidades futuras ocupem a Home antes de serem implementadas.
+
+Distinguir:
+
+- ação principal do módulo;
+- ação secundária;
+- configuração;
+- importação eventual.
+
+## 12. Mobile e acessibilidade
+
+Auditar por código:
+
+- larguras;
+- margens;
+- cards;
+- formulários;
+- campos longos;
+- textareas;
+- botões;
+- tamanho de toque;
+- scroll horizontal;
+- tabelas;
+- foco;
+- labels;
+- `aria-label`;
+- `aria-hidden`;
+- `role="status"`;
+- `role="alert"`;
+- headings;
+- ícones sem texto;
+- gráfico;
+- tooltip;
+- loading;
+- mensagens;
+- redução de movimento.
+
+Separar:
+
+- comprovado pelo código;
+- risco

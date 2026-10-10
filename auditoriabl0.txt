@@ -1,0 +1,189 @@
+Vamos iniciar uma auditoria total do Projeto Mulher Forte dividida em blocos funcionais.
+
+Esta é a Rodada 0: fotografia inicial e baseline.
+
+A rodada é somente de leitura.
+
+Não altere arquivos.
+Não escreva código.
+Não instale dependências.
+Não atualize pacotes.
+Não altere o Supabase.
+Não aplique nem crie migrations.
+Não faça git add.
+Não faça commit.
+Não faça push.
+Não faça deploy.
+Não execute npm audit fix.
+Não execute comandos destrutivos.
+Não descarte alterações existentes.
+
+## 1. Estado do Git
+
+Execute:
+
+- git status --short;
+- git status -sb;
+- git log --oneline -15;
+- git rev-parse HEAD;
+- git rev-list --left-right --count main...origin/main;
+- git diff --stat;
+- git diff --name-status;
+- git diff --check;
+- git diff --cached --stat;
+- git diff --cached --name-status.
+
+Informar:
+
+- branch;
+- HEAD;
+- distância do remoto;
+- arquivos modificados;
+- arquivos novos;
+- arquivos excluídos;
+- arquivos staged;
+- arquivos inesperados;
+- escopos misturados;
+- último commit comprovado;
+- estado conhecido do remoto.
+
+## 2. Classificação do working tree
+
+Ler os diffs e classificar cada arquivo pendente em:
+
+- Etapa 7A, exportação;
+- correções posteriores da exportação;
+- revisão de UX;
+- validade opcional das receitas;
+- estoque;
+- importação de receitas;
+- documentação;
+- dependências;
+- migration preparada;
+- inesperado ou não classificado.
+
+Não classificar apenas pelo nome do arquivo.
+
+Apresentar:
+
+- quantidade de arquivos por escopo;
+- arquivos compartilhados por mais de um escopo;
+- risco de criar commits limpos;
+- recomendação de separação futura.
+
+Não fazer stage.
+
+## 3. Inventário do projeto
+
+Levantar:
+
+- rotas do App Router;
+- Route Handlers;
+- Server Actions;
+- tabelas referenciadas;
+- migrations locais;
+- arquivos de teste;
+- dependências diretas;
+- scripts do package.json;
+- middleware;
+- configuração do Next.js;
+- documentos técnicos.
+
+Não aprofundar a auditoria funcional ainda.
+
+## 4. Banco e migrations
+
+Por consultas somente de catálogo, informar:
+
+- projeto Supabase selecionado;
+- project ref;
+- tabelas do Projeto Mulher Forte;
+- RLS ativa;
+- quantidade de policies;
+- grants;
+- migrations aplicadas remotamente;
+- migrations locais ainda não aplicadas;
+- divergências conhecidas entre nomes locais e versões remotas;
+- migrations preparadas no working tree.
+
+Não ler conteúdo pessoal.
+Não aplicar nada.
+
+## 5. Qualidade atual
+
+Executar:
+
+- npm test;
+- npm run lint;
+- npm run build;
+- npm audit;
+- npm outdated;
+- npm ls --depth=0.
+
+Não executar fix ou update.
+
+Registrar:
+
+- quantidade de testes;
+- quantidade de arquivos de teste;
+- falhas;
+- warnings;
+- rotas geradas;
+- First Load JS;
+- rota mais pesada;
+- vulnerabilidades por severidade;
+- dependências desatualizadas;
+- runtime ou desenvolvimento.
+
+## 6. Produção conhecida
+
+Sem alterar nada, verificar quando possível:
+
+- projeto Vercel;
+- domínio;
+- último deploy conhecido;
+- commit publicado;
+- banco usado;
+- diferença entre código local e produção;
+- migrations aplicadas depois do último deploy.
+
+Quando não for comprovável, escrever:
+
+“Não comprovado no estado atual do projeto.”
+
+## 7. Baseline para os blocos seguintes
+
+Registrar:
+
+- AUDIT_BASE_COMMIT;
+- lista completa de arquivos pendentes;
+- git diff --stat;
+- quantidade de testes;
+- data e horário da auditoria;
+- fingerprint do working tree usando um método somente de leitura.
+
+Antes de cada bloco seguinte, essa baseline deverá ser conferida.
+
+Se o working tree mudar entre blocos, interromper a auditoria e informar.
+
+## 8. Formato do relatório
+
+Entregar:
+
+1. Resumo executivo.
+2. Estado do Git.
+3. Classificação do working tree.
+4. Inventário de rotas.
+5. Inventário de banco.
+6. Migrations locais e remotas.
+7. Dependências.
+8. Resultado de testes, lint e build.
+9. npm audit e outdated.
+10. Estado conhecido de produção.
+11. Riscos para continuar a auditoria.
+12. Baseline oficial.
+13. Recomendação para iniciar ou não o Bloco 1.
+
+Não corrigir nada.
+Não atualizar documentação.
+Não criar plano de implementação detalhado ainda.
