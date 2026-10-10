@@ -357,11 +357,13 @@ não negociável, mesmo sendo uso pessoal.
 
 ## 8. Definição de "Pronto" (MVP)
 
-**Status em 2026-10-06:** auditoria técnica e correções automatizadas concluídas; TypeScript,
-lint, build e testes automatizados aprovados (631 testes). **O MVP não está marcado como 100%
-validado.** Pendências: validação manual completa no navegador, no Galaxy A34 e com leitor de
-tela; smoke test pós-deploy; aplicação confirmada da migration `20261004000000_receita_validade_opcional`.
-As caixas abaixo só são marcadas com evidência.
+**Status em 2026-10-10:** auditoria técnica e correções automatizadas concluídas; TypeScript,
+lint, build e testes automatizados aprovados (720 testes). **O MVP não está marcado como 100%
+validado.** As caixas abaixo só são marcadas com evidência.
+
+**O tracking ao vivo da validação manual (o que já foi confirmado, com data e evidência, e o
+que ainda falta) vive em `validacao-manual.md`** — esta lista abaixo é a definição original
+de escopo, não o status atual; consultar o outro arquivo pra saber o que já fechou.
 
 O MVP está pronto quando:
 - [ ] Dany consegue logar no app pelo celular

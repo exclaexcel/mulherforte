@@ -3,6 +3,10 @@
 sem fechar o checklist da atual. Trabalhar com Cursor + Claude uma etapa de cada vez evita
 abrir muita frente ao mesmo tempo e mantém o RLS/segurança sob controle desde o início.
 
+**Validação manual:** todo item de "Pronto quando" que exige testar no navegador/celular
+(não só `npm test`/lint/build) é rastreado num lugar só, `validacao-manual.md` — consultar
+e marcar ali, não duplicar checkbox aqui.
+
 ---
 
 ## Etapa 1 — Fundação
@@ -150,8 +154,9 @@ indicador exploratório sem classificação.
 
 **Pronto quando:**
 - [x] Exportação funcionando para todas as tabelas do app (7A, código e testes)
-- [ ] Teste manual da exportação no celular e no Excel pt-BR
-- [ ] Todos os 19 itens da seção 8 do PRD marcados como concluídos (7B)
+- [ ] Teste manual da exportação no celular e no Excel pt-BR — ver `validacao-manual.md`
+- [ ] Todos os itens da seção 8 do PRD marcados como concluídos — tracking ao vivo em
+  `validacao-manual.md`, não repetir a lista aqui
 
 ---
 
