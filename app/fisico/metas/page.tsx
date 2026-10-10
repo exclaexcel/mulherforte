@@ -2,8 +2,9 @@ import Link from "next/link";
 import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { salvarMeta } from "../actions";
+import { salvarMeta, excluirMeta } from "../actions";
 import { FormularioAcao } from "@/components/formulario-acao";
+import { BotaoAcao } from "@/components/botao-acao";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { hojeISO } from "@/lib/date";
@@ -16,7 +17,7 @@ import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 export default async function MetasPage({
   searchParams,
 }: {
-  searchParams: { meta_salva?: string };
+  searchParams: { meta_salva?: string; meta_excluida?: string; indicador?: string };
 }) {
   const supabase = await createClient();
   const {
@@ -78,6 +79,8 @@ export default async function MetasPage({
   };
 
   const metaSalva = searchParams?.meta_salva === "1";
+  const metaExcluida = searchParams?.meta_excluida === "1";
+  const labelMetaExcluida = INDICADORES_META.find((ind) => ind.value === searchParams?.indicador)?.label;
   const hoje = hojeISO();
 
   return (
@@ -93,6 +96,12 @@ export default async function MetasPage({
       {metaSalva ? (
         <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
           Meta salva!
+        </p>
+      ) : null}
+
+      {metaExcluida ? (
+        <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
+          {labelMetaExcluida ? `Meta de ${labelMetaExcluida} excluída.` : "Meta excluída."}
         </p>
       ) : null}
 
@@ -134,6 +143,19 @@ export default async function MetasPage({
                   />
                 </div>
               </FormularioAcao>
+              {meta ? (
+                <BotaoAcao
+                  acao={excluirMeta}
+                  campos={{ indicador: ind.value }}
+                  rotulo="Excluir meta"
+                  rotuloEnviando="Excluindo meta…"
+                  confirmacao={`Excluir a meta de ${ind.label}?`}
+                  destinoSucesso={`/fisico/metas?meta_excluida=1&indicador=${ind.value}`}
+                  variante="outline"
+                  tamanho="sm"
+                  className="w-full text-red-700 border-red-200 hover:bg-red-50"
+                />
+              ) : null}
             </section>
           );
         }
@@ -209,6 +231,19 @@ export default async function MetasPage({
               </div>
 
             </FormularioAcao>
+            {meta ? (
+              <BotaoAcao
+                acao={excluirMeta}
+                campos={{ indicador: ind.value }}
+                rotulo="Excluir meta"
+                rotuloEnviando="Excluindo meta…"
+                confirmacao={`Excluir a meta de ${ind.label}?`}
+                destinoSucesso={`/fisico/metas?meta_excluida=1&indicador=${ind.value}`}
+                variante="outline"
+                tamanho="sm"
+                className="w-full text-red-700 border-red-200 hover:bg-red-50"
+              />
+            ) : null}
           </section>
         );
       })}

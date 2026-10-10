@@ -668,3 +668,31 @@ export async function salvarMeta(formData: FormData): Promise<ResultadoAcao> {
   revalidatePath("/fisico/metas");
   return { ok: true, destino: "/fisico/metas?meta_salva=1" };
 }
+
+/** Exclui a meta de um indicador específico — item a item, não existe "excluir todas". */
+export async function excluirMeta(formData: FormData): Promise<ResultadoAcao> {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const indicador = String(formData.get("indicador") ?? "") as IndicadorMeta;
+  if (!indicador || !(indicador in UNIDADE_POR_INDICADOR)) {
+    return { ok: false, erro: "Indicador inválido." };
+  }
+
+  const { data, error } = await supabase
+    .from("metas")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("indicador", indicador)
+    .select("id");
+
+  if (error) {
+    return { ok: false, erro: "Não foi possível excluir a meta agora. Tente novamente." };
+  }
+
+  if (!data || data.length === 0) {
+    return { ok: false, erro: "Não há meta cadastrada para esse indicador." };
+  }
+
+  revalidatePath("/fisico/metas");
+  return { ok: true, destino: "/fisico/metas?meta_excluida=1" };
+}

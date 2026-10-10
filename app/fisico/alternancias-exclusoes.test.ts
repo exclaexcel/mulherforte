@@ -27,6 +27,7 @@ import {
   excluirHabitosHoje,
   excluirMedidasData,
   excluirMedidasHoje,
+  excluirMeta,
   excluirPesoData,
   excluirPesoHoje,
   excluirTreinoData,
@@ -291,6 +292,47 @@ describe.each([
 
     expect(r).toEqual({ ok: false, erro: "Não foi possível excluir o registro agora. Tente novamente." });
     expect(JSON.stringify(r)).not.toContain(tabela);
+    expect(JSON.stringify(r)).not.toContain("pg_");
+  });
+});
+
+describe("excluirMeta — exclusão item a item por indicador", () => {
+  it("indicador inválido: erro previsível, sem acessar o banco", async () => {
+    preparar();
+
+    const r = await excluirMeta(formulario({ indicador: "" }));
+
+    expect(r).toEqual({ ok: false, erro: "Indicador inválido." });
+    expect(chamadas("metas", "delete")).toHaveLength(0);
+  });
+
+  it("sucesso: filtra por user_id e pelo indicador informado, não apaga as outras metas", async () => {
+    preparar();
+
+    const r = await excluirMeta(formulario({ indicador: "cintura" }));
+
+    expect(r).toEqual({ ok: true, destino: "/fisico/metas?meta_excluida=1" });
+    expect(temEq("metas", "user_id", USER_ID)).toBe(true);
+    expect(temEq("metas", "indicador", "cintura")).toBe(true);
+  });
+
+  it("zero linhas apagadas: não há meta cadastrada pra esse indicador", async () => {
+    preparar({ metas: { escrita: { data: [] } } });
+
+    const r = await excluirMeta(formulario({ indicador: "peso" }));
+
+    expect(r).toEqual({
+      ok: false,
+      erro: "Não há meta cadastrada para esse indicador.",
+    });
+  });
+
+  it("falha do banco: mensagem neutra", async () => {
+    preparar({ metas: { escrita: { error: { message: "pg_excluir_meta" } } } });
+
+    const r = await excluirMeta(formulario({ indicador: "hidratacao" }));
+
+    expect(r).toEqual({ ok: false, erro: "Não foi possível excluir a meta agora. Tente novamente." });
     expect(JSON.stringify(r)).not.toContain("pg_");
   });
 });
