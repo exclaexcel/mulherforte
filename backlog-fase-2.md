@@ -221,3 +221,58 @@ Dany confere e salva. Nenhuma receita é gravada sem revisão.
 Leitura de dados de atividade e sono (Mi Band 5, app Zepp) para a Jornada Física. Fica na
 Fase 2. Antes de implementar: avaliar necessidade real, permissões, origem dos dados e
 como os valores entram no registro manual (sem sobrescrever o que a Dany digitou).
+
+### 2.18 Tela de cadastro (signup)
+
+Hoje o app só tem login (`app/login/page.tsx`) — toda conta é criada manualmente pelo painel
+do Supabase (Authentication → Users). Isso é suficiente enquanto o app é só da Dany, mas a
+intenção é expandir para outras usuárias depois que o projeto Supabase ficou dedicado ao
+Mulher Forte (projeto `mulherforte`, separado do `appreforma` em 09/10/2026 — ver
+[[project_supabase_compartilhado_reforma]]).
+
+A tabela `preparos` e as demais já são multiusuário "de fábrica": toda RLS já isola por
+`auth.uid() = user_id`. Falta só a porta de entrada. Antes de implementar, decidir:
+- Cadastro aberto (qualquer e-mail) ou por convite/aprovação?
+- Confirmação de e-mail obrigatória?
+- Alguma tela de onboarding (perfil, altura, etc.) logo após o cadastro?
+
+Relação: útil implementar junto com 2.19 (recuperar senha), já que os dois usam o mesmo
+fluxo de e-mail transacional do Supabase Auth.
+
+### 2.19 Recuperar senha
+
+Tentado em 08/10/2026 e revertido (código não chegou a ser commitado) porque, na época, o
+projeto Supabase era compartilhado com o ReForma — inclusive o template de e-mail de
+"Reset Password", com link fixo no domínio do ReForma. Ver
+[[project_supabase_compartilhado_reforma]] para o diagnóstico completo.
+
+Esse bloqueio não existe mais: desde a separação do banco em 09/10/2026 (projeto
+`mulherforte`), o template de e-mail é só do Mulher Forte, livre pra configurar do jeito
+certo. Ao retomar: usar o formato de fluxo real do template (`?token_hash=...&type=recovery`,
+verificação por OTP), não o formato `?code=` (PKCE) tentado antes. O `middleware.ts` precisa
+isentar a rota de redefinição da exigência de sessão ativa (a sessão só existe depois que a
+página chama `verifyOtp` com o `token_hash` da URL).
+
+### 2.20 Calendário de treino obrigatório configurável por usuária
+
+Hoje o que é "obrigatório" em cada dia da semana (moves na segunda/quarta, zumba na
+terça/quinta) é uma constante fixa no código (`TREINO_OBRIGATORIO_POR_DIA` em
+`lib/fisico/calendarioTreino.ts`), única fonte de verdade usada pelo cálculo do score
+(`lib/fisico/score.ts`). O campo `obrigatorio` salvo em cada linha de `adesao_treino` é só
+informativo/histórico — nunca decide o score. Mudar a rotina hoje exige editar a constante e
+fazer novo deploy; decisão de MVP deliberada (Etapa 6A), documentada no próprio código.
+
+Motivo de reabrir (09/10/2026): com a intenção de expandir o app pra outras usuárias (ver
+[[project_supabase_compartilhado_reforma]]), a rotina fixa da Dany deixa de fazer sentido como
+regra única — cada usuária provavelmente treina em dias diferentes.
+
+Antes de implementar, decidir (não é só um toggle, mexe no cálculo do score):
+- Onde a configuração fica: por usuária (tabela nova, tipo `preferencias_treino`) é o caminho
+  óbvio dado o RLS já existente por `user_id`.
+- Mudança na regra vale só daqui pra frente, ou reinterpreta o histórico já registrado? (Ex.:
+  se a usuária muda de "moves na segunda" pra "moves na terça", os registros antigos de
+  segunda continuam contando como obrigatório cumprido, ou o score recalcula pro passado?)
+- A regra é só por dia da semana (como hoje) ou pode variar por semana do ciclo (1-4)?
+- Tela de configuração em si: onde fica no fluxo (perfil? config própria?), e o que a usuária
+  pode escolher (dias + tipo de treino por dia, dentro dos tipos existentes `moves`/`zumba`/
+  `outro`).

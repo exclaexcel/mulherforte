@@ -58,3 +58,13 @@ export function listarPreparosCongelados(supabase: ClienteSupabase, userId: stri
     .eq("status", "congelado")
     .order("data_preparo", { ascending: true });
 }
+
+/** Todos os preparos (qualquer status) — base pra calcular taxa de descarte por receita. */
+export function listarPreparosParaResumoDescartes(supabase: ClienteSupabase, userId: string) {
+  return supabase
+    .from("preparos")
+    .select(
+      "data_preparo, data_descarte, quantidade_porcoes, status, motivo_descarte, receitas ( nome )"
+    )
+    .eq("user_id", userId);
+}

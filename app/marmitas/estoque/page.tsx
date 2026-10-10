@@ -10,8 +10,9 @@ import {
   type TomValidade,
 } from "@/lib/marmitas/estoque";
 import { listarPreparosCongelados } from "@/lib/marmitas/consultas";
-import { marcarConsumido } from "../actions";
+import { marcarConsumido, descartarPreparo } from "../actions";
 import { BotaoAcao } from "@/components/botao-acao";
+import { AcaoDescarte } from "@/components/marmitas/acao-descarte";
 import { textoConfirmacaoConsumo } from "@/lib/marmitas/consumo";
 
 const TOM_ESTILO: Record<TomValidade, string> = {
@@ -59,6 +60,9 @@ export default async function EstoquePage() {
           Início
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Estoque do congelador</h1>
+        <Link href="/marmitas/descartes" className="inline-block text-sm text-oliva underline mt-1">
+          Ver descartados
+        </Link>
       </header>
 
       {error ? (
@@ -91,6 +95,9 @@ export default async function EstoquePage() {
                   variante="outline"
                   tamanho="sm"
                 />
+                {item.validade.situacao === "vencido" ? (
+                  <AcaoDescarte acao={descartarPreparo} id={item.id} />
+                ) : null}
               </li>
             );
           })}

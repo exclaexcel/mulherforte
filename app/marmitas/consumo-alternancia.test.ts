@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { alternarTenhoEmCasa, marcarConsumido } from "../marmitas/actions";
+import { alternarTenhoEmCasa, descartarPreparo, marcarConsumido } from "../marmitas/actions";
 
 type Chamada = { metodo: string; args: unknown[] };
 type Config = {
@@ -186,6 +186,77 @@ describe("marcarConsumido — confirma a linha alterada e filtra por id e user_i
     preparar();
 
     expect(await marcarConsumido(formulario({}))).toEqual({
+      ok: false,
+      erro: "Preparo inválido. Atualize a página e tente de novo.",
+    });
+    expect(chamadas("preparos", "update")).toHaveLength(0);
+  });
+});
+
+describe("descartarPreparo — exige motivo e confirma a linha alterada", () => {
+  it("sucesso: grava status, data e motivo, filtrando por id e user_id", async () => {
+    preparar();
+
+    const r = await descartarPreparo(formulario({ id: "p1", motivo_descarte: "vencido" }));
+
+    expect(r).toEqual({ ok: true, destino: "/marmitas/estoque" });
+    expect(chamadas("preparos", "update")[0].args[0]).toMatchObject({
+      status: "descartado",
+      motivo_descarte: "vencido",
+    });
+    expect(temEq("preparos", "id", "p1")).toBe(true);
+    expect(temEq("preparos", "user_id", USER_ID)).toBe(true);
+  });
+
+  it("sem motivo: erro previsível, sem gravação", async () => {
+    preparar();
+
+    expect(await descartarPreparo(formulario({ id: "p1" }))).toEqual({
+      ok: false,
+      erro: "Selecione um motivo para o descarte.",
+    });
+    expect(chamadas("preparos", "update")).toHaveLength(0);
+  });
+
+  it("motivo fora da lista: erro previsível, sem gravação", async () => {
+    preparar();
+
+    expect(
+      await descartarPreparo(formulario({ id: "p1", motivo_descarte: "mofou" }))
+    ).toEqual({
+      ok: false,
+      erro: "Selecione um motivo para o descarte.",
+    });
+    expect(chamadas("preparos", "update")).toHaveLength(0);
+  });
+
+  it("zero linhas alteradas: não é sucesso falso", async () => {
+    preparar({ preparos: { escrita: { data: [] } } });
+
+    expect(
+      await descartarPreparo(formulario({ id: "p-de-outra", motivo_descarte: "estragado" }))
+    ).toEqual({
+      ok: false,
+      erro: "Preparo não encontrado. Atualize a página e tente de novo.",
+    });
+  });
+
+  it("erro de gravação: mensagem neutra, sem texto técnico", async () => {
+    preparar({ preparos: { escrita: { error: { message: "pg_descarte" } } } });
+
+    const r = await descartarPreparo(formulario({ id: "p1", motivo_descarte: "outro" }));
+
+    expect(r).toEqual({
+      ok: false,
+      erro: "Não foi possível registrar o descarte agora. Tente novamente.",
+    });
+    expect(JSON.stringify(r)).not.toContain("pg_descarte");
+  });
+
+  it("sem id: erro previsível, sem gravação", async () => {
+    preparar();
+
+    expect(await descartarPreparo(formulario({ motivo_descarte: "vencido" }))).toEqual({
       ok: false,
       erro: "Preparo inválido. Atualize a página e tente de novo.",
     });

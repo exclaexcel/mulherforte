@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { diaSemanaFromData } from "@/lib/marmitas/preparo";
 import { ehDataFutura, hojeISO } from "@/lib/date";
 import { interpretarReceita, type DadosReceita } from "@/lib/marmitas/receita";
+import { motivoDescarteValido } from "@/lib/marmitas/descarte";
 import { GRUPOS_COMPRA } from "@/lib/marmitas/types";
 import {
   MENSAGEM_DATA_FUTURA,
@@ -314,6 +315,44 @@ export async function marcarConsumido(formData: FormData): Promise<ResultadoAcao
 
   if (error) {
     return { ok: false, erro: "Não foi possível registrar o consumo agora. Tente novamente." };
+  }
+
+  if (!data || data.length === 0) {
+    return { ok: false, erro: "Preparo não encontrado. Atualize a página e tente de novo." };
+  }
+
+  revalidatePath("/marmitas/estoque");
+  return { ok: true, destino: "/marmitas/estoque" };
+}
+
+export async function descartarPreparo(formData: FormData): Promise<ResultadoAcao> {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    return { ok: false, erro: "Preparo inválido. Atualize a página e tente de novo." };
+  }
+
+  const motivo = String(formData.get("motivo_descarte") ?? "");
+  if (!motivoDescarteValido(motivo)) {
+    return { ok: false, erro: "Selecione um motivo para o descarte." };
+  }
+
+  // select após update confirma que alguma linha foi alterada: sem isso, zero linhas
+  // pareceria sucesso.
+  const { data, error } = await supabase
+    .from("preparos")
+    .update({
+      status: "descartado",
+      data_descarte: hojeISO(),
+      motivo_descarte: motivo,
+    })
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id");
+
+  if (error) {
+    return { ok: false, erro: "Não foi possível registrar o descarte agora. Tente novamente." };
   }
 
   if (!data || data.length === 0) {

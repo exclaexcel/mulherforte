@@ -27,10 +27,12 @@ import {
   criarPreparo,
   criarReceita,
   criarReceitaCompleta,
+  descartarPreparo,
   marcarConsumido,
   salvarDiaCronograma,
 } from "./actions";
-// alternarTenhoEmCasa e marcarConsumido têm testes próprios em consumo-alternancia.test.ts.
+// alternarTenhoEmCasa, marcarConsumido e descartarPreparo têm testes próprios em
+// consumo-alternancia.test.ts.
 
 type Chamada = { metodo: string; args: unknown[] };
 type Config = {
@@ -118,10 +120,13 @@ describe("sessão obrigatória", () => {
     expect(mocks.from).not.toHaveBeenCalled();
   });
 
-  it("marcarConsumido e alternarTenhoEmCasa sem sessão redirecionam", async () => {
+  it("marcarConsumido, descartarPreparo e alternarTenhoEmCasa sem sessão redirecionam", async () => {
     preparar(null);
 
     await expect(marcarConsumido(formulario({ id: "p1" }))).rejects.toThrow("REDIRECT:/login");
+    await expect(
+      descartarPreparo(formulario({ id: "p1", motivo_descarte: "vencido" }))
+    ).rejects.toThrow("REDIRECT:/login");
     await expect(
       alternarTenhoEmCasa(formulario({ id: "i1", tenho_em_casa: "false" }))
     ).rejects.toThrow("REDIRECT:/login");
