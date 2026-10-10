@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { BotaoAcao } from "@/components/botao-acao";
 import { ehDataFutura, formatarDataExtensa, hojeISO } from "@/lib/date";
 import { REGIOES_MEDIDA, type RegiaoMedida } from "@/lib/fisico/types";
+import { formatarNumeroBR } from "@/lib/valor-exibicao";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 
@@ -157,7 +158,7 @@ export default async function MedidasPage({
               />
               {ultima ? (
                 <p className="text-xs text-stone-500">
-                  Última: {ultima.valor_cm}cm em {ultima.data}
+                  Última: {formatarNumeroBR(ultima.valor_cm)}cm em {ultima.data}
                 </p>
               ) : null}
             </div>

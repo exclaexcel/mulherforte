@@ -1,3 +1,5 @@
+import { formatarNumeroBR } from "@/lib/valor-exibicao";
+
 /**
  * Comparação simples (subtração) entre o valor atual registrado e a meta — sem
  * fórmula clínica. RCEst/RCQ/RFM/Cintura-Coxa ficam para a Etapa 5.
@@ -21,5 +23,5 @@ export function compararComMeta(
     return { diferenca, texto: "Meta batida!" };
   }
 
-  return { diferenca, texto: `Faltam ${diferenca.toFixed(1)}${unidade} para a meta` };
+  return { diferenca, texto: `Faltam ${formatarNumeroBR(diferenca)}${unidade} para a meta` };
 }

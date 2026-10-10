@@ -21,7 +21,7 @@ import {
   type StatusTreino,
 } from "@/lib/fisico/historicoTreino";
 import { REGIOES_MEDIDA, TIPOS_TREINO, type TipoTreino } from "@/lib/fisico/types";
-import { temValor } from "@/lib/valor-exibicao";
+import { temValor, formatarNumeroBR } from "@/lib/valor-exibicao";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 import type { ResultadoAcao } from "@/lib/resultado-acao";
@@ -296,12 +296,16 @@ function renderizarPeso(resp: { data: unknown; error: unknown }): ReactNode {
                 confirmacaoExcluir={`Excluir o peso de ${formatarDataExtensa(registro.data)}?`}
               >
                 <p className="text-sm text-stone-700">
-                  {registro.pesoKg}kg
-                  {temValor(registro.percentualGordura) ? ` · gordura ${registro.percentualGordura}%` : ""}
-                  {temValor(registro.percentualMassaMuscular)
-                    ? ` · massa muscular ${registro.percentualMassaMuscular}%`
+                  {formatarNumeroBR(registro.pesoKg)}kg
+                  {temValor(registro.percentualGordura)
+                    ? ` · gordura ${formatarNumeroBR(registro.percentualGordura)}%`
                     : ""}
-                  {temValor(registro.percentualAgua) ? ` · água ${registro.percentualAgua}%` : ""}
+                  {temValor(registro.percentualMassaMuscular)
+                    ? ` · massa muscular ${formatarNumeroBR(registro.percentualMassaMuscular)}%`
+                    : ""}
+                  {temValor(registro.percentualAgua)
+                    ? ` · água ${formatarNumeroBR(registro.percentualAgua)}%`
+                    : ""}
                 </p>
               </CardHistorico>
             ))}
@@ -350,7 +354,7 @@ function renderizarMedidas(resp: { data: unknown; error: unknown }): ReactNode {
               >
                 <p className="text-sm text-stone-700">
                   {REGIOES_MEDIDA.filter((r) => registro.valoresPorRegiao[r.value] !== undefined)
-                    .map((r) => `${r.label} ${registro.valoresPorRegiao[r.value]}cm`)
+                    .map((r) => `${r.label} ${formatarNumeroBR(registro.valoresPorRegiao[r.value]!)}cm`)
                     .join(" · ")}
                 </p>
               </CardHistorico>

@@ -7,7 +7,7 @@ import { FormularioAcao } from "@/components/formulario-acao";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { BotaoAcao } from "@/components/botao-acao";
-import { temValor } from "@/lib/valor-exibicao";
+import { temValor, formatarNumeroBR } from "@/lib/valor-exibicao";
 import { ehDataFutura, formatarDataExtensa, hojeISO } from "@/lib/date";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
@@ -115,14 +115,16 @@ export default async function PesoPage({
 
       {ultimoRegistro && ultimoRegistro.data !== hoje ? (
         <p className="text-xs text-stone-500 bg-stone-50 border border-stone-200 rounded-2xl p-3">
-          Último registrado: {ultimoRegistro.peso_kg}kg em {ultimoRegistro.data}
+          Último registrado: {formatarNumeroBR(ultimoRegistro.peso_kg)}kg em {ultimoRegistro.data}
           {temValor(ultimoRegistro.percentual_gordura)
-            ? ` · gordura ${ultimoRegistro.percentual_gordura}%`
+            ? ` · gordura ${formatarNumeroBR(ultimoRegistro.percentual_gordura)}%`
             : ""}
           {temValor(ultimoRegistro.percentual_massa_muscular)
-            ? ` · massa muscular ${ultimoRegistro.percentual_massa_muscular}%`
+            ? ` · massa muscular ${formatarNumeroBR(ultimoRegistro.percentual_massa_muscular)}%`
             : ""}
-          {temValor(ultimoRegistro.percentual_agua) ? ` · água ${ultimoRegistro.percentual_agua}%` : ""}
+          {temValor(ultimoRegistro.percentual_agua)
+            ? ` · água ${formatarNumeroBR(ultimoRegistro.percentual_agua)}%`
+            : ""}
         </p>
       ) : null}
 

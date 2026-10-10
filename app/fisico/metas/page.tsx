@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { hojeISO } from "@/lib/date";
 import { compararComMeta } from "@/lib/fisico/metas";
 import { INDICADORES_META, type IndicadorMeta } from "@/lib/fisico/types";
+import { formatarNumeroBR } from "@/lib/valor-exibicao";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 
@@ -152,8 +153,9 @@ export default async function MetasPage({
             <div>
               <p className="font-semibold text-oliva">{ind.label}</p>
               <p className="text-sm text-stone-600 mt-1">
-                Atual: {valorAtual !== null ? `${valorAtual}${ind.unidade}` : "sem registro"}
-                {meta?.valor_meta ? ` · Meta: ${meta.valor_meta}${ind.unidade}` : ""}
+                Atual:{" "}
+                {valorAtual !== null ? `${formatarNumeroBR(valorAtual)}${ind.unidade}` : "sem registro"}
+                {meta?.valor_meta ? ` · Meta: ${formatarNumeroBR(meta.valor_meta)}${ind.unidade}` : ""}
               </p>
               <p className="text-sm text-oliva mt-1">{comparacao.texto}</p>
             </div>

@@ -14,6 +14,7 @@ import {
 } from "@/lib/fisico/indicadores";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
+import { formatarNumeroBR } from "@/lib/valor-exibicao";
 
 type Tier = "boa" | "atencao" | "risco";
 
@@ -58,7 +59,7 @@ function CardComClassificacao({
   return (
     <div className={`rounded-2xl border p-4 space-y-1 ${TIER_STYLE[tier]}`}>
       <p className="text-sm font-semibold">{titulo}</p>
-      <p className="text-2xl font-bold">{resultado.valorExibicao}</p>
+      <p className="text-2xl font-bold">{formatarNumeroBR(resultado.valorExibicao)}</p>
       <p className="text-xs font-medium">{resultado.classificacao}</p>
     </div>
   );
@@ -181,7 +182,7 @@ export default async function IndicadoresPage() {
         <div className="grid grid-cols-2 gap-3">
           <CardNeutro
             titulo="Circunferência da cintura"
-            valor={cinturaCm !== null ? `${cinturaCm} cm` : null}
+            valor={cinturaCm !== null ? `${formatarNumeroBR(cinturaCm)} cm` : null}
             mensagemFaltante="Registre a cintura para ver este valor."
           />
           <CardComClassificacao
@@ -196,7 +197,7 @@ export default async function IndicadoresPage() {
           />
           <CardNeutro
             titulo="RFM feminina"
-            valor={rfm.valorExibicao !== null ? `${rfm.valorExibicao}%` : null}
+            valor={rfm.valorExibicao !== null ? `${formatarNumeroBR(rfm.valorExibicao)}%` : null}
             mensagemFaltante="Preencha cintura e altura (no perfil) para calcular."
             rodape={
               rfm.valorExibicao !== null
@@ -214,7 +215,9 @@ export default async function IndicadoresPage() {
       <section className="rounded-2xl bg-white/60 border border-oliva/10 p-4 space-y-1">
         <p className="text-sm font-semibold text-stone-600">IMC</p>
         <p className="text-xl font-bold text-stone-700">
-          {imc.valorExibicao !== null ? imc.valorExibicao : "Preencha peso e altura (no perfil)."}
+          {imc.valorExibicao !== null
+            ? formatarNumeroBR(imc.valorExibicao)
+            : "Preencha peso e altura (no perfil)."}
         </p>
         <p className="text-xs text-stone-500">
           Indicador informativo e complementar — não é o critério central de acompanhamento.
@@ -225,7 +228,7 @@ export default async function IndicadoresPage() {
         <p className="text-sm font-semibold text-stone-600">Metabolismo de repouso estimado (TMB)</p>
         <p className="text-xl font-bold text-stone-700">
           {tmb.valorExibicao !== null
-            ? `${tmb.valorExibicao} kcal/dia`
+            ? `${formatarNumeroBR(tmb.valorExibicao)} kcal/dia`
             : "Preencha peso, altura e data de nascimento (no perfil)."}
         </p>
         <p className="text-xs text-stone-500">
@@ -238,7 +241,7 @@ export default async function IndicadoresPage() {
         <p className="text-sm font-semibold text-stone-600">Relação cintura-coxa</p>
         <p className="text-xl font-bold text-stone-700">
           {cinturaCoxa.valorExibicao !== null
-            ? cinturaCoxa.valorExibicao
+            ? formatarNumeroBR(cinturaCoxa.valorExibicao)
             : "Preencha cintura e coxa para calcular."}
         </p>
         <p className="text-xs text-stone-500">
