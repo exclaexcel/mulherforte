@@ -100,7 +100,7 @@ export default async function HabitosPage({
         <h1 className="text-2xl font-bold text-oliva mt-1">Hábitos do dia</h1>
         <Link
           href="/fisico/historico?aba=habitos"
-          className="inline-flex items-center gap-1 text-xs text-oliva/85 underline mt-1"
+          className="inline-flex items-center gap-1 p-1 -m-1 text-xs text-oliva/85 underline mt-1"
         >
           <History className="h-3 w-3" />
           Ver histórico

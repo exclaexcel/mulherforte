@@ -168,7 +168,7 @@ export default async function ReceitasPage({
                         <div className="flex items-center gap-3 pt-2">
                           <Link
                             href={`/marmitas/receitas/${r.id}/editar`}
-                            className="inline-flex items-center gap-1 text-xs text-oliva underline"
+                            className="inline-flex items-center gap-1 p-1 -m-1 text-xs text-oliva underline"
                           >
                             <Pencil className="h-3 w-3" />
                             Editar
@@ -180,7 +180,7 @@ export default async function ReceitasPage({
                             rotuloEnviando="Excluindo…"
                             confirmacao={`Excluir a receita "${r.nome}"? Essa ação não pode ser desfeita.`}
                             estilo="nativo"
-                            className="text-xs text-red-700 underline"
+                            className="p-1 -m-1 text-xs text-red-700 underline"
                           />
                         </div>
                       </div>

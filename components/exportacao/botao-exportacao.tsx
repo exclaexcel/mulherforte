@@ -93,7 +93,7 @@ export function BotaoExportacao({
       {estado === "sessao_expirada" ? (
         <div className="space-y-1" role="alert">
           <p className="text-xs text-red-700">{MENSAGENS.sessao_expirada}</p>
-          <Link href="/login" className="text-xs text-oliva underline">
+          <Link href="/login" className="inline-block p-1 -m-1 text-xs text-oliva underline">
             Entrar novamente
           </Link>
         </div>
