@@ -7,6 +7,7 @@ import {
   calcularValidade,
   formatarDataBR,
   ordenarEstoque,
+  type SituacaoValidade,
   type TomValidade,
 } from "@/lib/marmitas/estoque";
 import { listarPreparosCongelados, listarReceitasParaPreparo } from "@/lib/marmitas/consultas";
@@ -24,12 +25,81 @@ const TOM_ESTILO: Record<TomValidade, string> = {
   neutro: "bg-stone-50 border-stone-200 text-stone-700",
 };
 
+const ROTULO_SECAO: Record<SituacaoValidade, string> = {
+  vencido: "Vencido",
+  vence_hoje: "Vence hoje",
+  proximo: "Próximo do vencimento",
+  dentro: "Dentro do prazo",
+  nao_informada: "Prazo não informado",
+};
+
 type ReceitaRef = { nome: string; validade_congelado_dias: number | null } | null;
+
+type ItemEstoqueComValidade = {
+  id: string;
+  receitaId: string;
+  dataPreparo: string;
+  receitaNome: string;
+  quantidade: number;
+  observacoes: string | null;
+  validade: ReturnType<typeof calcularValidade>;
+};
+
+/** Agrupa em seções por situação — itens já vêm ordenados por urgência (ordenarEstoque),
+ * então itens da mesma situação já estão contíguos: não precisa reordenar aqui. */
+function agruparPorSituacao(itens: ItemEstoqueComValidade[]) {
+  const grupos: { situacao: SituacaoValidade; itens: ItemEstoqueComValidade[] }[] = [];
+  for (const item of itens) {
+    const ultimo = grupos[grupos.length - 1];
+    if (ultimo && ultimo.situacao === item.validade.situacao) {
+      ultimo.itens.push(item);
+    } else {
+      grupos.push({ situacao: item.validade.situacao, itens: [item] });
+    }
+  }
+  return grupos;
+}
+
+/** Pills por situação (slicer): só mostra as que têm item, mesmo padrão dos outros filtros do app. */
+function SlicerSituacao({
+  gruposPorSituacao,
+  situacaoAtual,
+}: {
+  gruposPorSituacao: { situacao: SituacaoValidade; itens: unknown[] }[];
+  situacaoAtual: SituacaoValidade | "todas";
+}) {
+  const opcoes: { value: SituacaoValidade | "todas"; label: string }[] = [
+    { value: "todas", label: "Todos" },
+    ...gruposPorSituacao.map((g) => ({ value: g.situacao, label: ROTULO_SECAO[g.situacao] })),
+  ];
+
+  return (
+    <div className="flex gap-2 overflow-x-auto" role="group" aria-label="Filtrar por situação">
+      {opcoes.map((o) => {
+        const ativo = o.value === situacaoAtual;
+        const href =
+          o.value === "todas" ? "/marmitas/estoque" : `/marmitas/estoque?situacao=${o.value}`;
+        return (
+          <Link
+            key={o.value}
+            href={href}
+            aria-current={ativo ? "true" : undefined}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap border ${
+              ativo ? "bg-oliva text-bege border-oliva" : "bg-white/80 text-oliva/85 border-oliva/20"
+            }`}
+          >
+            {o.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
 
 export default async function EstoquePage({
   searchParams,
 }: {
-  searchParams: { preparo_corrigido?: string; preparo_excluido?: string };
+  searchParams: { preparo_corrigido?: string; preparo_excluido?: string; situacao?: string };
 }) {
   const supabase = await createClient();
   const {
@@ -65,6 +135,17 @@ export default async function EstoquePage({
     })
   );
 
+  const gruposPorSituacao = agruparPorSituacao(itens);
+  const situacoesValidas = gruposPorSituacao.map((g) => g.situacao) as string[];
+  const situacaoAtual: SituacaoValidade | "todas" =
+    searchParams?.situacao && situacoesValidas.includes(searchParams.situacao)
+      ? (searchParams.situacao as SituacaoValidade)
+      : "todas";
+  const gruposExibidos =
+    situacaoAtual === "todas"
+      ? gruposPorSituacao
+      : gruposPorSituacao.filter((g) => g.situacao === situacaoAtual);
+
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
@@ -95,38 +176,49 @@ export default async function EstoquePage({
       ) : itens.length === 0 ? (
         <p className="text-sm text-stone-600">Nada congelado no momento.</p>
       ) : (
-        <ul className="space-y-3">
-          {itens.map((item) => {
-            const apresentacao = apresentarValidade(item.validade);
-            return (
-              <li
-                key={item.id}
-                className={`rounded-2xl border p-4 space-y-2 ${TOM_ESTILO[apresentacao.tom]}`}
-              >
-                <div>
-                  <p className="font-semibold">{item.receitaNome}</p>
-                  <p className="text-xs opacity-80">
-                    Preparado em {formatarDataBR(item.dataPreparo)} · {item.quantidade} porção(ões)
-                  </p>
-                </div>
-                <p className="text-sm font-medium">{apresentacao.titulo}</p>
-                {apresentacao.detalhe ? <p className="text-xs">{apresentacao.detalhe}</p> : null}
-                <BotaoAcao
-                  acao={marcarConsumido}
-                  campos={{ id: item.id }}
-                  rotulo="Marcar como consumido"
-                  rotuloEnviando="Registrando consumo…"
-                  confirmacao={textoConfirmacaoConsumo(item.validade.situacao)}
-                  variante="outline"
-                  tamanho="sm"
-                />
-                {item.validade.situacao === "vencido" ? (
-                  <AcaoDescarte acao={descartarPreparo} id={item.id} />
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
+        <div className="space-y-5">
+          {gruposPorSituacao.length > 1 ? (
+            <SlicerSituacao gruposPorSituacao={gruposPorSituacao} situacaoAtual={situacaoAtual} />
+          ) : null}
+          {gruposExibidos.map((grupo) => (
+            <section key={grupo.situacao} className="space-y-3">
+              <h2 className="text-xs font-semibold uppercase tracking-wide text-oliva/85 px-1">
+                {ROTULO_SECAO[grupo.situacao]} · {grupo.itens.length}
+              </h2>
+              <ul className="space-y-3">
+                {grupo.itens.map((item) => {
+                  const apresentacao = apresentarValidade(item.validade);
+                  return (
+                    <li
+                      key={item.id}
+                      className={`rounded-2xl border p-4 space-y-2 ${TOM_ESTILO[apresentacao.tom]}`}
+                    >
+                      <div>
+                        <p className="font-semibold">{item.receitaNome}</p>
+                        <p className="text-xs opacity-80">
+                          Preparado em {formatarDataBR(item.dataPreparo)} · {item.quantidade} porção(ões)
+                        </p>
+                      </div>
+                      {apresentacao.detalhe ? <p className="text-xs">{apresentacao.detalhe}</p> : null}
+                      <BotaoAcao
+                        acao={marcarConsumido}
+                        campos={{ id: item.id }}
+                        rotulo="Marcar como consumido"
+                        rotuloEnviando="Registrando consumo…"
+                        confirmacao={textoConfirmacaoConsumo(item.validade.situacao)}
+                        variante="outline"
+                        tamanho="sm"
+                      />
+                      {item.validade.situacao === "vencido" ? (
+                        <AcaoDescarte acao={descartarPreparo} id={item.id} />
+                      ) : null}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
+        </div>
       )}
 
       {itens.length > 0 && receitas && receitas.length > 0 ? (
