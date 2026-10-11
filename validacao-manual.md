@@ -25,8 +25,8 @@ eu mesma marco e anoto a fonte.
   depois Caldo e Pão proteico apareceram no estoque ao cadastrar)
 - [x] Alerta de validade (verde/amarelo/vermelho) aparece correto — **10/10/2026**, print
   (amarelo "Prazo próximo do fim", verde "Dentro do prazo")
-- [ ] Cronograma planejado das 4 semanas — app indica o que preparar na semana, não só o
-  que já foi preparado
+- [x] Cronograma planejado das 4 semanas — app indica o que preparar na semana, não só o
+  que já foi preparado — **10/10/2026**, localhost, "cronograma de semana ok"
 - [ ] Exportação de dados (CSV/JSON) testada no celular e no Excel PT-BR
 - [ ] Preparos antigos conferidos — usam a validade atual da receita corretamente
 
@@ -40,6 +40,10 @@ eu mesma marco e anoto a fonte.
 - [ ] Protocolo de coleta (frequência, postura, posicionamento da fita) disponível como
   referência dentro do app
 - [ ] Alerta de variação atípica (>3cm) funcionando ao registrar medida
+- [x] Gráfico de tendência do peso não liga pesagens distantes como se fosse queda
+  contínua — **10/10/2026**, achado seu em teste manual (vão real de 26 dias entre
+  pesagens desenhava reta enganosa); corrigido (commit `354eab2`) e reconfirmado na
+  tela depois do fix
 
 ## 4. Mobile e acessibilidade (Galaxy A34)
 
@@ -60,8 +64,12 @@ eu mesma marco e anoto a fonte.
 ## Itens que a auditoria classificou como "bloqueador/corrigir antes do deploy" — ação
 é de código, não de validação manual, mas listo aqui pra não perder o fio:
 
-- [ ] Login: erro sem `role="alert"`, botão sem "Entrando…" — corrigir
-- [ ] Cronograma: vaza `error.message` do Supabase direto na tela — corrigir
+- [x] Login: erro sem `role="alert"`, botão sem "Entrando…" — corrigido e validado —
+  **10/10/2026**, commit `1a3a1b4`; testado com Playwright (texto do alerta, foco,
+  texto do botão) e confirmado por você ("para entrar: ok")
+- [x] Cronograma: vaza `error.message` do Supabase direto na tela — corrigido —
+  **10/10/2026**, commit `79106f6`; confirmado por você na tela ("cronograma de
+  semana ok")
 - [x] `npm run build` validado nesta sessão — **10/10/2026**, commit `696eb5c`, passou
 
 ---
