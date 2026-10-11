@@ -11,7 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { dataISOParaUTC } from "@/lib/date";
+import { dataISOParaUTC, diasEntre } from "@/lib/date";
 import type { PontoTendenciaPeso } from "@/lib/fisico/tendenciaPeso";
 
 /**
@@ -48,7 +48,13 @@ const formatarPesoEixo = (valor: number) => new Intl.NumberFormat("pt-BR").forma
 const formatarPesagens = (quantidade: number) =>
   `${quantidade} ${quantidade === 1 ? "pesagem" : "pesagens"}`;
 
-type DadoGrafico = PontoTendenciaPeso & { timestamp: number };
+type DadoGrafico = PontoTendenciaPeso & {
+  timestamp: number;
+  /** Igual a mediaMovel7d, exceto null quando a pesagem anterior foi há mais de 7 dias — a reta não liga pesagens distantes como se houvesse tendência contínua entre elas. */
+  mediaMovel7dGrafico: number | null;
+  /** Mesma ideia para a janela de 28 dias. */
+  mediaMovel28dGrafico: number | null;
+};
 
 function TooltipPersonalizado({
   active,
@@ -84,11 +90,33 @@ function TooltipPersonalizado({
 /**
  * Único componente client relacionado ao gráfico — recebe só dados já
  * calculados (nunca acessa Supabase). Peso bruto é Scatter (pontos soltos,
- * sem linha ligando pesagens); MM7/MM28 são Line sem `connectNulls`, já que
- * cada ponto sempre tem um valor de média (nunca é null nesta estrutura).
+ * sem linha ligando pesagens). MM7/MM28 são Line com `connectNulls={false}`:
+ * quando a pesagem anterior foi há mais dias que a própria janela (7 ou 28),
+ * o ponto que chega depois do vão vira null só pro gráfico — a reta não liga
+ * pesagens distantes como se fosse uma tendência contínua entre elas. O
+ * tooltip e o resumo em texto continuam usando o valor real (nunca null),
+ * então a informação não some, só a reta visual é que não se desenha ali.
  */
+/**
+ * Monta os dados do gráfico a partir dos pontos já calculados. Exportada à parte
+ * pra ser testada sem precisar renderizar o Recharts (que exige layout real).
+ */
+export function construirDadosGrafico(pontos: PontoTendenciaPeso[]): DadoGrafico[] {
+  return pontos.map((p, indice) => {
+    const anterior = indice > 0 ? pontos[indice - 1] : null;
+    const diasDoAnterior = anterior ? diasEntre(anterior.data, p.data) : null;
+
+    return {
+      ...p,
+      timestamp: dataISOParaUTC(p.data),
+      mediaMovel7dGrafico: diasDoAnterior !== null && diasDoAnterior > 7 ? null : p.mediaMovel7d,
+      mediaMovel28dGrafico: diasDoAnterior !== null && diasDoAnterior > 28 ? null : p.mediaMovel28d,
+    };
+  });
+}
+
 export function GraficoTendenciaPeso({ pontos }: { pontos: PontoTendenciaPeso[] }) {
-  const dados: DadoGrafico[] = pontos.map((p) => ({ ...p, timestamp: dataISOParaUTC(p.data) }));
+  const dados = construirDadosGrafico(pontos);
   const haJanelaParcial = pontos.some((p) => !p.janela28dCompleta);
 
   return (
@@ -115,7 +143,7 @@ export function GraficoTendenciaPeso({ pontos }: { pontos: PontoTendenciaPeso[] 
             <Scatter name="Peso registrado" dataKey="pesoKg" fill="#6B7F3A" />
             <Line
               name="Média 7 dias"
-              dataKey="mediaMovel7d"
+              dataKey="mediaMovel7dGrafico"
               stroke={COR_MEDIA_7}
               strokeWidth={2}
               strokeDasharray={TRACO_MEDIA_7}
@@ -125,7 +153,7 @@ export function GraficoTendenciaPeso({ pontos }: { pontos: PontoTendenciaPeso[] 
             />
             <Line
               name="Média 28 dias"
-              dataKey="mediaMovel28d"
+              dataKey="mediaMovel28dGrafico"
               stroke="#4A5D23"
               strokeWidth={3}
               dot={false}
