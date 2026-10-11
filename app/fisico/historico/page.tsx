@@ -3,6 +3,7 @@ import { Home, Pencil } from "lucide-react";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
+import { hojeISO, somarDias } from "@/lib/date";
 import {
   excluirPesoData,
   excluirMedidasData,
@@ -59,6 +60,14 @@ const ESTILO_STATUS_TREINO: Record<StatusTreino, { texto: string; className: str
   },
 };
 
+/** Restringe a consulta a partir de `dataMinima`, quando houver — sem isso, o histórico inteiro é trazido. */
+function aplicarPeriodo<T extends { gte: (coluna: string, valor: string) => T }>(
+  query: T,
+  dataMinima: string | null
+): T {
+  return dataMinima ? query.gte("data", dataMinima) : query;
+}
+
 function rotuloTipoTreino(tipo: TipoTreino, descricaoOutro: string | null): string {
   if (tipo === "outro") {
     return descricaoOutro?.trim() || "Outro";
@@ -85,7 +94,10 @@ function CardHistorico({
       <p className="font-semibold text-oliva">{formatarDataExtensa(data)}</p>
       {children}
       <div className="flex items-center gap-3 pt-1">
-        <Link href={hrefEditar} className="inline-flex items-center gap-1 text-xs text-oliva underline">
+        <Link
+          href={hrefEditar}
+          className="inline-flex items-center gap-1 p-1 -m-1 text-xs text-oliva underline"
+        >
           <Pencil className="h-3 w-3" />
           Editar
         </Link>
@@ -96,7 +108,7 @@ function CardHistorico({
           rotuloEnviando="Excluindo…"
           confirmacao={confirmacaoExcluir}
           estilo="nativo"
-          className="text-xs text-red-700 underline"
+          className="p-1 -m-1 text-xs text-red-700 underline"
         />
       </div>
     </li>
@@ -111,7 +123,73 @@ function SemanaHeader({ grupo }: { grupo: Pick<GrupoSemana<unknown>, "inicioSema
   );
 }
 
-function ListaVazia({ texto, hrefRegistrar, rotuloRegistrar }: { texto: string; hrefRegistrar: string; rotuloRegistrar: string }) {
+const PERIODOS = [
+  { value: "7", label: "7 dias", dias: 7 },
+  { value: "30", label: "30 dias", dias: 30 },
+  { value: "90", label: "90 dias", dias: 90 },
+  { value: "tudo", label: "Tudo", dias: null },
+] as const;
+
+type PeriodoValue = (typeof PERIODOS)[number]["value"];
+
+function FiltroPeriodo({ periodoAtual, aba }: { periodoAtual: PeriodoValue; aba?: string }) {
+  return (
+    <div className="flex gap-2 overflow-x-auto mb-4" role="group" aria-label="Filtrar por período">
+      {PERIODOS.map((p) => {
+        const params = new URLSearchParams();
+        if (aba) params.set("aba", aba);
+        if (p.value !== "tudo") params.set("periodo", p.value);
+        const href = `/fisico/historico${params.toString() ? `?${params.toString()}` : ""}`;
+        const ativo = p.value === periodoAtual;
+        return (
+          <Link
+            key={p.value}
+            href={href}
+            aria-current={ativo ? "true" : undefined}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap border ${
+              ativo
+                ? "bg-oliva text-bege border-oliva"
+                : "bg-white/80 text-oliva/85 border-oliva/20"
+            }`}
+          >
+            {p.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+function ListaVazia({
+  texto,
+  hrefRegistrar,
+  rotuloRegistrar,
+  periodoAtual,
+  aba,
+}: {
+  texto: string;
+  hrefRegistrar: string;
+  rotuloRegistrar: string;
+  /** Quando o período filtrado não é "tudo", a tela vazia pode ser só ausência de registro
+   * NESSA janela — diferencia de "nunca registrou nada", que seria enganoso aqui. */
+  periodoAtual: PeriodoValue;
+  aba: string;
+}) {
+  const periodoAplicado = PERIODOS.find((p) => p.value === periodoAtual);
+
+  if (periodoAtual !== "tudo") {
+    return (
+      <div className="space-y-3 rounded-2xl bg-white/80 border border-oliva/10 p-5">
+        <p className="text-sm text-stone-600">
+          Nenhum registro nos últimos {periodoAplicado?.label.toLowerCase()}.
+        </p>
+        <Link href={`/fisico/historico?aba=${aba}`} className="text-sm text-oliva underline">
+          Ver todo o histórico
+        </Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-3 rounded-2xl bg-white/80 border border-oliva/10 p-5">
       <p className="text-sm text-stone-600">{texto}</p>
@@ -127,6 +205,7 @@ export default async function HistoricoFisicoPage({
 }: {
   searchParams: {
     aba?: string;
+    periodo?: string;
     peso_salvo?: string;
     medidas_salvas?: string;
     treino_salvo?: string;
@@ -143,27 +222,44 @@ export default async function HistoricoFisicoPage({
     redirect("/login");
   }
 
+  const periodoAtual: PeriodoValue =
+    PERIODOS.find((p) => p.value === searchParams?.periodo)?.value ?? "tudo";
+  const diasPeriodo = PERIODOS.find((p) => p.value === periodoAtual)?.dias ?? null;
+  const dataMinima = diasPeriodo !== null ? somarDias(hojeISO(), -(diasPeriodo - 1)) : null;
+
   const [pesoResp, medidasResp, treinoResp, habitosResp] = await Promise.all([
-    supabase
-      .from("registros_peso")
-      .select("data, peso_kg, percentual_gordura, percentual_massa_muscular, percentual_agua")
-      .eq("user_id", user.id)
-      .order("data", { ascending: false }),
-    supabase
-      .from("medidas_corporais")
-      .select("data, regiao, valor_cm")
-      .eq("user_id", user.id)
-      .order("data", { ascending: false }),
-    supabase
-      .from("adesao_treino")
-      .select("data, tipo, tipo_outro_descricao, realizado, duracao_minutos, calorias")
-      .eq("user_id", user.id)
-      .order("data", { ascending: false }),
-    supabase
-      .from("adesao_habitos")
-      .select("data, quantidade_agua_ml, priorizou_proteina")
-      .eq("user_id", user.id)
-      .order("data", { ascending: false }),
+    aplicarPeriodo(
+      supabase
+        .from("registros_peso")
+        .select("data, peso_kg, percentual_gordura, percentual_massa_muscular, percentual_agua")
+        .eq("user_id", user.id)
+        .order("data", { ascending: false }),
+      dataMinima
+    ),
+    aplicarPeriodo(
+      supabase
+        .from("medidas_corporais")
+        .select("data, regiao, valor_cm")
+        .eq("user_id", user.id)
+        .order("data", { ascending: false }),
+      dataMinima
+    ),
+    aplicarPeriodo(
+      supabase
+        .from("adesao_treino")
+        .select("data, tipo, tipo_outro_descricao, realizado, duracao_minutos, calorias")
+        .eq("user_id", user.id)
+        .order("data", { ascending: false }),
+      dataMinima
+    ),
+    aplicarPeriodo(
+      supabase
+        .from("adesao_habitos")
+        .select("data, quantidade_agua_ml, priorizou_proteina")
+        .eq("user_id", user.id)
+        .order("data", { ascending: false }),
+      dataMinima
+    ),
   ]);
 
   const regioesAtipicas = (searchParams?.variacao_atipica ?? "")
@@ -216,31 +312,33 @@ export default async function HistoricoFisicoPage({
         </p>
       ) : null}
 
+      <FiltroPeriodo periodoAtual={periodoAtual} aba={searchParams?.aba} />
+
       <HomeTabs
         groups={[
           {
             key: "peso",
             label: "Peso",
             cor: "rosa",
-            content: renderizarPeso(pesoResp),
+            content: renderizarPeso(pesoResp, periodoAtual),
           },
           {
             key: "medidas",
             label: "Medidas",
             cor: "rosa",
-            content: renderizarMedidas(medidasResp),
+            content: renderizarMedidas(medidasResp, periodoAtual),
           },
           {
             key: "treino",
             label: "Treino",
             cor: "rosa",
-            content: renderizarTreino(treinoResp),
+            content: renderizarTreino(treinoResp, periodoAtual),
           },
           {
             key: "habitos",
             label: "Hábitos",
             cor: "rosa",
-            content: renderizarHabitos(habitosResp),
+            content: renderizarHabitos(habitosResp, periodoAtual),
           },
         ]}
       />
@@ -248,7 +346,7 @@ export default async function HistoricoFisicoPage({
   );
 }
 
-function renderizarPeso(resp: { data: unknown; error: unknown }): ReactNode {
+function renderizarPeso(resp: { data: unknown; error: unknown }, periodoAtual: PeriodoValue): ReactNode {
   if (houveFalhaDeConsulta({ error: resp.error })) {
     return <AvisoErroLeitura novaTentativaHref="/fisico/historico?aba=peso" />;
   }
@@ -275,6 +373,8 @@ function renderizarPeso(resp: { data: unknown; error: unknown }): ReactNode {
         texto="Nenhum peso registrado ainda."
         hrefRegistrar="/fisico/peso"
         rotuloRegistrar="Registrar o primeiro peso"
+        periodoAtual={periodoAtual}
+        aba="peso"
       />
     );
   }
@@ -316,7 +416,7 @@ function renderizarPeso(resp: { data: unknown; error: unknown }): ReactNode {
   );
 }
 
-function renderizarMedidas(resp: { data: unknown; error: unknown }): ReactNode {
+function renderizarMedidas(resp: { data: unknown; error: unknown }, periodoAtual: PeriodoValue): ReactNode {
   if (houveFalhaDeConsulta({ error: resp.error })) {
     return <AvisoErroLeitura novaTentativaHref="/fisico/historico?aba=medidas" />;
   }
@@ -332,6 +432,8 @@ function renderizarMedidas(resp: { data: unknown; error: unknown }): ReactNode {
         texto="Nenhuma medida registrada ainda."
         hrefRegistrar="/fisico/medidas"
         rotuloRegistrar="Registrar a primeira medida"
+        periodoAtual={periodoAtual}
+        aba="medidas"
       />
     );
   }
@@ -366,7 +468,7 @@ function renderizarMedidas(resp: { data: unknown; error: unknown }): ReactNode {
   );
 }
 
-function renderizarTreino(resp: { data: unknown; error: unknown }): ReactNode {
+function renderizarTreino(resp: { data: unknown; error: unknown }, periodoAtual: PeriodoValue): ReactNode {
   if (houveFalhaDeConsulta({ error: resp.error })) {
     return <AvisoErroLeitura novaTentativaHref="/fisico/historico?aba=treino" />;
   }
@@ -395,6 +497,8 @@ function renderizarTreino(resp: { data: unknown; error: unknown }): ReactNode {
         texto="Nenhum treino registrado ainda."
         hrefRegistrar="/fisico/treino"
         rotuloRegistrar="Registrar o primeiro treino"
+        periodoAtual={periodoAtual}
+        aba="treino"
       />
     );
   }
@@ -443,7 +547,7 @@ function renderizarTreino(resp: { data: unknown; error: unknown }): ReactNode {
   );
 }
 
-function renderizarHabitos(resp: { data: unknown; error: unknown }): ReactNode {
+function renderizarHabitos(resp: { data: unknown; error: unknown }, periodoAtual: PeriodoValue): ReactNode {
   if (houveFalhaDeConsulta({ error: resp.error })) {
     return <AvisoErroLeitura novaTentativaHref="/fisico/historico?aba=habitos" />;
   }
@@ -466,6 +570,8 @@ function renderizarHabitos(resp: { data: unknown; error: unknown }): ReactNode {
         texto="Nenhum hábito registrado ainda."
         hrefRegistrar="/fisico/habitos"
         rotuloRegistrar="Registrar o primeiro dia"
+        periodoAtual={periodoAtual}
+        aba="habitos"
       />
     );
   }
