@@ -5,6 +5,15 @@ import { createClient } from "@/lib/supabase/server";
 import { BotaoExportacao } from "@/components/exportacao/botao-exportacao";
 import { FORMATOS } from "@/lib/exportacao/validarResposta";
 
+const contagem = (resp: { count: number | null }) => resp.count ?? null;
+
+const formatarGeradoEm = () =>
+  new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "long",
+    timeStyle: "short",
+    timeZone: "America/Sao_Paulo",
+  }).format(new Date());
+
 export default async function ExportarPage() {
   const supabase = await createClient();
   const {
@@ -14,6 +23,31 @@ export default async function ExportarPage() {
   if (!user) {
     redirect("/login");
   }
+
+  // Só contagem (head: true, sem trazer linhas) — leve, pra mostrar o que vai ser
+  // exportado antes do download. Falha numa contagem não bloqueia a tela: a linha
+  // correspondente simplesmente não aparece no resumo.
+  const [pesos, medidas, habitos, treinos, metas, receitas, preparos, itensCompra] = await Promise.all([
+    supabase.from("registros_peso").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("medidas_corporais").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("adesao_habitos").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("adesao_treino").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("metas").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("receitas").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("preparos").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+    supabase.from("itens_compra").select("*", { count: "exact", head: true }).eq("user_id", user.id),
+  ]);
+
+  const itensResumo = [
+    { label: "Pesagens", valor: contagem(pesos) },
+    { label: "Medidas", valor: contagem(medidas) },
+    { label: "Dias de hábitos", valor: contagem(habitos) },
+    { label: "Treinos", valor: contagem(treinos) },
+    { label: "Metas", valor: contagem(metas) },
+    { label: "Receitas", valor: contagem(receitas) },
+    { label: "Preparos registrados", valor: contagem(preparos) },
+    { label: "Itens na lista de compras", valor: contagem(itensCompra) },
+  ].filter((i) => i.valor !== null);
 
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
@@ -28,6 +62,20 @@ export default async function ExportarPage() {
           e planejamento de marmitas.
         </p>
       </header>
+
+      {itensResumo.length > 0 ? (
+        <section className="space-y-2 rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm">
+          <p className="font-semibold text-oliva">O que vai ser exportado</p>
+          <ul className="text-sm text-stone-700 space-y-1">
+            {itensResumo.map((i) => (
+              <li key={i.label}>
+                {i.valor} {i.label.toLowerCase()}
+              </li>
+            ))}
+          </ul>
+          <p className="text-xs text-stone-500">Gerado em {formatarGeradoEm()}.</p>
+        </section>
+      ) : null}
 
       <section className="space-y-3 rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm">
         <div>
