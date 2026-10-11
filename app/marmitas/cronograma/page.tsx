@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { calcularSemanaAtual } from "@/lib/marmitas/cronograma";
 import { listarCronograma } from "@/lib/marmitas/consultas";
 import { montarResumoDia } from "@/lib/marmitas/resumo-dia";
+import { houveFalhaDeConsulta } from "@/lib/leitura";
+import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 
 const resumoDia = (d: { proteina: string | null; base: string | null; legumes: string | null }) =>
   montarResumoDia([d.proteina, d.base, d.legumes]);
@@ -122,6 +124,21 @@ export default async function CronogramaPage({
 
   const { data: dias, error } = await listarCronograma(supabase, user.id);
 
+  if (houveFalhaDeConsulta({ error })) {
+    return (
+      <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
+        <header>
+          <Link href="/?aba=planejamento" className="inline-flex items-center gap-1 text-sm text-oliva/85">
+            <Home className="h-4 w-4" />
+            Início
+          </Link>
+          <h1 className="text-2xl font-bold text-oliva mt-1">Cronograma planejado</h1>
+        </header>
+        <AvisoErroLeitura novaTentativaHref="/marmitas/cronograma" />
+      </main>
+    );
+  }
+
   const { data: perfil } = await supabase
     .from("perfil_usuario")
     .select("cronograma_inicio_ciclo")
@@ -158,64 +175,60 @@ export default async function CronogramaPage({
         </p>
       ) : null}
 
-      {error ? (
-        <p className="text-sm text-red-700">Erro ao carregar cronograma: {error.message}</p>
-      ) : (
-        <div className="space-y-5">
-          {semanas.map((s) => (
-            <section
-              key={s.semana}
-              id={`semana-${s.semana}`}
-              className={`rounded-2xl bg-white/80 border p-4 shadow-sm scroll-mt-6 ${
-                s.semana === semanaAtual ? "border-oliva ring-2 ring-oliva/30" : "border-oliva/10"
-              }`}
-            >
-              <h2 className="font-semibold text-oliva mb-3 flex items-center gap-2">
-                Semana {s.semana}
-                {s.semana === semanaAtual ? (
-                  <span className="text-xs font-semibold bg-oliva text-bege rounded-full px-2 py-0.5">
-                    Semana atual
-                  </span>
-                ) : null}
-              </h2>
-              {s.dias.length === 0 ? (
-                <p className="text-xs text-stone-500 mb-3">Nada planejado ainda.</p>
-              ) : (
-                <ul className="space-y-1">
-                  {s.dias.map((d) => (
-                    <li key={d.id} className="border-t border-oliva/10 pt-2 first:border-0 first:pt-0">
-                      <details>
-                        <summary className="cursor-pointer">
-                          <span className="text-sm font-medium text-stone-800">{d.dia_semana}</span>
-                          {resumoDia(d) ? (
-                            <span className="text-sm text-stone-600">
-                              {" "}
-                              — {resumoDia(d)}
-                            </span>
-                          ) : null}
-                          {d.receita_extra_texto ? (
-                            <span className="block text-xs text-oliva mt-1">
-                              + Receita da semana: {d.receita_extra_texto}
-                            </span>
-                          ) : null}
-                        </summary>
-                        <FormularioDia semana={s.semana} dia={d} />
-                      </details>
-                    </li>
-                  ))}
-                </ul>
-              )}
+      <div className="space-y-5">
+        {semanas.map((s) => (
+          <section
+            key={s.semana}
+            id={`semana-${s.semana}`}
+            className={`rounded-2xl bg-white/80 border p-4 shadow-sm scroll-mt-6 ${
+              s.semana === semanaAtual ? "border-oliva ring-2 ring-oliva/30" : "border-oliva/10"
+            }`}
+          >
+            <h2 className="font-semibold text-oliva mb-3 flex items-center gap-2">
+              Semana {s.semana}
+              {s.semana === semanaAtual ? (
+                <span className="text-xs font-semibold bg-oliva text-bege rounded-full px-2 py-0.5">
+                  Semana atual
+                </span>
+              ) : null}
+            </h2>
+            {s.dias.length === 0 ? (
+              <p className="text-xs text-stone-500 mb-3">Nada planejado ainda.</p>
+            ) : (
+              <ul className="space-y-1">
+                {s.dias.map((d) => (
+                  <li key={d.id} className="border-t border-oliva/10 pt-2 first:border-0 first:pt-0">
+                    <details>
+                      <summary className="cursor-pointer">
+                        <span className="text-sm font-medium text-stone-800">{d.dia_semana}</span>
+                        {resumoDia(d) ? (
+                          <span className="text-sm text-stone-600">
+                            {" "}
+                            — {resumoDia(d)}
+                          </span>
+                        ) : null}
+                        {d.receita_extra_texto ? (
+                          <span className="block text-xs text-oliva mt-1">
+                            + Receita da semana: {d.receita_extra_texto}
+                          </span>
+                        ) : null}
+                      </summary>
+                      <FormularioDia semana={s.semana} dia={d} />
+                    </details>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-              <details className="mt-3 border-t border-oliva/10 pt-3">
-                <summary className="cursor-pointer text-sm text-oliva font-medium">
-                  + Adicionar dia
-                </summary>
-                <FormularioDia semana={s.semana} />
-              </details>
-            </section>
-          ))}
-        </div>
-      )}
+            <details className="mt-3 border-t border-oliva/10 pt-3">
+              <summary className="cursor-pointer text-sm text-oliva font-medium">
+                + Adicionar dia
+              </summary>
+              <FormularioDia semana={s.semana} />
+            </details>
+          </section>
+        ))}
+      </div>
     </main>
   );
 }
