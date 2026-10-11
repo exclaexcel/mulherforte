@@ -29,6 +29,16 @@ eu mesma marco e anoto a fonte.
   que já foi preparado — **10/10/2026**, localhost, "cronograma de semana ok"
 - [ ] Exportação de dados (CSV/JSON) testada no celular e no Excel PT-BR
 - [ ] Preparos antigos conferidos — usam a validade atual da receita corretamente
+- [x] Editar ou excluir um preparo lançado errado (A.1) — **11/10/2026**, notebook,
+  testado em `/marmitas/estoque`: editar receita/data/quantidade e excluir
+  funcionando; confirmado que não mexe na receita em si (isso continua em
+  `/marmitas/receitas`)
+- [x] Busca e filtro por categoria na Biblioteca de receitas (#8) — **11/10/2026**,
+  notebook, "ficou bom"
+- [x] Estoque em seções por urgência + filtro por situação (A.7) — **11/10/2026**,
+  notebook, "ficou bonito"
+- [x] Resumo mensal de descartes com slicer de mês (A.12) — **11/10/2026**, notebook,
+  "ok"
 
 ## 3. Jornada Física
 
