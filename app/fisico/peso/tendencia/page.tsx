@@ -7,6 +7,8 @@ import { calcularLinhaTendenciaPeso } from "@/lib/fisico/tendenciaPeso";
 import { GraficoTendenciaPeso } from "@/components/fisico/grafico-tendencia-peso";
 import { ResumoTendenciaPeso } from "@/components/fisico/resumo-tendencia";
 import { resumoTendencia } from "@/lib/fisico/resumoTendencia";
+import { houveFalhaDeConsulta } from "@/lib/leitura";
+import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
 
 const DIAS_JANELA_EXIBICAO = 90;
 
@@ -57,13 +59,11 @@ export default async function TendenciaPesoPage() {
     </header>
   );
 
-  if (error) {
+  if (houveFalhaDeConsulta({ error })) {
     return (
       <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
         {cabecalho}
-        <p className="text-sm text-stone-600 bg-stone-50 border border-stone-200 rounded-2xl p-4">
-          Não foi possível carregar a tendência agora. Tente novamente em instantes.
-        </p>
+        <AvisoErroLeitura novaTentativaHref="/fisico/peso/tendencia" />
       </main>
     );
   }
