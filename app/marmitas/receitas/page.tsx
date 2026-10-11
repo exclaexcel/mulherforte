@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { Home, Pencil } from "lucide-react";
+import { Home, Pencil, Search } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listarReceitasBiblioteca } from "@/lib/marmitas/consultas";
+import { CATEGORIAS_RECEITA } from "@/lib/marmitas/receita";
 import { excluirReceita } from "../actions";
 import { BotaoAcao } from "@/components/botao-acao";
 
 const ORDEM_CATEGORIAS = ["café da manhã", "lanche", "jantar", "sobremesa"];
+const SEM_CATEGORIA = "sem categoria";
 
 type Receita = {
   id: string;
@@ -37,10 +39,55 @@ function agruparPorCategoria(receitas: Receita[]) {
   }));
 }
 
+/** Pills de categoria (slicer): clicar filtra, sem dropdown — mesmo padrão do filtro de período do histórico. */
+function SlicerCategoria({
+  categoriaAtual,
+  busca,
+}: {
+  categoriaAtual: string;
+  busca: string;
+}) {
+  const opcoes = [
+    { value: "todas", label: "Todas" },
+    ...CATEGORIAS_RECEITA.map((c) => ({ value: c, label: c.charAt(0).toUpperCase() + c.slice(1) })),
+    { value: SEM_CATEGORIA, label: "Sem categoria" },
+  ];
+
+  return (
+    <div className="flex gap-2 overflow-x-auto" role="group" aria-label="Filtrar por categoria">
+      {opcoes.map((o) => {
+        const params = new URLSearchParams();
+        if (o.value !== "todas") params.set("categoria", o.value);
+        if (busca) params.set("busca", busca);
+        const href = `/marmitas/receitas${params.toString() ? `?${params.toString()}` : ""}`;
+        const ativo = o.value === categoriaAtual;
+        return (
+          <Link
+            key={o.value}
+            href={href}
+            aria-current={ativo ? "true" : undefined}
+            className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap border ${
+              ativo ? "bg-oliva text-bege border-oliva" : "bg-white/80 text-oliva/85 border-oliva/20"
+            }`}
+          >
+            {o.label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
 export default async function ReceitasPage({
   searchParams,
 }: {
-  searchParams: { receita_salva?: string; receita_atualizada?: string; receita_excluida?: string };
+  searchParams: {
+    receita_salva?: string;
+    receita_atualizada?: string;
+    receita_excluida?: string;
+    categoria?: string;
+    busca?: string;
+  };
 }) {
   const supabase = await createClient();
   const {
@@ -51,9 +98,24 @@ export default async function ReceitasPage({
     redirect("/login");
   }
 
-  const { data: receitas, error } = await listarReceitasBiblioteca(supabase, user.id);
+  const { data: receitasTodas, error } = await listarReceitasBiblioteca(supabase, user.id);
 
-  const grupos = receitas ? agruparPorCategoria(receitas) : [];
+  const categoriasValidas = [...CATEGORIAS_RECEITA, SEM_CATEGORIA] as string[];
+  const categoriaAtual =
+    searchParams?.categoria && categoriasValidas.includes(searchParams.categoria)
+      ? searchParams.categoria
+      : "todas";
+  const busca = (searchParams?.busca ?? "").trim();
+
+  const receitas = (receitasTodas ?? []).filter((r) => {
+    const categoriaDaReceita = r.categoria ?? SEM_CATEGORIA;
+    const passaCategoria = categoriaAtual === "todas" || categoriaDaReceita === categoriaAtual;
+    const passaBusca = !busca || r.nome.toLowerCase().includes(busca.toLowerCase());
+    return passaCategoria && passaBusca;
+  });
+
+  const grupos = agruparPorCategoria(receitas);
+  const filtrando = categoriaAtual !== "todas" || busca !== "";
 
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
@@ -89,13 +151,41 @@ export default async function ReceitasPage({
         </p>
       ) : null}
 
+      {!error && receitasTodas && receitasTodas.length > 0 ? (
+        <div className="space-y-3">
+          <form method="GET" className="flex gap-2">
+            {categoriaAtual !== "todas" ? <input type="hidden" name="categoria" value={categoriaAtual} /> : null}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-500" />
+              <input
+                type="search"
+                name="busca"
+                defaultValue={busca}
+                placeholder="Buscar por nome..."
+                className="w-full h-10 rounded-xl border border-oliva/70 bg-white pl-9 pr-3 text-sm text-stone-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oliva"
+              />
+            </div>
+          </form>
+          <SlicerCategoria categoriaAtual={categoriaAtual} busca={busca} />
+        </div>
+      ) : null}
+
       {error ? (
         <p className="text-sm text-red-700">Não foi possível carregar as receitas agora. Tente novamente.</p>
-      ) : !receitas || receitas.length === 0 ? (
+      ) : !receitasTodas || receitasTodas.length === 0 ? (
         <div className="space-y-3 rounded-2xl bg-white/80 border border-oliva/10 p-5">
           <p className="text-sm text-stone-600">Nenhuma receita cadastrada ainda.</p>
           <Link href="/marmitas/receitas/nova" className="text-sm text-oliva underline">
             Cadastrar a primeira receita
+          </Link>
+        </div>
+      ) : receitas.length === 0 ? (
+        <div className="space-y-3 rounded-2xl bg-white/80 border border-oliva/10 p-5">
+          <p className="text-sm text-stone-600">
+            Nenhuma receita encontrada {filtrando ? "com esse filtro" : ""}.
+          </p>
+          <Link href="/marmitas/receitas" className="text-sm text-oliva underline">
+            Limpar filtro
           </Link>
         </div>
       ) : (
