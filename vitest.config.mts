@@ -7,5 +7,7 @@ export default defineConfig({
   esbuild: { jsx: "automatic" },
   test: {
     environment: "node",
+    // e2e/ são testes do Playwright (outro runner, outra API) — nunca do Vitest.
+    exclude: ["**/node_modules/**", "**/e2e/**"],
   },
 });

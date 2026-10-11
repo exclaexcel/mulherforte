@@ -8,6 +8,12 @@ out
 *.log
 .DS_Store
 
+# Playwright (E2E)
+/e2e/.auth
+/test-results
+/playwright-report
+/blob-report
+
 # Dados pessoais / arquivos pesados (manter só local)
 controle_marmitas.xlsx
 jornada-acompanhamento-1.html
