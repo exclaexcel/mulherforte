@@ -84,6 +84,7 @@ export function CorrigirItemCompra({ itens }: { itens: ItemParaCorrecao[] }) {
             rotulo="Excluir item"
             rotuloEnviando="Excluindo item…"
             confirmacao={`Excluir "${selecionado.item}" da lista de compras?`}
+            destinoSucesso="/marmitas/compras?item_excluido=1"
             variante="outline"
             tamanho="sm"
             className="w-full text-red-700 border-red-200 hover:bg-red-50"

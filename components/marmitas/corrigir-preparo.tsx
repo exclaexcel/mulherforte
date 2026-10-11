@@ -129,6 +129,7 @@ export function CorrigirPreparo({
             rotulo="Excluir este lançamento"
             rotuloEnviando="Excluindo…"
             confirmacao={`Excluir o lançamento de "${selecionado.receitaNome}"? Isso remove o registro — diferente de descartar, que é pra comida vencida jogada fora.`}
+            destinoSucesso="/marmitas/estoque?preparo_excluido=1"
             variante="outline"
             tamanho="sm"
             className="w-full text-red-700 border-red-200 hover:bg-red-50"
