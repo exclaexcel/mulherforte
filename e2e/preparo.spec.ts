@@ -43,3 +43,33 @@ test("registrar preparo, corrigir e marcar como consumido", async ({ page }) => 
   await expect(page).toHaveURL(/\/marmitas\/estoque/);
   await expect(page.locator("li", { hasText: nomeReceita })).toHaveCount(0);
 });
+
+test("excluir um preparo lançado por engano", async ({ page }) => {
+  const nomeReceita = `E2E Excluir Preparo ${Date.now()}`;
+
+  await page.goto("/marmitas/receitas/nova");
+  await page.fill("#nome", nomeReceita);
+  await page.click('button:has-text("Salvar receita")');
+  await expect(
+    page.locator("li", { hasText: nomeReceita }).getByText(nomeReceita, { exact: true })
+  ).toBeVisible();
+
+  await page.goto("/marmitas/preparo");
+  await page.selectOption("#receita_id", { label: nomeReceita });
+  await page.fill("#quantidade_porcoes", "1");
+  await page.click('button:has-text("Registrar preparo")');
+
+  await expect(page).toHaveURL(/\/marmitas\/estoque/);
+  await expect(page.locator("li", { hasText: nomeReceita })).toHaveCount(1);
+
+  await page.getByText("Editar ou excluir um preparo").click();
+  const valorOpcao = await page
+    .locator("#selecionar-preparo-correcao option", { hasText: nomeReceita })
+    .getAttribute("value");
+  await page.selectOption("#selecionar-preparo-correcao", valorOpcao!);
+  await page.getByRole("button", { name: "Excluir este lançamento" }).click();
+
+  await expect(page).toHaveURL(/\/marmitas\/estoque/);
+  await expect(page.getByText("Preparo excluído do registro.")).toBeVisible();
+  await expect(page.locator("li", { hasText: nomeReceita })).toHaveCount(0);
+});
