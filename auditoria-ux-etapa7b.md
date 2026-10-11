@@ -198,20 +198,22 @@ Vários "Editar"/"Ver histórico"/"Ver tendência" usam `text-xs underline` sem 
 **Bloqueador do MVP:** nenhum.
 
 **Corrigir antes do próximo deploy:**
-1. `app/login/page.tsx` — erro sem `role="alert"`, botão sem rótulo de carregamento.
-2. `app/marmitas/cronograma/page.tsx` — vaza `error.message` do Supabase direto na tela.
-3. Confirmar `npm run build` com `.env.local` real antes do próximo deploy (já validado nesta sessão separadamente).
+1. ✅ `app/login/page.tsx` — erro sem `role="alert"`, botão sem rótulo de carregamento. **Feito 10/10/2026, commit `1a3a1b4`.**
+2. ✅ `app/marmitas/cronograma/page.tsx` — vaza `error.message` do Supabase direto na tela. **Feito 10/10/2026, commit `79106f6`.**
+3. ✅ Confirmar `npm run build` com `.env.local` real antes do próximo deploy. **Validado repetidamente ao longo da sessão de 10-11/10.**
 
 **Melhoria de Fase 2:**
-4. Dois caminhos de criar receita (`/marmitas/receitas/nova` vs. atalho em `/marmitas/preparo`).
-5. Home não implementa as 4 categorias completas da proposta original.
-6. `/fisico/peso/tendencia` fora do padrão `AvisoErroLeitura`.
-7. "Adicionar item" (Compras) quebra a convenção "Salvar".
-8. Busca/filtro ausente na Biblioteca de receitas.
-9. Sem `prefers-reduced-motion` em `globals.css`.
-10. Links secundários com alvo de toque pequeno.
-11. Schema de `adesao_treino` insuficiente pra importação futura de wearable.
-12. Dependências desatualizadas (`npm audit`, já mapeado, nada novo).
+4. ⏸️ Dois caminhos de criar receita (`/marmitas/receitas/nova` vs. atalho em `/marmitas/preparo`) — decisão de produto pendente, não feito.
+5. ⏸️ Home não implementa as 4 categorias completas da proposta original — decisão de produto pendente, não feito.
+6. ✅ `/fisico/peso/tendencia` fora do padrão `AvisoErroLeitura`. **Feito 11/10/2026, commit `90f738e`.**
+7. ✅ "Adicionar item" (Compras) quebra a convenção "Salvar". **Feito 11/10/2026, commit `ecf3dd8`.**
+8. ✅ Busca/filtro ausente na Biblioteca de receitas. **Feito 11/10/2026, commit `41b2c58`.**
+9. ✅ Sem `prefers-reduced-motion` em `globals.css`. **Feito 11/10/2026, commit `ecf3dd8`.**
+10. ✅ Links secundários com alvo de toque pequeno. **Feito 11/10/2026, commit `ecf3dd8`.**
+11. ⏸️ Schema de `adesao_treino` insuficiente pra importação futura de wearable — não fazer isolado, só junto com a feature de importação (ainda não desenhada).
+12. ⏸️ Dependências desatualizadas (`npm audit`, já mapeado, nada novo) — merece sessão própria, não feito.
+
+**Status completo, com os achados do Anexo:** ver "Atualização final — status de implementação" no fim do documento.
 
 **Sem problema relevante:** as 17 rotas restantes, a arquitetura de formulários, o módulo de receitas no critério mínimo do MVP, os disclaimers médicos, a cobertura de testes/lint.
 
@@ -243,6 +245,8 @@ Ordem sugerida: primeiro os 3 itens de "corrigir antes do deploy" (pequenos, rá
 **Esforço:** nenhum código novo, só disciplina de processo.
 
 ## Fase 2 — plano leve por item (esforço estimado, sem compromisso de data)
+
+**Status (11/10/2026):** itens 6, 7, 8, 9 e 10 feitos — ver "Atualização final — status de implementação" no fim do documento, com commits. Itens 4, 5, 11, 12 continuam pendentes como descrito abaixo.
 
 | # | Item | Abordagem proposta | Esforço |
 |---|---|---|---|
@@ -384,3 +388,40 @@ Acrescentando à seção "Plano de ação" original, só os itens **confirmados 
 **Esforço:** pequeno/médio — mesmo padrão de `excluirMeta` (ação com confirmação, item a item).
 
 **Itens A.3 a A.16:** registrados no Anexo acima, com status de verificação e fonte. Aguardando sua priorização antes de eu desenhar plano técnico pra cada um — alguns (A.6, tela "Hoje") são mudanças grandes que merecem conversa de produto antes de qualquer código.
+
+---
+
+# Atualização final — status de implementação (11/10/2026)
+
+Depois da priorização, essa foi a rodada de implementação. Todos os itens abaixo foram testados (lint + suíte automatizada + build em cada commit) e, quando a tela era nova ou mudava comportamento visível, validados por você no navegador antes do commit.
+
+**Feito:**
+
+| Item | O que foi feito | Commit |
+|---|---|---|
+| #6 | Tendência do peso usa `AvisoErroLeitura` | `90f738e` |
+| #7 | "Adicionar item" → "Salvar item" | `ecf3dd8` |
+| #9 | `prefers-reduced-motion` no CSS | `ecf3dd8` |
+| #10 | Área de toque maior em links pequenos | `ecf3dd8` / `dcb48fb` / `190494e` |
+| A.2 | Compras: editar grupo + excluir item | `1d51987` |
+| A.4 | Validação de data centralizada (`lib/data-formulario.ts`), rejeita datas de calendário inexistentes | `1d51987` |
+| A.5 | Filtro de período no histórico (7/30/90 dias/tudo), filtra no banco | `dcb48fb` |
+| A.11 | Avisa antes de sobrescrever registro do dia (peso/medidas/treino) | `190494e` |
+| A.13 | Preview de quantidade antes de exportar | `aa5675e` |
+| A.1 | Editar/excluir preparo lançado errado, dentro do Estoque, seletor único | `59b241f` |
+| #8 | Busca por nome + filtro de categoria (slicer) em receitas | `41b2c58` |
+| A.7 | Estoque em seções por urgência + slicer de situação | `ead7437` |
+| A.12 | Resumo mensal de descartes + slicer de mês | `b2423f5` |
+| A.15 | Infraestrutura de testes E2E (Playwright), achou e corrigiu 2 bugs reais (excluir item de compra e excluir preparo não navegavam nem avisavam) | `3d4f9ff` / `5a0c41f` / `a77451a` |
+
+**Decidido não fazer (não é pendência, é decisão):**
+- A.8 — trocar `window.confirm` por modal próprio: ficou como está.
+- A.9 — metas como resumo recolhido: ficou como está.
+
+**Ainda pendente, sem código ainda:**
+- A.3 / A.16 — validação manual no celular (Galaxy A34): vírgula decimal, zoom 200%, leitor de tela nas telas novas. Só dá pra validar no aparelho.
+- #4 / #5 / A.6 — reorganizar a Home / bloco "Hoje": decisão de produto grande, merece conversa própria com mockup antes de qualquer código.
+- #11 — schema pra importar dado de wearable: não fazer isolado, só junto com a feature de importação (ainda não desenhada).
+- #12 — upgrade de dependências (Next 16, Tailwind 4, Vitest 5): breaking changes, merece sessão própria.
+
+**Padrão de UI estabelecido nesta rodada:** filtros no app seguem o modelo "slicer" — pills clicáveis (ver `/fisico/historico`, `/marmitas/receitas`, `/marmitas/estoque`, `/marmitas/descartes`) em vez de dropdown. Pra editar/excluir um item específico de uma lista, o padrão é um seletor único ("Qual item?") com painel condicional abaixo, não um bloco de edição aberto repetido por item da lista (ver `/marmitas/compras` e `/marmitas/estoque`).
