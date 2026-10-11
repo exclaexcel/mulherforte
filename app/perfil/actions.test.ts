@@ -77,7 +77,7 @@ describe("salvarPerfil", () => {
 
     expect(await salvarPerfil(formulario({ nome: "Dany", data_nascimento: data }))).toEqual({
       ok: false,
-      erro: "Informe uma data de nascimento válida.",
+      erro: "Data inválida.",
     });
     expect(payloads).toHaveLength(0);
   });

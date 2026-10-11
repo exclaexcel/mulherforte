@@ -4,12 +4,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { diaSemanaFromData } from "@/lib/marmitas/preparo";
-import { ehDataFutura, hojeISO } from "@/lib/date";
+import { hojeISO } from "@/lib/date";
+import { lerDataObrigatoria } from "@/lib/data-formulario";
 import { interpretarReceita, type DadosReceita } from "@/lib/marmitas/receita";
 import { motivoDescarteValido } from "@/lib/marmitas/descarte";
 import { GRUPOS_COMPRA } from "@/lib/marmitas/types";
 import {
-  MENSAGEM_DATA_FUTURA,
   MENSAGEM_SALVAR,
   MENSAGEM_VALIDACAO_INDISPONIVEL,
   type ResultadoAcao,
@@ -235,22 +235,26 @@ export async function criarPreparo(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
   const receitaId = String(formData.get("receita_id") ?? "");
-  const dataPreparo = String(formData.get("data_preparo") ?? "");
   const quantidadePorcoes = Number(formData.get("quantidade_porcoes"));
   const semanaCicloRaw = formData.get("semana_ciclo");
   const semanaCiclo = semanaCicloRaw ? Number(semanaCicloRaw) : null;
   const observacoes = String(formData.get("observacoes") ?? "").trim() || null;
 
-  if (!receitaId || !dataPreparo) {
+  if (!receitaId) {
     return { ok: false, erro: "Escolha a receita e a data do preparo." };
   }
 
+  const leituraData = lerDataObrigatoria(
+    formData.get("data_preparo"),
+    "Escolha a receita e a data do preparo."
+  );
+  if (!leituraData.ok) {
+    return { ok: false, erro: leituraData.erro };
+  }
+  const dataPreparo = leituraData.valor;
+
   if (!Number.isInteger(quantidadePorcoes) || quantidadePorcoes <= 0) {
     return { ok: false, erro: "Informe uma quantidade de porções maior que zero." };
-  }
-
-  if (ehDataFutura(dataPreparo)) {
-    return { ok: false, erro: MENSAGEM_DATA_FUTURA };
   }
 
   if (semanaCiclo !== null && (!Number.isInteger(semanaCiclo) || semanaCiclo < 1 || semanaCiclo > 4)) {
@@ -411,15 +415,17 @@ export async function criarItemCompra(formData: FormData): Promise<ResultadoAcao
 }
 
 /**
- * Corrige o texto de um item já cadastrado (ex.: erro de digitação). O grupo não
- * muda aqui — só o nome do item. Checa duplicidade só dentro do grupo atual do item,
- * excluindo ele mesmo da checagem.
+ * Corrige o texto e/ou o grupo de um item já cadastrado. Grupo é opcional no
+ * formulário: se não vier, mantém o grupo atual (compatível com telas antigas que
+ * só mandam o nome). Checa duplicidade dentro do grupo de destino, excluindo o
+ * próprio item da checagem.
  */
 export async function atualizarItemCompra(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
   const id = String(formData.get("id") ?? "");
   const item = String(formData.get("item") ?? "").trim();
+  const grupoInformado = String(formData.get("grupo") ?? "");
 
   if (!id) {
     return { ok: false, erro: "Item não encontrado. Atualize a página e tente de novo." };
@@ -427,6 +433,10 @@ export async function atualizarItemCompra(formData: FormData): Promise<Resultado
 
   if (!item) {
     return { ok: false, erro: "Informe o nome do item." };
+  }
+
+  if (grupoInformado && !GRUPOS_COMPRA.some((g) => g.value === grupoInformado)) {
+    return { ok: false, erro: "Grupo inválido. Escolha uma das opções da lista." };
   }
 
   const { data: atual, error: erroAtual } = await supabase
@@ -444,11 +454,13 @@ export async function atualizarItemCompra(formData: FormData): Promise<Resultado
     return { ok: false, erro: "Item não encontrado. Atualize a página e tente de novo." };
   }
 
+  const grupoDestino = grupoInformado || atual.grupo;
+
   const { data: existentes, error: erroExistentes } = await supabase
     .from("itens_compra")
     .select("item")
     .eq("user_id", user.id)
-    .eq("grupo", atual.grupo)
+    .eq("grupo", grupoDestino)
     .neq("id", id);
 
   if (erroExistentes) {
@@ -465,7 +477,7 @@ export async function atualizarItemCompra(formData: FormData): Promise<Resultado
 
   const { data, error } = await supabase
     .from("itens_compra")
-    .update({ item })
+    .update({ item, grupo: grupoDestino })
     .eq("id", id)
     .eq("user_id", user.id)
     .select("id");
@@ -480,6 +492,37 @@ export async function atualizarItemCompra(formData: FormData): Promise<Resultado
 
   revalidatePath("/marmitas/compras");
   return { ok: true, destino: "/marmitas/compras?item_atualizado=1" };
+}
+
+/**
+ * Remove o item de vez da lista — diferente de "tenho em casa" (que só marca,
+ * sem apagar). Confirmação fica na tela (BotaoAcao com `confirmacao`).
+ */
+export async function excluirItemCompra(formData: FormData): Promise<ResultadoAcao> {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    return { ok: false, erro: "Item não encontrado. Atualize a página e tente de novo." };
+  }
+
+  const { data, error } = await supabase
+    .from("itens_compra")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .select("id");
+
+  if (error) {
+    return { ok: false, erro: "Não foi possível excluir o item agora. Tente novamente." };
+  }
+
+  if (!data || data.length === 0) {
+    return { ok: false, erro: "Item não encontrado. Atualize a página e tente de novo." };
+  }
+
+  revalidatePath("/marmitas/compras");
+  return { ok: true, destino: "/marmitas/compras?item_excluido=1" };
 }
 
 /**

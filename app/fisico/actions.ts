@@ -3,12 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ehDataFutura, hojeISO } from "@/lib/date";
+import { hojeISO } from "@/lib/date";
+import { lerDataObrigatoria, lerDataOpcional } from "@/lib/data-formulario";
 import { treinoObrigatorioDoDia } from "@/lib/fisico/calendarioTreino";
 import { selecionarMedidaReferencia, verificarVariacaoAtipica } from "@/lib/fisico/medidas";
 import { REGIOES_MEDIDA, TIPOS_TREINO, type IndicadorMeta, type RegiaoMedida } from "@/lib/fisico/types";
 import { lerNumeroObrigatorio, lerNumeroOpcional, type LeituraNumero } from "@/lib/numero-formulario";
-import { MENSAGEM_DATA_FUTURA, type ResultadoAcao } from "@/lib/resultado-acao";
+import type { ResultadoAcao } from "@/lib/resultado-acao";
 
 async function getUserOrRedirect() {
   const supabase = await createClient();
@@ -31,17 +32,13 @@ const entre0e100 = (n: number) => n >= 0 && n <= 100;
 export async function registrarPeso(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
-  const data = String(formData.get("data") ?? "");
+  const leituraData = lerDataObrigatoria(formData.get("data"), "Informe a data do registro.");
+  if (!leituraData.ok) {
+    return { ok: false, erro: leituraData.erro };
+  }
+  const data = leituraData.valor;
+
   const pesoKg = Number(formData.get("peso_kg"));
-
-  if (!data) {
-    return { ok: false, erro: "Informe a data do registro." };
-  }
-
-  if (ehDataFutura(data)) {
-    return { ok: false, erro: MENSAGEM_DATA_FUTURA };
-  }
-
   if (!Number.isFinite(pesoKg) || pesoKg <= 0) {
     return { ok: false, erro: "Informe um peso maior que zero." };
   }
@@ -165,15 +162,11 @@ export async function excluirPesoData(formData: FormData): Promise<ResultadoAcao
 export async function registrarMedidas(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
-  const data = String(formData.get("data") ?? "");
-
-  if (!data) {
-    return { ok: false, erro: "Informe a data das medidas." };
+  const leituraData = lerDataObrigatoria(formData.get("data"), "Informe a data das medidas.");
+  if (!leituraData.ok) {
+    return { ok: false, erro: leituraData.erro };
   }
-
-  if (ehDataFutura(data)) {
-    return { ok: false, erro: MENSAGEM_DATA_FUTURA };
-  }
+  const data = leituraData.valor;
 
   const campos: { regiao: RegiaoMedida; raw: FormDataEntryValue | null }[] = [
     { regiao: "cintura", raw: formData.get("cintura_cm") },
@@ -291,18 +284,19 @@ export async function excluirMedidasData(formData: FormData): Promise<ResultadoA
 export async function registrarTreino(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
-  const data = String(formData.get("data") ?? "");
   const tipo = String(formData.get("tipo") ?? "");
   const realizado = formData.get("realizado") === "on";
   const tipoOutroDescricao = String(formData.get("tipo_outro_descricao") ?? "").trim() || null;
 
-  if (!data || !tipo) {
+  if (!tipo) {
     return { ok: false, erro: "Informe a data e o tipo de treino." };
   }
 
-  if (ehDataFutura(data)) {
-    return { ok: false, erro: MENSAGEM_DATA_FUTURA };
+  const leituraData = lerDataObrigatoria(formData.get("data"), "Informe a data e o tipo de treino.");
+  if (!leituraData.ok) {
+    return { ok: false, erro: leituraData.erro };
   }
+  const data = leituraData.valor;
 
   if (!TIPOS_TREINO.some((t) => t.value === tipo)) {
     return { ok: false, erro: "Tipo de treino inválido. Escolha uma das opções da lista." };
@@ -396,8 +390,8 @@ type LeituraAgua = { ok: true; quantidadeMl: number } | { ok: false };
  */
 function resolverDataHabito(formData?: FormData): string {
   const hoje = hojeISO();
-  const bruto = String(formData?.get("data") ?? "");
-  return /^\d{4}-\d{2}-\d{2}$/.test(bruto) && !ehDataFutura(bruto, hoje) ? bruto : hoje;
+  const leitura = lerDataOpcional(formData?.get("data") ?? null, hoje);
+  return leitura.ok && leitura.valor ? leitura.valor : hoje;
 }
 
 /**
@@ -588,17 +582,18 @@ export async function salvarMeta(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
   const indicador = String(formData.get("indicador") ?? "") as IndicadorMeta;
-  // data_inicio segue o comportamento atual: vem do formulário ou é hoje.
-  const dataInicio = String(formData.get("data_inicio") ?? "") || hojeISO();
   const fase = String(formData.get("fase") ?? "").trim() || null;
 
   if (!indicador || !(indicador in UNIDADE_POR_INDICADOR)) {
     return { ok: false, erro: "Indicador inválido." };
   }
 
-  if (ehDataFutura(dataInicio)) {
-    return { ok: false, erro: MENSAGEM_DATA_FUTURA };
+  // data_inicio segue o comportamento atual: vem do formulário ou é hoje.
+  const leituraDataInicio = lerDataOpcional(formData.get("data_inicio"));
+  if (!leituraDataInicio.ok) {
+    return { ok: false, erro: leituraDataInicio.erro };
   }
+  const dataInicio = leituraDataInicio.valor ?? hojeISO();
 
   if (indicador === "hidratacao") {
     const metaHidratacao = lerNumeroObrigatorio(

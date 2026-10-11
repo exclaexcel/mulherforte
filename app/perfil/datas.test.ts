@@ -62,7 +62,7 @@ describe("data de nascimento: UTC foi removido, data futura é recusada", () => 
   it("data que não existe é recusada como inválida, não como futura", async () => {
     expect(await salvarPerfil(formulario({ nome: "Dany", data_nascimento: "2026-02-30" }))).toEqual({
       ok: false,
-      erro: "Informe uma data de nascimento válida.",
+      erro: "Data inválida.",
     });
   });
 

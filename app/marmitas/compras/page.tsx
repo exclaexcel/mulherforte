@@ -28,7 +28,7 @@ function rotuloItem(item: { tenho_em_casa: boolean; item: string }) {
 export default async function ComprasPage({
   searchParams,
 }: {
-  searchParams: { item_salvo?: string; item_atualizado?: string };
+  searchParams: { item_salvo?: string; item_atualizado?: string; item_excluido?: string };
 }) {
   const supabase = await createClient();
   const {
@@ -49,7 +49,12 @@ export default async function ComprasPage({
   const itemSalvo = searchParams?.item_salvo === "1";
 
   const itensParaCorrecao = porGrupo.flatMap((grupo) =>
-    grupo.itens.map((item) => ({ id: item.id, item: item.item, grupoLabel: grupo.label }))
+    grupo.itens.map((item) => ({
+      id: item.id,
+      item: item.item,
+      grupo: grupo.value,
+      grupoLabel: grupo.label,
+    }))
   );
 
   return (
@@ -71,6 +76,12 @@ export default async function ComprasPage({
       {searchParams?.item_atualizado === "1" ? (
         <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
           Item atualizado!
+        </p>
+      ) : null}
+
+      {searchParams?.item_excluido === "1" ? (
+        <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
+          Item excluído.
         </p>
       ) : null}
 
@@ -109,8 +120,8 @@ export default async function ComprasPage({
         <summary className="font-semibold text-oliva cursor-pointer">+ Novo item</summary>
         <FormularioAcao
           acao={criarItemCompra}
-          rotuloEnviar="Adicionar item"
-          rotuloEnviando="Adicionando item…"
+          rotuloEnviar="Salvar item"
+          rotuloEnviando="Salvando item…"
           mensagemSucesso="Item adicionado à lista."
           variante="outline"
           classeBotao="w-full"
@@ -142,7 +153,7 @@ export default async function ComprasPage({
         <details className="rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm">
           <summary className="inline-flex items-center gap-1 font-semibold text-oliva cursor-pointer">
             <Pencil className="h-4 w-4" />
-            Corrigir nome de um item
+            Editar ou excluir um item
           </summary>
           <CorrigirItemCompra itens={itensParaCorrecao} />
         </details>

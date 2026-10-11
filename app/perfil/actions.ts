@@ -3,18 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { ehDataFutura } from "@/lib/date";
+import { lerDataOpcional } from "@/lib/data-formulario";
 import { lerNumeroOpcional } from "@/lib/numero-formulario";
-import { MENSAGEM_DATA_FUTURA, type ResultadoAcao } from "@/lib/resultado-acao";
-
-/** Data AAAA-MM-DD que existe de fato (rejeita 2026-02-30). */
-function dataValida(iso: string): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) {
-    return false;
-  }
-  const data = new Date(`${iso}T00:00:00Z`);
-  return !Number.isNaN(data.getTime()) && data.toISOString().slice(0, 10) === iso;
-}
+import type { ResultadoAcao } from "@/lib/resultado-acao";
 
 export async function salvarPerfil(formData: FormData): Promise<ResultadoAcao> {
   const supabase = await createClient();
@@ -27,7 +18,6 @@ export async function salvarPerfil(formData: FormData): Promise<ResultadoAcao> {
   }
 
   const nome = String(formData.get("nome") ?? "").trim();
-  const dataNascimentoRaw = String(formData.get("data_nascimento") ?? "").trim();
 
   if (!nome) {
     return { ok: false, erro: "Informe seu nome." };
@@ -42,12 +32,9 @@ export async function salvarPerfil(formData: FormData): Promise<ResultadoAcao> {
     return { ok: false, erro: altura.erro };
   }
 
-  if (dataNascimentoRaw && !dataValida(dataNascimentoRaw)) {
-    return { ok: false, erro: "Informe uma data de nascimento válida." };
-  }
-
-  if (dataNascimentoRaw && ehDataFutura(dataNascimentoRaw)) {
-    return { ok: false, erro: MENSAGEM_DATA_FUTURA };
+  const dataNascimento = lerDataOpcional(formData.get("data_nascimento"));
+  if (!dataNascimento.ok) {
+    return { ok: false, erro: dataNascimento.erro };
   }
 
   // O upsert só envia as colunas do formulário. O início do ciclo do cronograma
@@ -57,7 +44,7 @@ export async function salvarPerfil(formData: FormData): Promise<ResultadoAcao> {
       user_id: user.id,
       nome,
       altura_cm: altura.valor,
-      data_nascimento: dataNascimentoRaw || null,
+      data_nascimento: dataNascimento.valor,
     },
     { onConflict: "user_id" }
   );

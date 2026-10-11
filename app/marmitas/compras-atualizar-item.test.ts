@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
-import { atualizarItemCompra } from "./actions";
+import { atualizarItemCompra, excluirItemCompra } from "./actions";
 
 type Chamada = { metodo: string; args: unknown[] };
 type ConfigTabela = {
@@ -38,7 +38,7 @@ let registros: { tabela: string; chamadas: Chamada[] }[] = [];
 function criarBuilder(tabela: string) {
   const chamadas: Chamada[] = [];
   const builder: Record<string, unknown> = {};
-  for (const metodo of ["select", "eq", "neq", "maybeSingle", "update"]) {
+  for (const metodo of ["select", "eq", "neq", "maybeSingle", "update", "delete"]) {
     builder[metodo] = (...args: unknown[]) => {
       chamadas.push({ metodo, args });
       return builder;
@@ -46,7 +46,7 @@ function criarBuilder(tabela: string) {
   }
   builder.then = (resolve: (v: unknown) => unknown, reject: (e: unknown) => unknown) => {
     const cfg = configs[tabela] ?? {};
-    const escrevendo = chamadas.some((c) => c.metodo === "update");
+    const escrevendo = chamadas.some((c) => c.metodo === "update" || c.metodo === "delete");
     const comMaybeSingle = chamadas.some((c) => c.metodo === "maybeSingle");
 
     let resultado: unknown;
@@ -175,7 +175,7 @@ describe("atualizarItemCompra", () => {
     expect(chamadas("itens_compra", "update")).toHaveLength(0);
   });
 
-  it("sucesso: grava filtrando por id e user_id, destino correto", async () => {
+  it("sucesso: grava filtrando por id e user_id, mantém o grupo atual quando não informado", async () => {
     preparar({ itens_compra: { leituraAtual: { data: { grupo: "despensa" } } } });
 
     const r = await atualizarItemCompra(formulario({ id: "i1", item: "Arroz integral" }));
@@ -183,7 +183,44 @@ describe("atualizarItemCompra", () => {
     expect(r).toEqual({ ok: true, destino: "/marmitas/compras?item_atualizado=1" });
     expect(temEq("itens_compra", "id", "i1")).toBe(true);
     expect(temEq("itens_compra", "user_id", USER_ID)).toBe(true);
-    expect(chamadas("itens_compra", "update")[0].args[0]).toEqual({ item: "Arroz integral" });
+    expect(chamadas("itens_compra", "update")[0].args[0]).toEqual({
+      item: "Arroz integral",
+      grupo: "despensa",
+    });
+  });
+
+  it("grupo inválido: erro previsível, sem acessar o banco", async () => {
+    preparar();
+
+    const r = await atualizarItemCompra(formulario({ id: "i1", item: "Arroz", grupo: "inventado" }));
+
+    expect(r).toEqual({ ok: false, erro: "Grupo inválido. Escolha uma das opções da lista." });
+    expect(chamadas("itens_compra", "update")).toHaveLength(0);
+  });
+
+  it("troca de grupo: duplicidade é checada no grupo de destino, não no atual", async () => {
+    preparar({
+      itens_compra: {
+        leituraAtual: { data: { grupo: "despensa" } },
+        leituraDuplicidade: { data: [] },
+      },
+    });
+
+    await atualizarItemCompra(formulario({ id: "i1", item: "Arroz", grupo: "carboidratos" }));
+
+    expect(temEq("itens_compra", "grupo", "carboidratos")).toBe(true);
+    expect(temEq("itens_compra", "grupo", "despensa")).toBe(false);
+  });
+
+  it("troca de grupo: grava o novo grupo junto com o item", async () => {
+    preparar({ itens_compra: { leituraAtual: { data: { grupo: "despensa" } } } });
+
+    await atualizarItemCompra(formulario({ id: "i1", item: "Arroz", grupo: "carboidratos" }));
+
+    expect(chamadas("itens_compra", "update")[0].args[0]).toEqual({
+      item: "Arroz",
+      grupo: "carboidratos",
+    });
   });
 
   it("zero linhas atualizadas: item não encontrado", async () => {
@@ -207,6 +244,44 @@ describe("atualizarItemCompra", () => {
     const r = await atualizarItemCompra(formulario({ id: "i1", item: "Arroz" }));
 
     expect(r).toEqual({ ok: false, erro: "Não foi possível salvar o item. Tente novamente." });
+    expect(JSON.stringify(r)).not.toContain("pg_");
+  });
+});
+
+describe("excluirItemCompra", () => {
+  it("sem id: erro previsível, sem acessar o banco", async () => {
+    preparar();
+
+    const r = await excluirItemCompra(formulario({}));
+
+    expect(r).toEqual({ ok: false, erro: "Item não encontrado. Atualize a página e tente de novo." });
+    expect(chamadas("itens_compra", "delete")).toHaveLength(0);
+  });
+
+  it("sucesso: apaga filtrando por id e user_id, destino correto", async () => {
+    preparar({ itens_compra: { escrita: { data: [{ id: "i1" }] } } });
+
+    const r = await excluirItemCompra(formulario({ id: "i1" }));
+
+    expect(r).toEqual({ ok: true, destino: "/marmitas/compras?item_excluido=1" });
+    expect(temEq("itens_compra", "id", "i1")).toBe(true);
+    expect(temEq("itens_compra", "user_id", USER_ID)).toBe(true);
+  });
+
+  it("zero linhas apagadas: item não encontrado", async () => {
+    preparar({ itens_compra: { escrita: { data: [] } } });
+
+    const r = await excluirItemCompra(formulario({ id: "i1" }));
+
+    expect(r).toEqual({ ok: false, erro: "Item não encontrado. Atualize a página e tente de novo." });
+  });
+
+  it("falha ao excluir: mensagem neutra, sem texto técnico", async () => {
+    preparar({ itens_compra: { escrita: { error: { message: "pg_delete_secreto" } } } });
+
+    const r = await excluirItemCompra(formulario({ id: "i1" }));
+
+    expect(r).toEqual({ ok: false, erro: "Não foi possível excluir o item agora. Tente novamente." });
     expect(JSON.stringify(r)).not.toContain("pg_");
   });
 });

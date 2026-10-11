@@ -44,6 +44,15 @@ function utcParaDataISO(timestampMs: number): string {
   return new Date(timestampMs).toISOString().slice(0, 10);
 }
 
+/** Data AAAA-MM-DD que existe de fato no calendário (rejeita, por exemplo, 2026-02-30). */
+export function dataISOValida(dataISO: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dataISO)) {
+    return false;
+  }
+  const data = new Date(`${dataISO}T00:00:00Z`);
+  return !Number.isNaN(data.getTime()) && data.toISOString().slice(0, 10) === dataISO;
+}
+
 /** Diferença em dias de calendário entre duas datas ISO (fim - início). */
 export function diasEntre(dataInicioISO: string, dataFimISO: string): number {
   return Math.round((dataISOParaUTC(dataFimISO) - dataISOParaUTC(dataInicioISO)) / MS_POR_DIA);
