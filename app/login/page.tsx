@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const alertaRef = useRef<HTMLParagraphElement>(null);
+
+  useEffect(() => {
+    if (error) {
+      alertaRef.current?.focus();
+    }
+  }, [error]);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -73,13 +80,18 @@ export default function LoginPage() {
             />
           </div>
           {error ? (
-            <p className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+            <p
+              ref={alertaRef}
+              role="alert"
+              tabIndex={-1}
+              className="text-sm text-red-700 bg-red-50 border border-red-100 rounded-xl px-3 py-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-oliva"
+            >
               {error}
             </p>
           ) : null}
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            Entrar
+            {loading ? "Entrando…" : "Entrar"}
           </Button>
         </form>
       </div>
