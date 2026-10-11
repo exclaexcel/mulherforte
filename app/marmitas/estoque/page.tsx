@@ -9,10 +9,12 @@ import {
   ordenarEstoque,
   type TomValidade,
 } from "@/lib/marmitas/estoque";
-import { listarPreparosCongelados } from "@/lib/marmitas/consultas";
+import { listarPreparosCongelados, listarReceitasParaPreparo } from "@/lib/marmitas/consultas";
 import { marcarConsumido, descartarPreparo } from "../actions";
 import { BotaoAcao } from "@/components/botao-acao";
 import { AcaoDescarte } from "@/components/marmitas/acao-descarte";
+import { CorrigirPreparo } from "@/components/marmitas/corrigir-preparo";
+import { hojeISO } from "@/lib/date";
 import { textoConfirmacaoConsumo } from "@/lib/marmitas/consumo";
 
 const TOM_ESTILO: Record<TomValidade, string> = {
@@ -24,7 +26,11 @@ const TOM_ESTILO: Record<TomValidade, string> = {
 
 type ReceitaRef = { nome: string; validade_congelado_dias: number | null } | null;
 
-export default async function EstoquePage() {
+export default async function EstoquePage({
+  searchParams,
+}: {
+  searchParams: { preparo_corrigido?: string; preparo_excluido?: string };
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -34,16 +40,23 @@ export default async function EstoquePage() {
     redirect("/login");
   }
 
-  const { data: preparos, error } = await listarPreparosCongelados(supabase, user.id);
+  const [{ data: preparos, error }, { data: receitas }] = await Promise.all([
+    listarPreparosCongelados(supabase, user.id),
+    listarReceitasParaPreparo(supabase, user.id),
+  ]);
+
+  const hoje = hojeISO();
 
   const itens = ordenarEstoque(
     (preparos ?? []).map((p) => {
       const receita = (Array.isArray(p.receitas) ? p.receitas[0] : p.receitas) as ReceitaRef;
       return {
         id: p.id as string,
+        receitaId: p.receita_id as string,
         dataPreparo: p.data_preparo as string,
         receitaNome: receita?.nome ?? "Receita removida",
         quantidade: p.quantidade_porcoes as number,
+        observacoes: p.observacoes as string | null,
         validade: calcularValidade(
           p.data_preparo as string,
           receita?.validade_congelado_dias ?? null
@@ -64,6 +77,18 @@ export default async function EstoquePage() {
           Ver descartados
         </Link>
       </header>
+
+      {searchParams?.preparo_corrigido === "1" ? (
+        <p role="status" className="text-sm text-green-800 bg-green-50 border border-green-200 rounded-2xl p-3">
+          Preparo corrigido!
+        </p>
+      ) : null}
+
+      {searchParams?.preparo_excluido === "1" ? (
+        <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
+          Preparo excluído do registro.
+        </p>
+      ) : null}
 
       {error ? (
         <p className="text-sm text-red-700">Não foi possível carregar o estoque agora. Tente novamente.</p>
@@ -103,6 +128,15 @@ export default async function EstoquePage() {
           })}
         </ul>
       )}
+
+      {itens.length > 0 && receitas && receitas.length > 0 ? (
+        <details className="rounded-2xl bg-white/80 border border-oliva/10 p-5 shadow-sm">
+          <summary className="font-semibold text-oliva cursor-pointer">
+            Editar ou excluir um preparo
+          </summary>
+          <CorrigirPreparo preparos={itens} receitas={receitas} hoje={hoje} />
+        </details>
+      ) : null}
     </main>
   );
 }

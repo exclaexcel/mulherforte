@@ -53,7 +53,9 @@ export function listarCronograma(supabase: ClienteSupabase, userId: string) {
 export function listarPreparosCongelados(supabase: ClienteSupabase, userId: string) {
   return supabase
     .from("preparos")
-    .select("id, data_preparo, quantidade_porcoes, observacoes, receitas ( nome, validade_congelado_dias )")
+    .select(
+      "id, receita_id, data_preparo, quantidade_porcoes, observacoes, receitas ( nome, validade_congelado_dias )"
+    )
     .eq("user_id", userId)
     .eq("status", "congelado")
     .order("data_preparo", { ascending: true });

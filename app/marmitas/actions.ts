@@ -367,6 +367,122 @@ export async function descartarPreparo(formData: FormData): Promise<ResultadoAca
   return { ok: true, destino: "/marmitas/estoque" };
 }
 
+/**
+ * Corrige um preparo lançado com receita, data ou quantidade errada — diferente
+ * de "descartar" (que é sobre comida real jogada fora e fica registrado pra
+ * análise). Só corrige enquanto o preparo ainda está congelado: depois de
+ * consumido ou descartado, a correção não faz mais sentido.
+ */
+export async function editarPreparo(formData: FormData): Promise<ResultadoAcao> {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const id = String(formData.get("id") ?? "");
+  const receitaId = String(formData.get("receita_id") ?? "");
+  const quantidadePorcoes = Number(formData.get("quantidade_porcoes"));
+  const observacoes = String(formData.get("observacoes") ?? "").trim() || null;
+
+  if (!id || !receitaId) {
+    return { ok: false, erro: "Escolha a receita e a data do preparo." };
+  }
+
+  const leituraData = lerDataObrigatoria(
+    formData.get("data_preparo"),
+    "Escolha a receita e a data do preparo."
+  );
+  if (!leituraData.ok) {
+    return { ok: false, erro: leituraData.erro };
+  }
+  const dataPreparo = leituraData.valor;
+
+  if (!Number.isInteger(quantidadePorcoes) || quantidadePorcoes <= 0) {
+    return { ok: false, erro: "Informe uma quantidade de porções maior que zero." };
+  }
+
+  // A FK não passa pela RLS: sem esta checagem, um id de receita de outra
+  // usuária seria aceito. Confere que a receita é da sessão atual.
+  const { data: receitaDaUsuaria, error: erroReceita } = await supabase
+    .from("receitas")
+    .select("id")
+    .eq("id", receitaId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (erroReceita) {
+    return { ok: false, erro: MENSAGEM_VALIDACAO_INDISPONIVEL };
+  }
+
+  if (!receitaDaUsuaria) {
+    return { ok: false, erro: "Receita não encontrada. Atualize a página e tente de novo." };
+  }
+
+  // select após update confirma que alguma linha foi alterada: sem isso, zero linhas
+  // pareceria sucesso. Só corrige enquanto "congelado" — depois de consumido ou
+  // descartado, a correção não se aplica mais.
+  const { data, error } = await supabase
+    .from("preparos")
+    .update({
+      receita_id: receitaId,
+      data_preparo: dataPreparo,
+      dia_semana: diaSemanaFromData(dataPreparo),
+      quantidade_porcoes: quantidadePorcoes,
+      observacoes,
+    })
+    .eq("user_id", user.id)
+    .eq("id", id)
+    .eq("status", "congelado")
+    .select("id");
+
+  if (error) {
+    return { ok: false, erro: "Não foi possível salvar a correção. Tente novamente." };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      erro: "Preparo não encontrado ou já consumido/descartado. Atualize a página e tente de novo.",
+    };
+  }
+
+  revalidatePath("/marmitas/estoque");
+  return { ok: true, destino: "/marmitas/estoque?preparo_corrigido=1" };
+}
+
+/**
+ * Remove o lançamento de um preparo criado por engano — diferente de "descartar"
+ * (que registra motivo e entra na análise de desperdício, porque é comida real
+ * jogada fora). Excluir aqui é só apagar um registro que nunca devia ter existido.
+ */
+export async function excluirPreparoRegistro(formData: FormData): Promise<ResultadoAcao> {
+  const { supabase, user } = await getUserOrRedirect();
+
+  const id = String(formData.get("id") ?? "");
+  if (!id) {
+    return { ok: false, erro: "Preparo não encontrado. Atualize a página e tente de novo." };
+  }
+
+  const { data, error } = await supabase
+    .from("preparos")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", user.id)
+    .eq("status", "congelado")
+    .select("id");
+
+  if (error) {
+    return { ok: false, erro: "Não foi possível excluir o preparo agora. Tente novamente." };
+  }
+
+  if (!data || data.length === 0) {
+    return {
+      ok: false,
+      erro: "Preparo não encontrado ou já consumido/descartado. Atualize a página e tente de novo.",
+    };
+  }
+
+  revalidatePath("/marmitas/estoque");
+  return { ok: true, destino: "/marmitas/estoque?preparo_excluido=1" };
+}
+
 export async function criarItemCompra(formData: FormData): Promise<ResultadoAcao> {
   const { supabase, user } = await getUserOrRedirect();
 
