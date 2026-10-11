@@ -79,12 +79,15 @@ export default async function PesoPage({
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Registrar peso</h1>
         <div className="flex items-center gap-3 mt-1">
-          <Link href="/fisico/peso/tendencia" className="text-xs text-oliva/85 underline">
+          <Link
+            href="/fisico/peso/tendencia"
+            className="inline-block p-1 -m-1 text-xs text-oliva/85 underline"
+          >
             Ver tendência
           </Link>
           <Link
             href="/fisico/historico?aba=peso"
-            className="inline-flex items-center gap-1 text-xs text-oliva/85 underline"
+            className="inline-flex items-center gap-1 p-1 -m-1 text-xs text-oliva/85 underline"
           >
             <History className="h-3 w-3" />
             Ver histórico
@@ -110,6 +113,12 @@ export default async function PesoPage({
       {registroExcluido ? (
         <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
           Registro de hoje excluído.
+        </p>
+      ) : null}
+
+      {registroDoDia && !editandoOutroDia ? (
+        <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
+          Você já registrou o peso de hoje. Salvar vai substituir os valores abaixo, não duplicar.
         </p>
       ) : null}
 

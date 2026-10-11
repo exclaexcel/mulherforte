@@ -92,7 +92,7 @@ export default async function MedidasPage({
         <h1 className="text-2xl font-bold text-oliva mt-1">Registrar medidas</h1>
         <Link
           href="/fisico/historico?aba=medidas"
-          className="inline-flex items-center gap-1 text-xs text-oliva/85 underline mt-1"
+          className="inline-flex items-center gap-1 p-1 -m-1 text-xs text-oliva/85 underline mt-1"
         >
           <History className="h-3 w-3" />
           Ver histórico
@@ -117,6 +117,13 @@ export default async function MedidasPage({
       {registroExcluido ? (
         <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
           Medidas excluídas.
+        </p>
+      ) : null}
+
+      {temMedidaDoDia && !editandoOutroDia ? (
+        <p role="status" className="text-sm text-stone-700 bg-stone-100 border border-stone-200 rounded-2xl p-3">
+          Você já registrou medidas hoje. Salvar vai substituir os valores preenchidos, não
+          duplicar.
         </p>
       ) : null}
 
