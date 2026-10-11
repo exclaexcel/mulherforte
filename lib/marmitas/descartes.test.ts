@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { ordenarDescartados, resumoDescartes, type ItemDescartado, type PreparoParaResumo } from "./descartes";
+import {
+  listarMesesComDescarte,
+  ordenarDescartados,
+  resumoDescartes,
+  resumoMensal,
+  type ItemDescartado,
+  type PreparoParaResumo,
+} from "./descartes";
 
 describe("resumoDescartes", () => {
   it("sem preparos: tudo zerado, sem NaN", () => {
@@ -71,5 +78,59 @@ describe("ordenarDescartados", () => {
     ];
 
     expect(ordenarDescartados(itens).map((i) => i.receitaNome)).toEqual(["A", "B", "C"]);
+  });
+});
+
+describe("listarMesesComDescarte", () => {
+  it("sem itens: lista vazia", () => {
+    expect(listarMesesComDescarte([])).toEqual([]);
+  });
+
+  it("meses únicos, mais recente primeiro", () => {
+    const itens: ItemDescartado[] = [
+      { receitaNome: "A", dataPreparo: "2026-09-01", dataDescarte: "2026-09-05", motivo: "vencido", quantidadePorcoes: 1 },
+      { receitaNome: "B", dataPreparo: "2026-10-01", dataDescarte: "2026-10-03", motivo: "outro", quantidadePorcoes: 1 },
+      { receitaNome: "C", dataPreparo: "2026-10-10", dataDescarte: "2026-10-12", motivo: "outro", quantidadePorcoes: 1 },
+    ];
+
+    expect(listarMesesComDescarte(itens)).toEqual(["2026-10", "2026-09"]);
+  });
+});
+
+describe("resumoMensal", () => {
+  it("mês sem descarte: tudo zerado/null, sem NaN", () => {
+    const resumo = resumoMensal([], "2026-10");
+
+    expect(resumo).toEqual({
+      mes: "2026-10",
+      totalPorcoesPerdidas: 0,
+      receitaMaisDescartada: null,
+      motivoPredominante: null,
+    });
+  });
+
+  it("soma porções, acha receita e motivo predominantes, só do mês pedido", () => {
+    const itens: ItemDescartado[] = [
+      { receitaNome: "Panqueca", dataPreparo: "2026-10-01", dataDescarte: "2026-10-05", motivo: "vencido", quantidadePorcoes: 2 },
+      { receitaNome: "Panqueca", dataPreparo: "2026-10-08", dataDescarte: "2026-10-10", motivo: "vencido", quantidadePorcoes: 1 },
+      { receitaNome: "Torta", dataPreparo: "2026-10-12", dataDescarte: "2026-10-15", motivo: "estragado", quantidadePorcoes: 3 },
+      // mês diferente, não deve entrar na conta de outubro
+      { receitaNome: "Sopa", dataPreparo: "2026-09-01", dataDescarte: "2026-09-05", motivo: "outro", quantidadePorcoes: 5 },
+    ];
+
+    const resumo = resumoMensal(itens, "2026-10");
+
+    expect(resumo.totalPorcoesPerdidas).toBe(6);
+    expect(resumo.receitaMaisDescartada).toEqual({ nome: "Panqueca", quantidade: 2 });
+    expect(resumo.motivoPredominante).toEqual({ motivo: "vencido", quantidade: 2 });
+  });
+
+  it("empate de receita: desempata por nome", () => {
+    const itens: ItemDescartado[] = [
+      { receitaNome: "Zebra", dataPreparo: "2026-10-01", dataDescarte: "2026-10-05", motivo: "outro", quantidadePorcoes: 1 },
+      { receitaNome: "Abacate", dataPreparo: "2026-10-02", dataDescarte: "2026-10-06", motivo: "outro", quantidadePorcoes: 1 },
+    ];
+
+    expect(resumoMensal(itens, "2026-10").receitaMaisDescartada).toEqual({ nome: "Abacate", quantidade: 1 });
   });
 });

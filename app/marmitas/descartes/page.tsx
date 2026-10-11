@@ -4,8 +4,10 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listarPreparosParaResumoDescartes } from "@/lib/marmitas/consultas";
 import {
+  listarMesesComDescarte,
   ordenarDescartados,
   resumoDescartes,
+  resumoMensal,
   type ItemDescartado,
   type PreparoParaResumo,
 } from "@/lib/marmitas/descartes";
@@ -34,7 +36,21 @@ function nomeReceita(receitas: LinhaPreparo["receitas"]): string {
   return receita?.nome ?? "Receita removida";
 }
 
-export default async function DescartesPage() {
+/** "2026-10" -> "Outubro de 2026". */
+function formatarMes(mes: string): string {
+  const texto = new Intl.DateTimeFormat("pt-BR", {
+    month: "long",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${mes}-01T00:00:00Z`));
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+export default async function DescartesPage({
+  searchParams,
+}: {
+  searchParams: { mes?: string };
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -62,13 +78,13 @@ export default async function DescartesPage() {
       {houveFalhaDeConsulta({ error }) ? (
         <AvisoErroLeitura novaTentativaHref="/marmitas/descartes" />
       ) : (
-        <ConteudoDescartes linhas={(data ?? []) as LinhaPreparo[]} />
+        <ConteudoDescartes linhas={(data ?? []) as LinhaPreparo[]} mesParam={searchParams?.mes} />
       )}
     </main>
   );
 }
 
-function ConteudoDescartes({ linhas }: { linhas: LinhaPreparo[] }) {
+function ConteudoDescartes({ linhas, mesParam }: { linhas: LinhaPreparo[]; mesParam?: string }) {
   const paraResumo: PreparoParaResumo[] = linhas.map((l) => ({
     receitaNome: nomeReceita(l.receitas),
     status: l.status,
@@ -99,8 +115,55 @@ function ConteudoDescartes({ linhas }: { linhas: LinhaPreparo[] }) {
     );
   }
 
+  const meses = listarMesesComDescarte(itensDescartados);
+  const mesAtual = mesParam && meses.includes(mesParam) ? mesParam : meses[0];
+  const mensal = resumoMensal(itensDescartados, mesAtual);
+
   return (
     <div className="space-y-6">
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold text-oliva">Resumo do mês</h2>
+        <div className="flex gap-2 overflow-x-auto" role="group" aria-label="Filtrar por mês">
+          {meses.map((m) => {
+            const ativo = m === mesAtual;
+            return (
+              <Link
+                key={m}
+                href={`/marmitas/descartes?mes=${m}`}
+                aria-current={ativo ? "true" : undefined}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap border ${
+                  ativo ? "bg-oliva text-bege border-oliva" : "bg-white/80 text-oliva/85 border-oliva/20"
+                }`}
+              >
+                {formatarMes(m)}
+              </Link>
+            );
+          })}
+        </div>
+        <div className="rounded-2xl bg-white/80 border border-oliva/10 p-4 space-y-2">
+          <p className="text-sm text-stone-700">
+            <span className="font-semibold text-oliva">{mensal.totalPorcoesPerdidas}</span> porção(ões)
+            perdida(s) em {formatarMes(mensal.mes).toLowerCase()}.
+          </p>
+          {mensal.receitaMaisDescartada ? (
+            <p className="text-sm text-stone-700">
+              Receita mais descartada:{" "}
+              <span className="font-semibold text-oliva">{mensal.receitaMaisDescartada.nome}</span> (
+              {mensal.receitaMaisDescartada.quantidade}x)
+            </p>
+          ) : null}
+          {mensal.motivoPredominante ? (
+            <p className="text-sm text-stone-700">
+              Motivo predominante:{" "}
+              <span className="font-semibold text-oliva">
+                {ROTULO_MOTIVO[mensal.motivoPredominante.motivo]}
+              </span>{" "}
+              ({mensal.motivoPredominante.quantidade}x)
+            </p>
+          ) : null}
+        </div>
+      </section>
+
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-oliva">Por motivo</h2>
         <ul className="grid grid-cols-3 gap-2">
