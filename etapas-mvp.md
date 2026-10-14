@@ -139,7 +139,7 @@ indicador exploratório sem classificação.
 ## Etapa 7 — Exportação e polimento final
 **Objetivo:** fechar os últimos itens de segurança/soberania de dados e acabamento visual.
 
-### Etapa 7A — Exportação completa (implementada, validação manual pendente)
+### Etapa 7A — Exportação completa (implementada e validada, 13/10/2026)
 - ZIP com 10 CSVs e backup JSON versionado, todos os domínios do app (ver PRD §3.2.3)
 - Página `/perfil/exportar`, link a partir de `/perfil`
 - Rotas `GET /api/exportacao/planilhas` e `GET /api/exportacao/json`, sem cache
@@ -147,15 +147,18 @@ indicador exploratório sem classificação.
 - Testes automatizados com dados fictícios e cliente Supabase mockado
 - Sem importação. Sem migration.
 
-### Etapa 7B — Auditoria final do MVP (próxima)
+### Etapa 7B — Auditoria final do MVP (concluída, 13/10/2026)
 - Revisão de tudo o que o MVP entrega, antes de considerar o MVP fechado
-- Protocolo de coleta como tela de referência (se ainda não incluído na Etapa 3)
-- Revisão visual final: paleta, tipografia, padrão de card conforme guia de referência
+- [x] Protocolo de coleta como tela de referência — implementado 13/10/2026 em
+  `/fisico/medidas/protocolo`, commit `d6cc8d1`
+- [ ] Revisão visual final: paleta, tipografia, padrão de card conforme guia de
+  referência — **não feita ainda**, nenhuma sessão dedicada a isso até agora
 
 **Pronto quando:**
 - [x] Exportação funcionando para todas as tabelas do app (7A, código e testes)
-- [ ] Teste manual da exportação no celular e no Excel pt-BR — ver `validacao-manual.md`
-- [ ] Todos os itens da seção 8 do PRD marcados como concluídos — tracking ao vivo em
+- [x] Teste manual da exportação no celular e no Excel pt-BR — **13/10/2026**,
+  ver `validacao-manual.md`
+- [x] Todos os itens da seção 8 do PRD marcados como concluídos — tracking ao vivo em
   `validacao-manual.md`, não repetir a lista aqui
 
 ---

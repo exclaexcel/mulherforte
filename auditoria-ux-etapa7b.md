@@ -418,8 +418,14 @@ Depois da priorização, essa foi a rodada de implementação. Todos os itens ab
 - A.8 — trocar `window.confirm` por modal próprio: ficou como está.
 - A.9 — metas como resumo recolhido: ficou como está.
 
+**Feito desde então:**
+- A.3 / A.16 — validação manual no celular (Galaxy A34): vírgula decimal, zoom 200%,
+  leitor de tela nas telas novas — **concluída 13/10/2026**, ver `validacao-manual.md`.
+  Nessa sessão também achamos e corrigimos um incidente real (produção apontando pro
+  banco Supabase antigo) e implementamos o protocolo de coleta que faltava
+  (`/fisico/medidas/protocolo`, item da seção 8 do PRD que nunca tinha sido feito).
+
 **Ainda pendente, sem código ainda:**
-- A.3 / A.16 — validação manual no celular (Galaxy A34): vírgula decimal, zoom 200%, leitor de tela nas telas novas. Só dá pra validar no aparelho.
 - #4 / #5 / A.6 — reorganizar a Home / bloco "Hoje": decisão de produto grande, merece conversa própria com mockup antes de qualquer código.
 - #11 — schema pra importar dado de wearable: não fazer isolado, só junto com a feature de importação (ainda não desenhada).
 - #12 — upgrade de dependências (Next 16, Tailwind 4, Vitest 5): breaking changes, merece sessão própria.
