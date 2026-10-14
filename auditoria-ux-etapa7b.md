@@ -164,6 +164,9 @@ Propostas de parâmetro: até 10MB, até 20 páginas, processamento no cliente q
 
 ## 9. Integração com pulseira (Mi Band 5 / Zepp) — planejamento
 
+**Cancelado em 13/10/2026** — a Dany decidiu não seguir com essa integração. Seção
+mantida como histórico de por que não foi feito, não como plano ativo.
+
 Nome exato do app instalado (Zepp vs. Zepp Life) **requer confirmação manual no Galaxy A34**.
 
 Caminhos realistas de curto prazo pro app web atual (sem camada nativa Android): exportação de arquivo pelo app da pulseira + importação manual de CSV/JSON. Health Connect/Google Fit API exigem um wrapper Android que hoje não existe no projeto — ficaria pra uma Fase 2B separada, de esforço bem maior.
@@ -210,7 +213,7 @@ Vários "Editar"/"Ver histórico"/"Ver tendência" usam `text-xs underline` sem 
 8. ✅ Busca/filtro ausente na Biblioteca de receitas. **Feito 11/10/2026, commit `41b2c58`.**
 9. ✅ Sem `prefers-reduced-motion` em `globals.css`. **Feito 11/10/2026, commit `ecf3dd8`.**
 10. ✅ Links secundários com alvo de toque pequeno. **Feito 11/10/2026, commit `ecf3dd8`.**
-11. ⏸️ Schema de `adesao_treino` insuficiente pra importação futura de wearable — não fazer isolado, só junto com a feature de importação (ainda não desenhada).
+11. ❌ Schema de `adesao_treino` insuficiente pra importação futura de wearable — **cancelado 13/10/2026**, a Dany decidiu não fazer essa integração.
 12. ⏸️ Dependências desatualizadas (`npm audit`, já mapeado, nada novo) — merece sessão própria, não feito.
 
 **Status completo, com os achados do Anexo:** ver "Atualização final — status de implementação" no fim do documento.
@@ -425,9 +428,18 @@ Depois da priorização, essa foi a rodada de implementação. Todos os itens ab
   banco Supabase antigo) e implementamos o protocolo de coleta que faltava
   (`/fisico/medidas/protocolo`, item da seção 8 do PRD que nunca tinha sido feito).
 
+**Cancelado (13/10/2026, decisão da Dany):**
+- #11 — schema pra importar dado de wearable: ela já sabe que essa integração não vai
+  rolar. Cancelado, não é mais backlog — ver também `backlog-fase-2.md` item 2.17. A
+  análise técnica (seção 9 abaixo) fica só como histórico de por que não foi feito.
+
 **Ainda pendente, sem código ainda:**
-- #4 / #5 / A.6 — reorganizar a Home / bloco "Hoje": decisão de produto grande, merece conversa própria com mockup antes de qualquer código.
-- #11 — schema pra importar dado de wearable: não fazer isolado, só junto com a feature de importação (ainda não desenhada).
-- #12 — upgrade de dependências (Next 16, Tailwind 4, Vitest 5): breaking changes, merece sessão própria.
+- #4 / #5 / A.6 — reorganizar a Home / bloco "Hoje": decisão de produto grande, merece conversa própria com mockup antes de qualquer código. Ela pediu mais tempo pra decidir (13/10/2026).
+- #12 — upgrade de dependências (Next 16, Tailwind 4, Vitest 5): breaking changes, merece sessão própria. Ela pediu mais tempo pra decidir (13/10/2026).
+
+**Concluído (13/10/2026, decisão da Dany):**
+- Revisão visual final (paleta/tipografia/cards) — ela confirmou que gosta das cores
+  atuais, mesmo divergindo do guia visual original. Considerar encerrado, não reabrir
+  sem pedido explícito dela. Ver nota em `etapas-mvp.md`, Etapa 7B.
 
 **Padrão de UI estabelecido nesta rodada:** filtros no app seguem o modelo "slicer" — pills clicáveis (ver `/fisico/historico`, `/marmitas/receitas`, `/marmitas/estoque`, `/marmitas/descartes`) em vez de dropdown. Pra editar/excluir um item específico de uma lista, o padrão é um seletor único ("Qual item?") com painel condicional abaixo, não um bloco de edição aberto repetido por item da lista (ver `/marmitas/compras` e `/marmitas/estoque`).

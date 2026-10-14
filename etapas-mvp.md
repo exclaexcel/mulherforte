@@ -151,8 +151,10 @@ indicador exploratório sem classificação.
 - Revisão de tudo o que o MVP entrega, antes de considerar o MVP fechado
 - [x] Protocolo de coleta como tela de referência — implementado 13/10/2026 em
   `/fisico/medidas/protocolo`, commit `d6cc8d1`
-- [ ] Revisão visual final: paleta, tipografia, padrão de card conforme guia de
-  referência — **não feita ainda**, nenhuma sessão dedicada a isso até agora
+- [x] Revisão visual final: paleta, tipografia, padrão de card — **13/10/2026**, Dany
+  confirmou que gosta das cores atuais do app, mesmo divergindo do guia visual
+  original enviado no início do projeto. Encerrado por decisão dela, não por ter
+  rodado uma auditoria visual formal comparando com o guia.
 
 **Pronto quando:**
 - [x] Exportação funcionando para todas as tabelas do app (7A, código e testes)

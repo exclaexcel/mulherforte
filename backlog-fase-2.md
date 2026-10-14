@@ -2,6 +2,10 @@
 **Status:** Não faz parte do MVP. Só entra em desenvolvimento depois do MVP estar "Pronto"
 (ver critério na seção 8 do PRD).
 
+**MVP fechado em 13/10/2026** (ver `validacao-manual.md`). A partir de agora, este
+backlog é o escopo candidato da **versão 1.1** — decisão da Dany, 13/10/2026. Nenhum
+item entra em desenvolvimento sem ela priorizar e confirmar um de cada vez.
+
 ---
 
 ## 1. Por que isso está separado do MVP
@@ -216,11 +220,11 @@ O MVP entrega só o cadastro manual (completo e rápido). Colar texto, importar 
 entram no MVP. Quando forem avaliados, a importação deve ser assistida: o app sugere, a
 Dany confere e salva. Nenhuma receita é gravada sem revisão.
 
-### 2.17 Integração com Mi Band 5 e Zepp
+### 2.17 Integração com Mi Band 5 e Zepp — CANCELADO (13/10/2026)
 
-Leitura de dados de atividade e sono (Mi Band 5, app Zepp) para a Jornada Física. Fica na
-Fase 2. Antes de implementar: avaliar necessidade real, permissões, origem dos dados e
-como os valores entram no registro manual (sem sobrescrever o que a Dany digitou).
+Leitura de dados de atividade e sono (Mi Band 5, app Zepp) para a Jornada Física.
+**Cancelado pela Dany em 13/10/2026** — não entra nem na v1.1. Mantido aqui só como
+registro de que foi considerado e descartado, não como pendência.
 
 ### 2.18 Tela de cadastro (signup)
 
