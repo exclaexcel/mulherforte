@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, History } from "lucide-react";
+import { Home, History, Ruler } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { registrarMedidas, excluirMedidasHoje, excluirMedidasData } from "../actions";
@@ -90,13 +90,22 @@ export default async function MedidasPage({
           Início
         </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Registrar medidas</h1>
-        <Link
-          href="/fisico/historico?aba=medidas"
-          className="inline-flex items-center gap-1 p-1 -m-1 text-xs text-oliva/85 underline mt-1"
-        >
-          <History className="h-3 w-3" />
-          Ver histórico
-        </Link>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+          <Link
+            href="/fisico/historico?aba=medidas"
+            className="inline-flex items-center gap-1 p-1 -m-1 text-xs text-oliva/85 underline"
+          >
+            <History className="h-3 w-3" />
+            Ver histórico
+          </Link>
+          <Link
+            href="/fisico/medidas/protocolo"
+            className="inline-flex items-center gap-1 p-1 -m-1 text-xs text-oliva/85 underline"
+          >
+            <Ruler className="h-3 w-3" />
+            Como medir
+          </Link>
+        </div>
       </header>
 
       {editandoOutroDia ? (
