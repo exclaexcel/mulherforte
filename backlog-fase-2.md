@@ -226,36 +226,36 @@ Leitura de dados de atividade e sono (Mi Band 5, app Zepp) para a Jornada Físic
 **Cancelado pela Dany em 13/10/2026** — não entra nem na v1.1. Mantido aqui só como
 registro de que foi considerado e descartado, não como pendência.
 
-### 2.18 Tela de cadastro (signup)
+### 2.18 Tela de cadastro (signup) — ✅ Implementado 14/10/2026
 
-Hoje o app só tem login (`app/login/page.tsx`) — toda conta é criada manualmente pelo painel
-do Supabase (Authentication → Users). Isso é suficiente enquanto o app é só da Dany, mas a
-intenção é expandir para outras usuárias depois que o projeto Supabase ficou dedicado ao
-Mulher Forte (projeto `mulherforte`, separado do `appreforma` em 09/10/2026 — ver
-[[project_supabase_compartilhado_reforma]]).
+`/cadastro` (e-mail + senha, confirmação de e-mail obrigatória — decisão da Dany) e link a
+partir do `/login`. Reaproveita o `/api/auth/callback` que já existia. Sem onboarding
+automático: perfil fica vazio até a usuária preencher em "Editar perfil" (o app já tratava
+perfil ausente normalmente, nenhuma mudança de schema foi necessária). Cadastro aberto, sem
+convite/aprovação.
 
-A tabela `preparos` e as demais já são multiusuário "de fábrica": toda RLS já isola por
-`auth.uid() = user_id`. Falta só a porta de entrada. Antes de implementar, decidir:
-- Cadastro aberto (qualquer e-mail) ou por convite/aprovação?
-- Confirmação de e-mail obrigatória?
-- Alguma tela de onboarding (perfil, altura, etc.) logo após o cadastro?
-
-Relação: útil implementar junto com 2.19 (recuperar senha), já que os dois usam o mesmo
-fluxo de e-mail transacional do Supabase Auth.
-
-### 2.19 Recuperar senha
+### 2.19 Recuperar senha — ✅ Implementado 14/10/2026
 
 Tentado em 08/10/2026 e revertido (código não chegou a ser commitado) porque, na época, o
 projeto Supabase era compartilhado com o ReForma — inclusive o template de e-mail de
 "Reset Password", com link fixo no domínio do ReForma. Ver
 [[project_supabase_compartilhado_reforma]] para o diagnóstico completo.
 
-Esse bloqueio não existe mais: desde a separação do banco em 09/10/2026 (projeto
-`mulherforte`), o template de e-mail é só do Mulher Forte, livre pra configurar do jeito
-certo. Ao retomar: usar o formato de fluxo real do template (`?token_hash=...&type=recovery`,
-verificação por OTP), não o formato `?code=` (PKCE) tentado antes. O `middleware.ts` precisa
-isentar a rota de redefinição da exigência de sessão ativa (a sessão só existe depois que a
-página chama `verifyOtp` com o `token_hash` da URL).
+Esse bloqueio não existe mais desde a separação do banco em 09/10/2026 (projeto
+`mulherforte`). **Correção sobre a nota técnica antiga deste item:** a orientação de usar
+`?token_hash=...&type=recovery` com `verifyOtp` ficou desatualizada — o link real recebido
+por e-mail (confirmado tanto no cadastro quanto testado no formato do Supabase) usa fluxo
+PKCE (`/auth/v1/verify?token=pkce_...&type=recovery&redirect_to=...`, que o Supabase troca
+por `?code=` no redirect final). Isso é exatamente o que o `/api/auth/callback` existente já
+sabia tratar (`exchangeCodeForSession`), então não foi preciso nenhum código novo de
+verificação — só duas telas (`/recuperar-senha` e `/redefinir-senha`) e liberar a rota no
+`middleware.ts`.
+
+**Pendente de validação:** o teste de ponta a ponta (receber o e-mail de verdade e clicar no
+link) esbarrou no limite de e-mail do plano gratuito do Supabase durante os testes de
+cadastro na mesma sessão. Confirmar quando o limite liberar. Backlog relacionado, não
+bloqueador: configurar um provedor de e-mail próprio (ex: Resend) no Supabase antes de abrir
+pra usuárias de verdade, já que o serviço embutido tem limite baixo de propósito.
 
 ### 2.20 Calendário de treino obrigatório configurável por usuária
 

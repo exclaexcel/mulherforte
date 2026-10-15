@@ -434,8 +434,28 @@ Depois da priorização, essa foi a rodada de implementação. Todos os itens ab
   análise técnica (seção 9 abaixo) fica só como histórico de por que não foi feito.
 
 **Ainda pendente, sem código ainda:**
-- #4 / #5 / A.6 — reorganizar a Home / bloco "Hoje": decisão de produto grande, merece conversa própria com mockup antes de qualquer código. Ela pediu mais tempo pra decidir (13/10/2026).
-- #12 — upgrade de dependências (Next 16, Tailwind 4, Vitest 5): breaking changes, merece sessão própria. Ela pediu mais tempo pra decidir (13/10/2026).
+- A.6 (opção B) — painel "Hoje" com ações rápidas (água, proteína, treino, peso do dia,
+  marmitas vencendo direto na Home, com botões tipo `+250ml`) agregando dados de várias
+  tabelas numa consulta só. Mais ambicioso que a reorganização já feita (achado 3.1, ver
+  abaixo) — decisão de produto, merece conversa própria com mockup.
+- #12 — upgrade de dependências (Next 16, Tailwind 4, Vitest 5): breaking changes, merece
+  sessão própria. Achado técnico relevante: `searchParams`/`params` vira assíncrono no
+  Next 15+, e esse padrão hoje aparece em praticamente toda página do app — não é uma
+  mudança pontual.
+
+**Concluído (14-15/10/2026):**
+- #4 / #5 / A.6 (achado 3.1, reorganização) — Home trocou as 3 abas-pílula no topo por 4
+  categorias (Hoje / Evolução / Marmitas / Conta) numa barra de navegação fixa embaixo
+  (`components/home-bottom-nav.tsx`), resolvendo a dispersão de Perfil/Exportar/Sair em 3
+  lugares diferentes. O link "Início", antes duplicado e com hrefs desatualizados em 17
+  páginas, virou um componente único (`components/link-inicio.tsx`) no rodapé de cada
+  tela. A opção B (painel "Hoje" com ações rápidas) segue pendente, ver acima.
+- Backlog 2.18 (cadastro) e 2.19 (recuperar senha) — implementados nesta sessão, fora do
+  escopo original deste documento mas relacionados à mesma conversa. Ver `backlog-fase-2.md`
+  pros detalhes técnicos; nota importante: a orientação antiga em 2.19 (usar fluxo
+  `token_hash`/`verifyOtp`) ficou desatualizada — o projeto usa fluxo PKCE por padrão
+  (confirmado pelo link real recebido por e-mail), então o `/api/auth/callback` que já
+  existia (`exchangeCodeForSession`) resolveu os dois casos sem mudança.
 
 **Concluído (13/10/2026, decisão da Dany):**
 - Revisão visual final (paleta/tipografia/cards) — ela confirmou que gosta das cores
