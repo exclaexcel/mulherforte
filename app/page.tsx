@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { LogoutButton } from "@/components/logout-button";
 import { NavCard } from "@/components/marmitas/nav-card";
-import { HomeTabs } from "@/components/home-tabs";
+import { HomeBottomNav } from "@/components/home-bottom-nav";
 import { houveFalhaDeConsulta, MENSAGEM_ERRO_LEITURA } from "@/lib/leitura";
 import { redirect } from "next/navigation";
 import {
@@ -22,6 +21,9 @@ import {
   Trophy,
   TrendingUp,
   Download,
+  LogOut,
+  CalendarCheck,
+  CircleUser,
 } from "lucide-react";
 
 export default async function HomePage({
@@ -59,10 +61,6 @@ export default async function HomePage({
             <p className="text-sm text-oliva/85">Olá, {saudacao}</p>
           )}
           <h1 className="text-2xl font-bold text-oliva">Projeto Mulher Forte</h1>
-          <Link href="/perfil" className="inline-flex items-center gap-1 text-xs text-oliva/85 mt-2">
-            <Pencil className="h-3 w-3" />
-            Editar perfil
-          </Link>
         </div>
         <LogoutButton />
       </header>
@@ -73,21 +71,81 @@ export default async function HomePage({
         </p>
       ) : null}
 
-      <div className="mb-6">
-        <NavCard
-          href="/perfil/exportar"
-          icon={Download}
-          titulo="Exportar meus dados"
-          descricao="Planilhas para o Excel e backup completo em JSON"
-        />
-      </div>
-
-      <HomeTabs
+      <HomeBottomNav
         groups={[
           {
-            key: "dia-a-dia",
-            label: "Dia a dia",
+            key: "hoje",
+            label: "Hoje",
+            cor: "rosa",
+            icon: <CalendarCheck className="h-5 w-5" />,
+            content: (
+              <>
+                <NavCard
+                  href="/fisico/peso"
+                  icon={Scale}
+                  titulo="Registrar peso"
+                  descricao="Pesagem do dia, com bioimpedância opcional"
+                />
+                <NavCard
+                  href="/fisico/medidas"
+                  icon={Ruler}
+                  titulo="Registrar medidas"
+                  descricao="Cintura, quadril, coxa e abdômen inferior"
+                />
+                <NavCard
+                  href="/fisico/treino"
+                  icon={Dumbbell}
+                  titulo="Registrar treino"
+                  descricao="Move's, Zumba ou outra atividade do dia"
+                />
+                <NavCard
+                  href="/fisico/habitos"
+                  icon={Droplet}
+                  titulo="Hábitos do dia"
+                  descricao="Hidratação e proteína"
+                />
+              </>
+            ),
+          },
+          {
+            key: "evolucao",
+            label: "Evolução",
+            cor: "rosaSoft",
+            icon: <TrendingUp className="h-5 w-5" />,
+            content: (
+              <>
+                <NavCard
+                  href="/fisico/peso/tendencia"
+                  icon={TrendingUp}
+                  titulo="Tendência do peso"
+                  descricao="Pontos registrados e médias de 7/28 dias"
+                />
+                <NavCard
+                  href="/fisico/metas"
+                  icon={Target}
+                  titulo="Metas"
+                  descricao="Peso, cintura, abdômen e hidratação"
+                />
+                <NavCard
+                  href="/fisico/indicadores"
+                  icon={Activity}
+                  titulo="Indicadores corporais"
+                  descricao="Cintura, RCEst, RCQ e RFM — estimativas, não diagnóstico"
+                />
+                <NavCard
+                  href="/fisico/score"
+                  icon={Trophy}
+                  titulo="Score da semana"
+                  descricao="Proteína, hidratação e treino obrigatório, acumulado"
+                />
+              </>
+            ),
+          },
+          {
+            key: "marmitas",
+            label: "Marmitas",
             cor: "oliva",
+            icon: <ChefHat className="h-5 w-5" />,
             content: (
               <>
                 <NavCard
@@ -108,83 +166,6 @@ export default async function HomePage({
                   titulo="Lista de compras"
                   descricao="Marcar o que já tem em casa"
                 />
-              </>
-            ),
-          },
-          {
-            key: "fisico",
-            label: "Jornada física",
-            cor: "rosa",
-            content: (
-              <>
-                <section className="space-y-3">
-                  <h2 className="text-xs font-semibold uppercase tracking-wide text-oliva/85 px-1">
-                    Hoje
-                  </h2>
-                  <NavCard
-                    href="/fisico/peso"
-                    icon={Scale}
-                    titulo="Registrar peso"
-                    descricao="Pesagem do dia, com bioimpedância opcional"
-                  />
-                  <NavCard
-                    href="/fisico/medidas"
-                    icon={Ruler}
-                    titulo="Registrar medidas"
-                    descricao="Cintura, quadril, coxa e abdômen inferior"
-                  />
-                  <NavCard
-                    href="/fisico/treino"
-                    icon={Dumbbell}
-                    titulo="Registrar treino"
-                    descricao="Move's, Zumba ou outra atividade do dia"
-                  />
-                  <NavCard
-                    href="/fisico/habitos"
-                    icon={Droplet}
-                    titulo="Hábitos do dia"
-                    descricao="Hidratação e proteína"
-                  />
-                </section>
-
-                <section className="space-y-3">
-                  <h2 className="text-xs font-semibold uppercase tracking-wide text-oliva/85 px-1">
-                    Minha evolução
-                  </h2>
-                  <NavCard
-                    href="/fisico/peso/tendencia"
-                    icon={TrendingUp}
-                    titulo="Tendência do peso"
-                    descricao="Pontos registrados e médias de 7/28 dias"
-                  />
-                  <NavCard
-                    href="/fisico/metas"
-                    icon={Target}
-                    titulo="Metas"
-                    descricao="Peso, cintura, abdômen e hidratação"
-                  />
-                  <NavCard
-                    href="/fisico/indicadores"
-                    icon={Activity}
-                    titulo="Indicadores corporais"
-                    descricao="Cintura, RCEst, RCQ e RFM — estimativas, não diagnóstico"
-                  />
-                  <NavCard
-                    href="/fisico/score"
-                    icon={Trophy}
-                    titulo="Score da semana"
-                    descricao="Proteína, hidratação e treino obrigatório, acumulado"
-                  />
-                </section>
-              </>
-            ),
-          },
-          {
-            key: "planejamento",
-            label: "Planejamento",
-            cor: "neutro",
-            content: (
-              <>
                 <NavCard
                   href="/marmitas/receitas"
                   icon={BookOpen}
@@ -203,6 +184,38 @@ export default async function HomePage({
                   titulo="Sobre o plano"
                   descricao="Horários, regras USDA e boas práticas"
                 />
+              </>
+            ),
+          },
+          {
+            key: "conta",
+            label: "Conta",
+            cor: "neutro",
+            icon: <CircleUser className="h-5 w-5" />,
+            content: (
+              <>
+                <NavCard
+                  href="/perfil"
+                  icon={Pencil}
+                  titulo="Editar perfil"
+                  descricao="Nome e dados pessoais"
+                />
+                <NavCard
+                  href="/perfil/exportar"
+                  icon={Download}
+                  titulo="Exportar meus dados"
+                  descricao="Planilhas para o Excel e backup completo em JSON"
+                />
+                <div className="flex items-center gap-3 rounded-2xl bg-white/80 border border-oliva/10 p-4 shadow-sm">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-oliva/10 border border-oliva/20">
+                    <LogOut className="h-5 w-5 text-oliva" />
+                  </span>
+                  <span className="flex-1">
+                    <p className="font-semibold text-oliva">Sair</p>
+                    <p className="text-sm text-stone-600">Encerrar sua sessão neste dispositivo</p>
+                  </span>
+                  <LogoutButton />
+                </div>
               </>
             ),
           },

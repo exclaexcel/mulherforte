@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { salvarMeta, excluirMeta } from "../actions";
@@ -13,6 +11,7 @@ import { INDICADORES_META, type IndicadorMeta } from "@/lib/fisico/types";
 import { formatarNumeroBR } from "@/lib/valor-exibicao";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
+import { LinkInicio } from "@/components/link-inicio";
 
 export default async function MetasPage({
   searchParams,
@@ -54,13 +53,10 @@ export default async function MetasPage({
     return (
       <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
         <header>
-          <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-            <Home className="h-4 w-4" />
-            Início
-          </Link>
           <h1 className="text-2xl font-bold text-oliva mt-1">Metas</h1>
         </header>
         <AvisoErroLeitura novaTentativaHref="/fisico/metas" />
+        <LinkInicio aba="evolucao" />
       </main>
     );
   }
@@ -86,10 +82,6 @@ export default async function MetasPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-          <Home className="h-4 w-4" />
-          Início
-        </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Metas</h1>
       </header>
 
@@ -247,6 +239,8 @@ export default async function MetasPage({
           </section>
         );
       })}
+
+      <LinkInicio aba="evolucao" />
     </main>
   );
 }

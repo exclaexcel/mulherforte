@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { criarPreparo, criarReceita } from "../actions";
@@ -9,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { hojeISO } from "@/lib/date";
 import { listarReceitasParaPreparo } from "@/lib/marmitas/consultas";
 import { CampoPrazoCongelamento } from "@/components/marmitas/campo-prazo-congelamento";
+import { LinkInicio } from "@/components/link-inicio";
 
 export default async function PreparoPage({
   searchParams,
@@ -33,10 +32,6 @@ export default async function PreparoPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/?aba=dia-a-dia" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-          <Home className="h-4 w-4" />
-          Início
-        </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Registrar preparo</h1>
       </header>
 
@@ -116,6 +111,8 @@ export default async function PreparoPage({
           <CampoPrazoCongelamento />
         </FormularioAcao>
       </details>
+
+      <LinkInicio aba="marmitas" />
     </main>
   );
 }

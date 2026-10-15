@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { dataISOParaUTC, hojeISO, somarDias } from "@/lib/date";
@@ -9,6 +8,7 @@ import { ResumoTendenciaPeso } from "@/components/fisico/resumo-tendencia";
 import { resumoTendencia } from "@/lib/fisico/resumoTendencia";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
+import { LinkInicio } from "@/components/link-inicio";
 
 const DIAS_JANELA_EXIBICAO = 90;
 
@@ -46,10 +46,6 @@ export default async function TendenciaPesoPage() {
 
   const cabecalho = (
     <header>
-      <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-        <Home className="h-4 w-4" />
-        Início
-      </Link>
       <h1 className="text-2xl font-bold text-oliva mt-1">Tendência do peso</h1>
       <p className="text-sm text-stone-600 mt-2">
         Os pontos representam pesagens registradas. As linhas mostram médias calculadas somente
@@ -64,6 +60,7 @@ export default async function TendenciaPesoPage() {
       <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
         {cabecalho}
         <AvisoErroLeitura novaTentativaHref="/fisico/peso/tendencia" />
+        <LinkInicio aba="evolucao" />
       </main>
     );
   }
@@ -112,6 +109,8 @@ export default async function TendenciaPesoPage() {
           </p>
         </>
       )}
+
+      <LinkInicio aba="evolucao" />
     </main>
   );
 }

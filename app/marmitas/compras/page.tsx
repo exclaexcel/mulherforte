@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { Home, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { criarItemCompra, alternarTenhoEmCasa } from "../actions";
@@ -10,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { GRUPOS_COMPRA } from "@/lib/marmitas/types";
 import { listarItensCompra } from "@/lib/marmitas/consultas";
 import { CorrigirItemCompra } from "@/components/marmitas/corrigir-item-compra";
+import { LinkInicio } from "@/components/link-inicio";
 
 /**
  * Rótulo do item na lista. O ✓ e o ○ são decorativos; o estado vai em texto oculto
@@ -60,10 +60,6 @@ export default async function ComprasPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
-        <Link href="/?aba=dia-a-dia" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-          <Home className="h-4 w-4" />
-          Início
-        </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Lista de compras</h1>
       </header>
 
@@ -158,6 +154,8 @@ export default async function ComprasPage({
           <CorrigirItemCompra itens={itensParaCorrecao} />
         </details>
       ) : null}
+
+      <LinkInicio aba="marmitas" />
     </main>
   );
 }

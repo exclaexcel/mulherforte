@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, Pencil } from "lucide-react";
+import { Pencil } from "lucide-react";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/server";
@@ -12,6 +12,7 @@ import {
 } from "../actions";
 import { BotaoAcao } from "@/components/botao-acao";
 import { HomeTabs } from "@/components/home-tabs";
+import { LinkInicio } from "@/components/link-inicio";
 import { formatarDataBR, formatarDataExtensa } from "@/lib/date";
 import { agruparPorSemana, type GrupoSemana } from "@/lib/fisico/historico";
 import { agruparMedidasPorDia, type RegistroMedidasDia } from "@/lib/fisico/historicoMedidas";
@@ -274,10 +275,6 @@ export default async function HistoricoFisicoPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto">
       <header className="mb-4">
-        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-          <Home className="h-4 w-4" />
-          Início
-        </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Histórico da Jornada física</h1>
       </header>
 
@@ -342,6 +339,8 @@ export default async function HistoricoFisicoPage({
           },
         ]}
       />
+
+      <LinkInicio aba="evolucao" />
     </main>
   );
 }

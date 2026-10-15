@@ -1,11 +1,12 @@
 import Link from "next/link";
-import { Home, Pencil, Search } from "lucide-react";
+import { Pencil, Search } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { listarReceitasBiblioteca } from "@/lib/marmitas/consultas";
 import { CATEGORIAS_RECEITA } from "@/lib/marmitas/receita";
 import { excluirReceita } from "../actions";
 import { BotaoAcao } from "@/components/botao-acao";
+import { LinkInicio } from "@/components/link-inicio";
 
 const ORDEM_CATEGORIAS = ["café da manhã", "lanche", "jantar", "sobremesa"];
 const SEM_CATEGORIA = "sem categoria";
@@ -120,10 +121,6 @@ export default async function ReceitasPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-6">
       <header>
-        <Link href="/?aba=planejamento" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-          <Home className="h-4 w-4" />
-          Início
-        </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Biblioteca de receitas</h1>
         <Link
           href="/marmitas/receitas/nova"
@@ -282,6 +279,8 @@ export default async function ReceitasPage({
           ))}
         </div>
       )}
+
+      <LinkInicio aba="marmitas" />
     </main>
   );
 }

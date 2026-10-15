@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { fimDaSemana, hojeISO, inicioDaSemana } from "@/lib/date";
 import { calcularScoreSemanal, metaHidratacaoValidaNaSemana } from "@/lib/fisico/score";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
+import { LinkInicio } from "@/components/link-inicio";
 
 export default async function ScorePage() {
   const supabase = await createClient();
@@ -51,13 +51,10 @@ export default async function ScorePage() {
     return (
       <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
         <header>
-          <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-            <Home className="h-4 w-4" />
-            Início
-          </Link>
           <h1 className="text-2xl font-bold text-oliva mt-1">Score da semana</h1>
         </header>
         <AvisoErroLeitura novaTentativaHref="/fisico/score" />
+        <LinkInicio aba="evolucao" />
       </main>
     );
   }
@@ -82,10 +79,6 @@ export default async function ScorePage() {
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-          <Home className="h-4 w-4" />
-          Início
-        </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Score da semana</h1>
         <p className="text-sm text-stone-600 mt-1">
           Segunda a domingo · {inicioSemana} a {fimSemana}
@@ -164,6 +157,8 @@ export default async function ScorePage() {
           {resultado.treinosOpcionaisRealizados.join(", ")}.
         </p>
       ) : null}
+
+      <LinkInicio aba="evolucao" />
     </main>
   );
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Home, History } from "lucide-react";
+import { History } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -16,6 +16,7 @@ import { calcularProgressoAgua, mensagemAlternarProteina } from "@/lib/fisico/ha
 import { INCREMENTOS_AGUA_ML } from "@/lib/fisico/types";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
+import { LinkInicio } from "@/components/link-inicio";
 
 export default async function HabitosPage({
   searchParams,
@@ -63,13 +64,10 @@ export default async function HabitosPage({
     return (
       <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
         <header>
-          <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-            <Home className="h-4 w-4" />
-            Início
-          </Link>
           <h1 className="text-2xl font-bold text-oliva mt-1">Hábitos do dia</h1>
         </header>
         <AvisoErroLeitura novaTentativaHref="/fisico/habitos" />
+        <LinkInicio aba="hoje" />
       </main>
     );
   }
@@ -93,10 +91,6 @@ export default async function HabitosPage({
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/?aba=fisico" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-          <Home className="h-4 w-4" />
-          Início
-        </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Hábitos do dia</h1>
         <Link
           href="/fisico/historico?aba=habitos"
@@ -192,6 +186,8 @@ export default async function HabitosPage({
           className="w-full text-red-700 border-red-200 hover:bg-red-50"
         />
       ) : null}
+
+      <LinkInicio aba="hoje" />
     </main>
   );
 }

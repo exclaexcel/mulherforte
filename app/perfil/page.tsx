@@ -1,5 +1,3 @@
-import Link from "next/link";
-import { Home } from "lucide-react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { salvarPerfil } from "./actions";
@@ -9,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { houveFalhaDeConsulta } from "@/lib/leitura";
 import { AvisoErroLeitura } from "@/components/aviso-erro-leitura";
+import { LinkInicio } from "@/components/link-inicio";
 
 export default async function PerfilPage() {
   const supabase = await createClient();
@@ -33,13 +32,10 @@ export default async function PerfilPage() {
     return (
       <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
         <header>
-          <Link href="/" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-            <Home className="h-4 w-4" />
-            Início
-          </Link>
           <h1 className="text-2xl font-bold text-oliva mt-1">Meu perfil</h1>
         </header>
         <AvisoErroLeitura novaTentativaHref="/perfil" />
+        <LinkInicio aba="conta" />
       </main>
     );
   }
@@ -47,10 +43,6 @@ export default async function PerfilPage() {
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto space-y-8">
       <header>
-        <Link href="/" className="inline-flex items-center gap-1 text-sm text-oliva/85">
-          <Home className="h-4 w-4" />
-          Início
-        </Link>
         <h1 className="text-2xl font-bold text-oliva mt-1">Meu perfil</h1>
       </header>
 
@@ -87,6 +79,8 @@ export default async function PerfilPage() {
           />
         </div>
       </FormularioAcao>
+
+      <LinkInicio aba="conta" />
     </main>
   );
 }
