@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -94,6 +95,13 @@ export default function LoginPage() {
             {loading ? "Entrando…" : "Entrar"}
           </Button>
         </form>
+
+        <p className="text-center text-sm text-stone-600">
+          Ainda não tem conta?{" "}
+          <Link href="/cadastro" className="text-oliva underline">
+            Criar conta
+          </Link>
+        </p>
       </div>
     </div>
   );

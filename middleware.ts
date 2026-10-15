@@ -3,7 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    if (request.nextUrl.pathname.startsWith("/login")) {
+    if (
+      request.nextUrl.pathname.startsWith("/login") ||
+      request.nextUrl.pathname.startsWith("/cadastro")
+    ) {
       return NextResponse.next();
     }
     const url = request.nextUrl.clone();
@@ -58,15 +61,16 @@ export async function middleware(request: NextRequest) {
   }
 
   const isLogin = request.nextUrl.pathname.startsWith("/login");
+  const isCadastro = request.nextUrl.pathname.startsWith("/cadastro");
   const isAuthApi = request.nextUrl.pathname.startsWith("/api/auth/");
 
-  if (!user && !isLogin && !isAuthApi) {
+  if (!user && !isLogin && !isCadastro && !isAuthApi) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && isLogin) {
+  if (user && (isLogin || isCadastro)) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
