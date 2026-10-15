@@ -5,7 +5,8 @@ export async function middleware(request: NextRequest) {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     if (
       request.nextUrl.pathname.startsWith("/login") ||
-      request.nextUrl.pathname.startsWith("/cadastro")
+      request.nextUrl.pathname.startsWith("/cadastro") ||
+      request.nextUrl.pathname.startsWith("/recuperar-senha")
     ) {
       return NextResponse.next();
     }
@@ -62,15 +63,16 @@ export async function middleware(request: NextRequest) {
 
   const isLogin = request.nextUrl.pathname.startsWith("/login");
   const isCadastro = request.nextUrl.pathname.startsWith("/cadastro");
+  const isRecuperarSenha = request.nextUrl.pathname.startsWith("/recuperar-senha");
   const isAuthApi = request.nextUrl.pathname.startsWith("/api/auth/");
 
-  if (!user && !isLogin && !isCadastro && !isAuthApi) {
+  if (!user && !isLogin && !isCadastro && !isRecuperarSenha && !isAuthApi) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
 
-  if (user && (isLogin || isCadastro)) {
+  if (user && (isLogin || isCadastro || isRecuperarSenha)) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
