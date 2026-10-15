@@ -53,16 +53,13 @@ export default async function HomePage({
 
   return (
     <main className="min-h-dvh px-6 py-10 max-w-lg mx-auto">
-      <header className="flex items-start justify-between gap-4 mb-8">
-        <div>
-          {falhouPerfil ? (
-            <p className="text-sm text-stone-600">{MENSAGEM_ERRO_LEITURA}</p>
-          ) : (
-            <p className="text-sm text-oliva/85">Olá, {saudacao}</p>
-          )}
-          <h1 className="text-2xl font-bold text-oliva">Projeto Mulher Forte</h1>
-        </div>
-        <LogoutButton />
+      <header className="mb-8">
+        {falhouPerfil ? (
+          <p className="text-sm text-stone-600">{MENSAGEM_ERRO_LEITURA}</p>
+        ) : (
+          <p className="text-sm text-oliva/85">Olá, {saudacao}</p>
+        )}
+        <h1 className="text-2xl font-bold text-oliva">Projeto Mulher Forte</h1>
       </header>
 
       {perfilSalvo ? (
