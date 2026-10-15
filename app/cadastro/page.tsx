@@ -58,7 +58,14 @@ export default function CadastroPage() {
     setLoading(false);
 
     if (authError) {
-      setError("Não deu pra criar a conta. Confira o e-mail e tente de novo.");
+      const msg = authError.message ?? "";
+      if (/already registered|already exists/i.test(msg)) {
+        setError("Já existe uma conta com esse e-mail. Tenta entrar em vez de cadastrar.");
+      } else if (/rate limit/i.test(msg)) {
+        setError("Muitas tentativas em pouco tempo. Espera um minuto e tenta de novo.");
+      } else {
+        setError(`Não deu pra criar a conta${msg ? `: ${msg}` : "."}`);
+      }
       return;
     }
 
